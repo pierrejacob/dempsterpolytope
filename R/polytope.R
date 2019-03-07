@@ -91,3 +91,55 @@ compare_polytopes <- function(cvxp1, cvxp2){
   return(c(contained, intersects))
 }
 
+#'@export
+check_intersection_independence <- function(etas){
+  ## check intersection between polypote of theta s.t. theta_j / theta_d < etas[d,j] 
+  ## with independence assumption
+  ## log(theta_1) + log(theta_4) - log(theta_2) - log(theta_3) = 0
+  ## i.e. log(theta_1) + log(theta_4) - log(theta_2) - log(theta_3)  <= 0
+  ## and  log(theta_1) + log(theta_4) - log(theta_2) - log(theta_3)  >= 0
+  if (dim(etas)[1] != 4){
+    stop("The matix etas must be 4x4 for the function 'check_intersection_independence' to be called.")
+  }
+  K_ <- dim(etas)[1]
+  A <- matrix(0, nrow = K_*(K_-1), ncol = K_-1)
+  b <- rep(0, K*(K_-1))
+  # then the extra constraints come from etas
+  index <- 1
+  for (d in categories){
+    for (j in setdiff(categories, d)){
+      # cccc (wA wB wC ... )' = 0
+      ccc <- rep(0, K_)
+      ccc[d] <- -1
+      ccc[j] <- +1
+      cc <- ccc - ccc[K_]
+      b[index] <- log(etas[d,j])
+      A[index,] <- cc[1:(K_-1)]
+      index <- index + 1
+    }
+  }
+  constr <- list(constr = A, rhs = b, dir = rep("<=", nrow(A)))
+  cvxpolytope <- hitandrun::findVertices(constr)
+  ### interesting numerical stability problem, because we're using finite precision:
+  ### constr_small <- hitandrun::eliminateRedundant(constr)
+  ### apply(cvxpolytope, 1, function(v) max(constr_small$constr %*% v - constr_small$rhs))
+  # "positive correlation" constraint
+  Aindep <- matrix(c(1,-1,-1,1), nrow = 1, byrow = T)
+  Aindep <- Aindep[,1:(K_-1),drop=F] - Aindep[,K_]
+  bindep <- 0
+  ncst <- nrow(constr$constr)
+  ## test intersection between log(eta)-polytope and log(theta_1) - log(theta_2) - log(theta_3) + log(theta_4) <= 0
+  constr1 <- list(constr = Aindep, rhs = bindep, dir = "<=")
+  intersectconstr <- list(constr = rbind(constr$constr, Aindep), rhs = c(constr$rhs, bindep), dir = rep("<=", ncst+1))
+  intersect1 <- !inherits(try(hitandrun::findVertices(intersectconstr), silent = T), "try-error")
+  ## test whether log(eta)-polytope is contained in the set log(theta_1) - log(theta_2) - log(theta_3) + log(theta_4) <= 0
+  contained1 <- all(apply(cvxpolytope, 1, function(v) all(constr1$constr %*% v <= constr1$rhs)))
+  
+  ## test intersection between log(eta)-polytope and log(theta_1) - log(theta_2) - log(theta_3) + log(theta_4) >= 0
+  constr2 <- list(constr = -Aindep, rhs = bindep, dir = "<=")
+  intersectconstr <- list(constr = rbind(constr$constr, -Aindep), rhs = c(constr$rhs, bindep), dir = rep("<=", ncst+1))
+  intersect2 <- !inherits(try(hitandrun::findVertices(intersectconstr), silent = T), "try-error")
+  ## test whether log(eta)-polytope is contained in the set log(theta_1) - log(theta_2) - log(theta_3) + log(theta_4) >= 0
+  contained2 <- all(apply(cvxpolytope, 1, function(v) all(constr2$constr %*% v <= constr2$rhs)))
+  return(list(intersect1 = intersect1, contained1 = contained1, intersect2 = intersect2, contained2 = contained2))
+}

@@ -7,25 +7,16 @@ smc_refresh_category <- function(etas, g, freqX){
     if (freqX[k] > 0){
       notk <- setdiff(1:K, k)
       theta_star <- rep(0, K)
-      # minimum value among paths from k to ell ("eta star")
-      # minimum_values <- rep(1, K)
-      # for (ell in setdiff(1:K, k)){
-      #   minimum_values[ell] <- distances(g, v = ell, to = k, mode = "out")
-      # }
       # 
+      # minimum value among paths from k to ell ("eta star")
       minimum_values <- rep(1, K)
       minimum_values[notk] <- distances(g, v = notk, to = k, mode = "out")[,1]
-      
+      # theta_star is the intersection of theta_ell/theta_k = etastar[k,ell]
       theta_star <- exp(-minimum_values)
       theta_star[k] <- 1
       theta_star <- theta_star / sum(theta_star)
       pts_k <- runif_piktheta_cpp(freqX[k], k, theta_star)
       etas[k,] <- pts_k$minratios
-      # # refresh etas and graph
-      # for (to_category in setdiff(1:K, k)){
-      #   # etas[k,to_category] <- get_eta(pts, k, to_category)
-      #   E(g, c(k, to_category))$weight <- log(etas[k,to_category])
-      # }
       seqedges <- as.numeric(sapply(notk, function(x) c(k, x)))
       E(g, seqedges)$weight <- log(etas[k, notk])
     }
@@ -74,10 +65,6 @@ SMC_sampler <- function(nparticles, X, K, essthreshold = 0.75){
         etas <- etas_particles[iparticle,,]
         theta_star <- rep(0, K)
         # minimum value among paths from k to ell ("eta star")
-        # minimum_values <- rep(1, K)
-        # for (ell in setdiff(1:K, k_)){
-        #   minimum_values[ell] <- distances(g, v = ell, to = k_, mode = "out")
-        # }
         minimum_values <- rep(1, K)
         minimum_values[notk_] <- distances(g, v = notk_, to = k_, mode = "out")[,1]
         

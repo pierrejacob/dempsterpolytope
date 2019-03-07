@@ -1,3 +1,5 @@
+### TO BE DONE: This could become a little tutorial (in rmarkdown?) on how to use the package in a simple example
+
 library(montecarlodsm)
 library(doParallel)
 library(doRNG)

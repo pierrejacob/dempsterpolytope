@@ -1,0 +1,14 @@
+Package: montecarlodsm
+Type: Package
+Title: Monte Carlo calculations for Dempster Shafer models
+Version: 1.0
+Date: 2019-03-05
+Author: Pierre E. Jacob
+Maintainer: Pierre E. Jacob <pierre.jacob.work@gmail.com>
+Description: Implements Monte Carlo algorithms for inference in Dempster-Shafer models
+License: GNU GPL
+LazyData: TRUE
+Depends: Rcpp, RcppEigen, igraph, hitandrun, dplyr
+Imports: Rcpp (>= 1.0.0), RcppEigen (>= 0.3.3.5.0)
+LinkingTo: Rcpp, RcppEigen
+RoxygenNote: 6.1.1

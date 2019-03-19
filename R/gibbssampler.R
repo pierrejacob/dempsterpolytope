@@ -12,7 +12,7 @@ initialize_pts <- function(freqX, theta_0){
       minratios[[k]] <- tmp$minratios
     } else { #?
       pts[[k]] <- NA
-      minratios[[k]] <- rep(Inf, K)
+      minratios[[k]] <- rep(Inf, K_)
     }
   }
   return(list(pts = pts, minratios = minratios))

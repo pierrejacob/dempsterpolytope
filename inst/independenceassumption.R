@@ -31,6 +31,7 @@ X <- sample(x = categories, size = n, replace = TRUE, prob = table_)
 freqX <- tabulate(X, nbins = 4)
 freqX / sum(freqX)
 matrix(freqX / sum(freqX), nrow = 2)
+matrix(freqX, nrow = 2)
 
 ## independence here means theta1 (topleft) * theta4(bottomright) = theta2(bottomleft) * theta3(topright)
 ## for a given etas, check whether it is compatible with 
@@ -38,24 +39,47 @@ matrix(freqX / sum(freqX), nrow = 2)
 ## and log(theta_1) + log(theta_4) - log(theta_2) - log(theta_3)  >= 0
 
 # run SMC sampler
-nparticles <- 256
-samples_smc <- SMC_sampler(nparticles, X, K)
-etas <- samples_smc$etas_particles[1,,]
-intersect_smc <- foreach(iparticle = 1:nparticles) %dorng% {
-  check_intersection_independence(samples_smc$etas_particles[iparticle,,])  
+nparticles <- 128
+h <- function(etas) unlist(check_intersection_independence(etas))
+pct <- proc.time()
+samples_smc <- SMC_sampler(nparticles, X, K, essthreshold = 0.75, h = h)
+print((proc.time() - pct)[3])
+
+p <- samples_smc$hestimator[2]
+q <- samples_smc$hestimator[4]
+r <- 1-p-q
+cat(p, q, r, "\n")
+
+## unbiased estimators
+NREP <- 20
+pct <- proc.time()
+nparticles <- 2^7
+smc_result <- SMC_sampler(nparticles, X, K, essthreshold = 0.75, h = h)
+smcsampler_results <- foreach(irep = 1:NREP) %dorng% {
+  SMC_sampler(nparticles, X, K, resamplingtimes = smc_result$resamplingtimes, h = h)
 }
-intersect1_smc <- sapply(intersect_smc, function(x) x$intersect1)
-intersect2_smc <- sapply(intersect_smc, function(x) x$intersect2)
-contained1_smc <- sapply(intersect_smc, function(x) x$contained1)
-contained2_smc <- sapply(intersect_smc, function(x) x$contained2)
+normcsts <- sapply(smcsampler_results, function(x) sum(x$normcst))
 
-# lower - upper proba on 'theta_1 theta_4 <= theta_2 theta_3
-sum(samples_smc$weights * contained1_smc) 
-sum(samples_smc$weights * intersect1_smc) 
+## deduce resulting meeting times
+meanaccepts <- foreach (i = 1:NREP, .combine = c) %dopar% {
+  Zstart <- normcsts[i]
+  othercsts <- normcsts[-i]
+  mean(pmin(1, exp(othercsts - Zstart)))
+}
+# sample from mixture of Geometric
+fake_meetings <- 1 + rgeom(length(meanaccepts), prob = mean(meanaccepts))
+k <- 2
+m <- 2*k
 
-# lower - upper proba on 'theta_1 theta_4 >= theta_2 theta_3
-sum(samples_smc$weights * contained2_smc)
-sum(samples_smc$weights * intersect2_smc)
+cchains <- foreach(irep = 1:NREP) %dorng% {
+  coupled_chains(nparticles, X, K, resamplingtimes = smc_result$resamplingtimes, k = k, m = m, h = h)
+}
 
-# upper proba on independence 
-sum(samples_smc$weights * (intersect1_smc & intersect2_smc))
+uestimators <- t(sapply(cchains, function(x) x$uestimator))
+colMeans(uestimators) - 1.96 * apply(uestimators, 2, sd) / sqrt(NREP)
+colMeans(uestimators) + 1.96 * apply(uestimators, 2, sd) / sqrt(NREP)
+print((proc.time() - pct)[3])
+
+hist(sapply(cchains, function(x) x$meetingtime))
+
+#

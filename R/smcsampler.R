@@ -27,7 +27,7 @@ smc_refresh_category <- function(etas, g, freqX){
 
 ## SMC sampler
 #'@export
-SMC_sampler <- function(nparticles, X, K, essthreshold = 0.75){
+SMC_sampler <- function(nparticles, X, K, essthreshold = 0.75, resamplingtimes = NULL, verbose = FALSE, h = NULL){
   nobs <- length(X)
   etas_particles <- array(dim = c(nparticles, K, K))
   graphs <- list()
@@ -52,10 +52,11 @@ SMC_sampler <- function(nparticles, X, K, essthreshold = 0.75){
   normcst <- rep(0, nobs)
   normcst[1] <- 0
   ess <- rep(1, nobs)
+  resamplingtimes_sofar <- c()
   #
   if (nobs > 1){
     for (iobs in 2:nobs){
-      cat("assimilating observation ", iobs, "\n")
+      if (verbose) cat("assimilating observation ", iobs, "\n")
       freqX_ <- tabulate(X[1:iobs], nbins = K)
       k_ <- X[iobs]
       notk_ <- setdiff(1:K, k_)
@@ -92,10 +93,11 @@ SMC_sampler <- function(nparticles, X, K, essthreshold = 0.75){
       logweights <- logweights + log(incrweights)
       weights <- exp(logweights - max(logweights))
       weights <- weights/sum(weights)
-      # resampling if ESS is low
+      # resampling if ESS is low or if iobs is in the provided vector 'resamplingtimes'
       ess[iobs] <- 1/(sum(weights^2)) / nparticles
-      if (ess[iobs] < essthreshold){
-        cat("resampling at step ", iobs, "\n")
+      if (((ess[iobs] < essthreshold) && is.null(resamplingtimes)) || (iobs %in% resamplingtimes)){
+        if (verbose) cat("resampling at step ", iobs, "\n")
+        resamplingtimes_sofar <- c(resamplingtimes_sofar, iobs)
         ancestors <- SSP_resampling_(nparticles, weights)
         graphs <- graphs[ancestors]
         logweights <- rep(0, nparticles)
@@ -110,5 +112,14 @@ SMC_sampler <- function(nparticles, X, K, essthreshold = 0.75){
       }
     }
   }
-  return(list(etas_particles = etas_particles, normcst = normcst, weights = weights, ess = ess))
+  hestimator <- NULL
+  if (!is.null(h)){
+    # compute estimator based on weighted particles
+    hestimator <- weights[1] * h(etas_particles[1,,])
+    for (iparticle in 2:nparticles){
+      hestimator <- hestimator + weights[iparticle] * h(etas_particles[iparticle,,])  
+    }
+  }
+  return(list(etas_particles = etas_particles, normcst = normcst, weights = weights, ess = ess,
+              essthreshold = essthreshold, resamplingtimes = resamplingtimes_sofar, hestimator = hestimator))
 }

@@ -47,7 +47,7 @@ meanaccepts <- foreach (i = 1:NREP, .combine = c) %dopar% {
   mean(pmin(1, exp(othercsts - Zstart)))
 }
 # sample from mixture of Geometric
-fake_meetings <- 1 + rgeom(length(meanaccepts), prob = mean(meanaccepts))
+fake_meetings <- 1 + rgeom(length(meanaccepts), prob = meanaccepts)
 mean(fake_meetings > 2)
 summary(fake_meetings)
 hist(fake_meetings)

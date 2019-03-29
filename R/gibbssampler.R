@@ -1,5 +1,6 @@
 # initialize points by defining a point in the simplex as theta_0
 # then sampling a_n uniformly on pi_k(theta_0) if X_n == k
+# also returns 'minratios', a list of K vectors, where the k-th vector contains min_{a in A_k} a_ell / a_k at element ell
 #'@export
 initialize_pts <- function(freqX, theta_0){
   K_ <- length(freqX)

@@ -79,7 +79,7 @@ gibbs_sampler <- function(niterations, freqX, theta_0){
     # loop over categories
     for (k in categories){
       if (freqX[k] > 0){
-        notk <- setdiff(1:K, k)
+        notk <- setdiff(1:K_, k)
         tmp <- refresh_pts_category(g, k, freqX)
         pts[[k]] <- tmp$pts
         etas[k,] <- tmp$minratios

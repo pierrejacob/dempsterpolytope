@@ -103,6 +103,5 @@ gibbs_sampler <- function(niterations, freqX, theta_0){
     }
     etas_chain[iter_gibbs,,] <- etas
   }
-  # return points post-burnin
   return(list(etas_chain = etas_chain, Achain = Achain))
 }

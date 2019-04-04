@@ -71,7 +71,7 @@ mean(sapply(etas_, function(x) x$nattempts))
 
 
 ## check with SMC
-nparticles <- 2^10
+nparticles <- 2^12
 smc_res <- SMC_sampler(nparticles, X, K)
 ## log normalizing constant
 exp(sum(smc_res$normcst))

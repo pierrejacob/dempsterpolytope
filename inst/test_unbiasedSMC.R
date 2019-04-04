@@ -53,13 +53,13 @@ summary(fake_meetings)
 hist(fake_meetings)
 
 # ## check against real meeting times 
-# cchains <- foreach(irep = 1:NREP) %dorng% {
-#   coupled_chains(nparticles, X, K, resamplingtimes)
-# }
-# meetingtimes <- sapply(cchains, function(x) x$meetingtime)
-# summary(meetingtimes)
-# mean(meetingtimes > 2)
-# hist(meetingtimes)
+cchains <- foreach(irep = 1:NREP) %dorng% {
+  coupled_chains(nparticles, X, K, resamplingtimes)
+}
+meetingtimes <- sapply(cchains, function(x) x$meetingtime)
+summary(meetingtimes)
+mean(meetingtimes > 2)
+hist(meetingtimes)
 ## seems like an accurate approximation!
 
 # from there we can take k = 2, m = 5 for instance
@@ -73,7 +73,7 @@ h(smc_result$etas_particles[1,,])
 nparticles <- 2^8
 pct <- proc.time()
 samples_smc <- SMC_sampler(nparticles, X, K, essthreshold = 0.5)
-print(pct - proc.time())
+print(proc.time()-pct)
 etas <- samples_smc$etas_particles[1,,]
 intersect_smc <- foreach(iparticle = 1:nparticles) %dorng% {
   check_intersection_independence(samples_smc$etas_particles[iparticle,,])  

@@ -9,7 +9,7 @@ rm(list = ls())
 # number of observations
 n <- 50
 # number of categories
-K <- 5
+K <- 3
 categories <- 1:K
 # data 
 # freqX <- c(70,150,0)
@@ -84,7 +84,14 @@ if (K == 3){
 ### now SMC sampler
 nparticles <- 2^5
 
-smc_res <- SMC_sampler(nparticles, X, K)
+set.seed(1)
+smc_res_graph <- SMC_sampler_graph(nparticles, X, K, verbose = TRUE)
+set.seed(1)
+smc_res_lp <- SMC_sampler_lp(nparticles, X, K, verbose = TRUE)
+
+smc_res_graph$etas_particles[1,,]
+smc_res_lp$etas_particles[1,,]
+
 
 # etas <- smc_res$etas_particles[1,,]
 # g <- graph_from_adjacency_matrix(log(etas), mode = "directed", weighted = TRUE, diag = FALSE)
@@ -109,14 +116,29 @@ smc_res <- SMC_sampler(nparticles, X, K)
 # minimum_values2[setdiff(1:K, k_)] <-distances(g, v = setdiff(1:K, k_), to = k_, mode = "out")[,1]
 
 
+library(microbenchmark)
+microbenchmark(
+  smcgraph = SMC_sampler_graph(nparticles, X, K),
+  smclp = SMC_sampler_lp(nparticles, X, K),
+  times = 10)
+
 
 nrep <- 2*(detectCores()-2)
 smc_res <- foreach(irep = 1:nrep) %dorng% {
-  SMC_sampler(nparticles, X, K)
+  SMC_sampler_graph(nparticles, X, K)
 }
 
 var(sapply(smc_res, function(v) sum(v$normcst)))
 hist(sapply(smc_res, function(v) sum(v$normcst)))
+
+smc_res_lp <- foreach(irep = 1:nrep) %dorng% {
+  SMC_sampler_lp(nparticles, X, K)
+}
+
+var(sapply(smc_res_lp, function(v) sum(v$normcst)))
+hist(sapply(smc_res_lp, function(v) sum(v$normcst)))
+
+
 
 ## now try to assimilate X[2]
 # assimilate <- function(etas, x){
@@ -139,18 +161,19 @@ plot_etas <- function(etas){
   g
 }
 if (K==3){
-  grid.arrange(plot_etas(smc_res$etas_particles[1,,]), plot_etas(smc_res$etas_particles[2,,]),
-             plot_etas(smc_res$etas_particles[3,,]), plot_etas(smc_res$etas_particles[4,,]), nrow = 2)
+  grid.arrange(plot_etas(smc_res_graph$etas_particles[1,,]), plot_etas(smc_res_graph$etas_particles[2,,]),
+             plot_etas(smc_res_graph$etas_particles[3,,]), plot_etas(smc_res_graph$etas_particles[4,,]), nrow = 2)
 }
 
-smc_res <- SMC_sampler(2^10, X, K)
+
+smc_res <- SMC_sampler_lp(2^10, X, K, verbose = FALSE)
 etas_particles <- smc_res$etas_particles
 weights <- smc_res$weights
 
 ### test
-niterations <- 5100
+burnin <- 1000
+niterations <- 5000 + burnin
 samples_gibbs <- gibbs_sampler(niterations = niterations, freqX = freqX)
-burnin <- 100
 param <- 1
 interval <- c(freqX[1]/sum(freqX)-0.05, freqX[1]/sum(freqX)+0.05)
 intervalcvxp <- interval2polytope(K, param, interval)

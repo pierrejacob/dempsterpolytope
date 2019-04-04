@@ -16,7 +16,7 @@ freqX <- tabulate(X, nbins = K)
 print(freqX)
 
 ## run Gibbs sampler to get random polytopes
-niterations_gibbs <- 1e4
+niterations_gibbs <- 1e3
 samples_gibbs <- gibbs_sampler(niterations_gibbs, freqX)
 
 # the "etas" are stored in samples_gibbs$etas_chain, e.g.
@@ -45,10 +45,19 @@ intervalcvxp <- interval2polytope(K, 1, c(0.2, 0.3))
 ## then we can compute whether our Gibbs samples intersect or are contained in the 
 ## polytope corresponding to our interval of interest
 ## we have to specify some burn-in perod
-burnin <- 1000
+burnin <- 100
 postburn <- niterations_gibbs - burnin
 contained_ <- rep(0, postburn)
 intersects_ <- rep(0, postburn)
+# library(doParallel)
+# registerDoParallel(cores = detectCores()-2)
+# rescvx <- foreach(index = ((burnin+1):niterations_gibbs), .combine = rbind) %dopar% {
+#   cvxp <- etas2cvxpolytope(samples_gibbs$etas_chain[index,,])
+#   res_ <- compare_polytopes(cvxp, intervalcvxp)
+#   res_
+# }
+# contained_ <- rescvx[,1]
+# intersects_ <- rescvx[,2]
 for (index in ((burnin+1):niterations_gibbs)){
   cvxp <- etas2cvxpolytope(samples_gibbs$etas_chain[index,,])
   res_ <- compare_polytopes(cvxp, intervalcvxp)

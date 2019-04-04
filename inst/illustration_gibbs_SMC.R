@@ -48,7 +48,7 @@ for (iteration in 1:niterations){
 g <- ggplot_triangle(v_cartesian) +
   geom_polygon(data=df.polytope %>% filter(iteration >= 100), aes(x = x, y = y, group = iteration), alpha = .3)
 g
-ggsave(filename = "~/Dropbox/Fiducial/Figures/sdk.plottriangle.polytopeS.pdf", plot = g, width = 7, height = 7)
+# ggsave(filename = "~/Dropbox/Fiducial/Figures/sdk.plottriangle.polytopeS.pdf", plot = g, width = 7, height = 7)
 
 
 ### Show an instance of a feasible plot with all six linear constraints
@@ -58,7 +58,7 @@ pts_barcoord <- lapply(samples_gibbs$Achain, function(l) l[iteration,,])
 pts_cart <- lapply(pts_barcoord, function(l) t(apply(matrix(l, ncol = K), 1, function(v) barycentric2cartesian(v, v_cartesian))))
 g <- ggplot_triangle(v_cartesian, pts_cart, etas, addpolytope = T, cols = cols)
 g
-ggsave(filename = "~/Dropbox/Fiducial/Figures/sdk.plottriangle.polytope.pdf", plot = g, width = 7, height = 7)
+# ggsave(filename = "~/Dropbox/Fiducial/Figures/sdk.plottriangle.polytope.pdf", plot = g, width = 7, height = 7)
 
 ##
 niterations <- 1100

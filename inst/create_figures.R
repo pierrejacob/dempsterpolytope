@@ -56,10 +56,10 @@ barconstraint2cartconstraint <- function(d, j, eta, matrixT, v_cartesian){
 }
 
 g <- ggplot_triangle(v_cartesian)
-g <- g + geom_point(aes(x = pt_xy[1], y = pt_xy[2]))
+# g <- g + geom_point(aes(x = pt_xy[1], y = pt_xy[2]))
 interslope_j1 <- barconstraint2cartconstraint(1, 3, pt_bar[1]/pt_bar[3], matrixT, v_cartesian)
 g <- g + geom_abline(intercept = interslope_j1[1], slope = interslope_j1[2], colour = cols[1], linetype = 2)
-g <- g + annotate(geom = "text", x = pt_xy[1]-0.025, y = pt_xy[2]+0.025, label = expression(theta), parse = FALSE, size = 5) 
+# g <- g + annotate(geom = "text", x = pt_xy[1]-0.025, y = pt_xy[2]+0.025, label = expression(theta), parse = FALSE, size = 5) 
 
 ## add polytope theta_3/theta_1 < pt_bar[3]/pt_bar[1]
 ## ie - pt_bar[3]/pt_bar[1] theta_1 + theta_3 < 0

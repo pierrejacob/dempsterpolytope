@@ -71,7 +71,7 @@ mean(sapply(etas_, function(x) x$nattempts))
 
 
 ## check with SMC
-nparticles <- 2^10
+nparticles <- 2^12
 smc_res <- SMC_sampler(nparticles, X, K)
 ## log normalizing constant
 exp(sum(smc_res$normcst))
@@ -101,7 +101,7 @@ exp(sum(smc_res$normcst))
 
 
 ##
-niterations <- 1100
+niterations <- 10100
 pct <- proc.time()
 samples_gibbs <- gibbs_sampler(niterations = niterations, freqX = freqX)
 elapsed <- (proc.time() - pct)[3]
@@ -132,7 +132,7 @@ param
 (freqX/sum(freqX))[param]
 
 ## now with rejection sampling
-nrs <- 1e3
+nrs <- 1e4
 etas_rs <- foreach(irep = 1:nrs) %dorng% {
   rejectionsampler(X,K)
 }
@@ -151,3 +151,19 @@ cat(mean(contained_rs), mean(intersects_rs), "\n")
 cat(mean(contained_), mean(intersects_), "\n")
 
 # seems to agree
+
+# and with SMC
+
+nparticles <- 2^12
+smc_res <- SMC_sampler_lp(nparticles, X, K)
+etas_particles <- smc_res$etas_particles
+weights <- smc_res$weights
+contained_smc <- rep(0, length(weights))
+intersect_smc <- rep(0, length(weights))
+for (iparticle in 1:length(weights)){
+  cvxp <- etas2cvxpolytope(etas_particles[iparticle,,])
+  res_ <- compare_polytopes(cvxp, intervalcvxp)
+  contained_smc[iparticle] <- res_[1]
+  intersect_smc[iparticle] <- res_[2]
+}
+cat(sum(weights*contained_smc), sum(weights*intersect_smc), "\n")

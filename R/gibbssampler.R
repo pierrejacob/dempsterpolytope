@@ -206,6 +206,9 @@ gibbs_sampler_lp <- function(niterations, freqX, theta_0){
   return(list(etas_chain = etas_chain, Achain = Achain))
 }
 
+# niterations must be...
+# freqX must be...
+# theta_0 must be...
 #'@export
 gibbs_sampler <- function(niterations, freqX, theta_0){
   # return(gibbs_sampler_graph(niterations, freqX, theta_0))

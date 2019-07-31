@@ -21,7 +21,9 @@ void permute(IntegerVector & a, const int & nparticles){
 IntegerVector systematic_resampling_(int nsamples, const NumericVector & weights){
   RNGScope scope;
   IntegerVector ancestors(nsamples);
+  GetRNGstate();
   NumericVector u_vec = runif(1);
+  PutRNGstate();
   double u = u_vec(0) / nsamples;
   int j = 0;
   double csw = weights(0);
@@ -44,7 +46,9 @@ IntegerVector multinomial_resampling_(int nsamples, const NumericVector & weight
   IntegerVector ancestors(nsamples);
   int nparents = weights.size();
   NumericVector cumsumw = cumsum(weights);
+  GetRNGstate();
   NumericVector uniforms = runif(nsamples);
+  PutRNGstate();
   double sumw = cumsumw(nparents - 1);
   double lnMax = 0;
   int j = nparents;
@@ -60,7 +64,9 @@ IntegerVector multinomial_resampling_(int nsamples, const NumericVector & weight
       ancestors(i-1) = 0;
     }
   }
+  GetRNGstate();
   std::random_shuffle(ancestors.begin(), ancestors.end(), randWrapper);
+  PutRNGstate();
   return ancestors + 1;
 }
 
@@ -69,7 +75,9 @@ IntegerVector SSP_resampling_(int nsamples, const NumericVector & weights){
   RNGScope scope;
   int N = weights.size();
   int n,m,k;
+  GetRNGstate();
   NumericVector uniforms = runif(N); // vector of N unif(0,1)
+  PutRNGstate();
   const double tol = 1e-15; // tolerance used to test whether a float is an integer
   NumericVector Y(N);
   IntegerVector nb_offsprings(N);

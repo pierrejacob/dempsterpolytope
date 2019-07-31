@@ -30,6 +30,7 @@ samples_gibbs <- gibbs_sampler(niterations = niterations, freqX = freqX, theta_0
 (proc.time() - pct)[3]
 ##
 
+
 ## now get all polytopes of feasible parameters at all iterations
 ## and overlay them in plot
 df.polytope <- data.frame()
@@ -60,13 +61,24 @@ g <- ggplot_triangle(v_cartesian, pts_cart, etas, addpolytope = T, cols = cols)
 g
 # ggsave(filename = "~/Dropbox/Fiducial/Figures/sdk.plottriangle.polytope.pdf", plot = g, width = 7, height = 7)
 
+## How many iterations do we have to perform to reach stationarity
+
+## draw meeting times
+NREP <- 5e2
+lag <- 50
+meetings <- unlist(foreach(irep = 1:NREP) %dorng% {
+  meeting_times(freqX, lag = lag, rinit = function(){ x = rexp(K); return(x/sum(x))}, omega = 0.5, max_iterations = 1e5)
+})
+plot(sapply(1:100, function(t) tv_upper_bound(meetings, lag, t)), type = "l", ylab = "total variation", xlab = "iteration", log = "y")
+## so it seems that ~ 40 steps are enough to get to stationarity
+## let's be conservative with a burn-in of 100
+burnin <- 100
 ##
-niterations <- 1100
+niterations <- 1000
 pct <- proc.time()
 samples_gibbs <- gibbs_sampler(niterations = niterations, freqX = freqX)
 elapsed <- (proc.time() - pct)[3]
 elapsed
-burnin <- 1
 
 param <- 1
 interval <- c(0.3, 0.4)

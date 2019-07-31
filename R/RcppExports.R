@@ -17,3 +17,19 @@ runif_piktheta_cpp <- function(n, k, theta) {
     .Call('_montecarlodsm_runif_piktheta_cpp', PACKAGE = 'montecarlodsm', n, k, theta)
 }
 
+crng_runif_piktheta_cpp <- function(n, k, theta1, theta2) {
+    .Call('_montecarlodsm_crng_runif_piktheta_cpp', PACKAGE = 'montecarlodsm', n, k, theta1, theta2)
+}
+
+runif_piktheta_one_cpp <- function(k, theta) {
+    .Call('_montecarlodsm_runif_piktheta_one_cpp', PACKAGE = 'montecarlodsm', k, theta)
+}
+
+dunif_piktheta_cpp <- function(x_, k, theta) {
+    .Call('_montecarlodsm_dunif_piktheta_cpp', PACKAGE = 'montecarlodsm', x_, k, theta)
+}
+
+maxcoupling_runif_piktheta_cpp <- function(n, k, theta1, theta2) {
+    .Call('_montecarlodsm_maxcoupling_runif_piktheta_cpp', PACKAGE = 'montecarlodsm', n, k, theta1, theta2)
+}
+

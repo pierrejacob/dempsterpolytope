@@ -55,12 +55,69 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// crng_runif_piktheta_cpp
+List crng_runif_piktheta_cpp(int n, int k, NumericVector& theta1, NumericVector& theta2);
+RcppExport SEXP _montecarlodsm_crng_runif_piktheta_cpp(SEXP nSEXP, SEXP kSEXP, SEXP theta1SEXP, SEXP theta2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< NumericVector& >::type theta1(theta1SEXP);
+    Rcpp::traits::input_parameter< NumericVector& >::type theta2(theta2SEXP);
+    rcpp_result_gen = Rcpp::wrap(crng_runif_piktheta_cpp(n, k, theta1, theta2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// runif_piktheta_one_cpp
+NumericVector runif_piktheta_one_cpp(int k, const NumericVector& theta);
+RcppExport SEXP _montecarlodsm_runif_piktheta_one_cpp(SEXP kSEXP, SEXP thetaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type theta(thetaSEXP);
+    rcpp_result_gen = Rcpp::wrap(runif_piktheta_one_cpp(k, theta));
+    return rcpp_result_gen;
+END_RCPP
+}
+// dunif_piktheta_cpp
+double dunif_piktheta_cpp(const NumericVector& x_, int k, const NumericVector& theta);
+RcppExport SEXP _montecarlodsm_dunif_piktheta_cpp(SEXP x_SEXP, SEXP kSEXP, SEXP thetaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type x_(x_SEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type theta(thetaSEXP);
+    rcpp_result_gen = Rcpp::wrap(dunif_piktheta_cpp(x_, k, theta));
+    return rcpp_result_gen;
+END_RCPP
+}
+// maxcoupling_runif_piktheta_cpp
+List maxcoupling_runif_piktheta_cpp(int n, int k, const NumericVector& theta1, const NumericVector& theta2);
+RcppExport SEXP _montecarlodsm_maxcoupling_runif_piktheta_cpp(SEXP nSEXP, SEXP kSEXP, SEXP theta1SEXP, SEXP theta2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type theta1(theta1SEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type theta2(theta2SEXP);
+    rcpp_result_gen = Rcpp::wrap(maxcoupling_runif_piktheta_cpp(n, k, theta1, theta2));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_montecarlodsm_systematic_resampling_", (DL_FUNC) &_montecarlodsm_systematic_resampling_, 2},
     {"_montecarlodsm_multinomial_resampling_", (DL_FUNC) &_montecarlodsm_multinomial_resampling_, 2},
     {"_montecarlodsm_SSP_resampling_", (DL_FUNC) &_montecarlodsm_SSP_resampling_, 2},
     {"_montecarlodsm_runif_piktheta_cpp", (DL_FUNC) &_montecarlodsm_runif_piktheta_cpp, 3},
+    {"_montecarlodsm_crng_runif_piktheta_cpp", (DL_FUNC) &_montecarlodsm_crng_runif_piktheta_cpp, 4},
+    {"_montecarlodsm_runif_piktheta_one_cpp", (DL_FUNC) &_montecarlodsm_runif_piktheta_one_cpp, 2},
+    {"_montecarlodsm_dunif_piktheta_cpp", (DL_FUNC) &_montecarlodsm_dunif_piktheta_cpp, 3},
+    {"_montecarlodsm_maxcoupling_runif_piktheta_cpp", (DL_FUNC) &_montecarlodsm_maxcoupling_runif_piktheta_cpp, 4},
     {NULL, NULL, 0}
 };
 

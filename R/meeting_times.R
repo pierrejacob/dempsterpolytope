@@ -80,6 +80,7 @@ meeting_times <- function(freqX, lag, rinit, omega, max_iterations = 1e5){
     # loop over categories
     for (k in categories){ if (freqX[k] > 0){
       ## find the two "theta_star"
+      # find first theta_star
       mat_cst_ <- mat_cst; icst <- 1
       for (j in setdiff(1:K, k)){ for (i in setdiff(1:K, j)){
         if (all(is.finite(etas1[j,]))){
@@ -90,6 +91,7 @@ meeting_times <- function(freqX, lag, rinit, omega, max_iterations = 1e5){
       for (ik in 1:K) set.column(lpobject, ik, mat_cst_[,ik])
       vec_ <- rep(0, K); vec_[k] <- -1; set.objfn(lpobject, vec_)
       solve(lpobject); theta_star1 <- get.variables(lpobject)
+      # find second theta_star
       mat_cst_ <- mat_cst; icst <- 1
       for (j in setdiff(1:K, k)){ for (i in setdiff(1:K, j)){
         if (all(is.finite(etas2[j,]))){
@@ -115,19 +117,27 @@ meeting_times <- function(freqX, lag, rinit, omega, max_iterations = 1e5){
         ## maximal coupling
         pts1_ <- matrix(NA, nrow = freqX[k], ncol = K)
         pts2_ <- matrix(NA, nrow = freqX[k], ncol = K)
-        for (irow in 1:freqX[k]){
-          res_ <- rmaxcoupling(k, theta_star1, theta_star2)
-          pts1_[irow,] <- res_$pts[,1]
-          pts2_[irow,] <- res_$pts[,2]
-          same_a[[k]][irow] <- res_$equal
-        }
+        coupled_results_ <- maxcoupling_runif_piktheta_cpp(freqX[k], k, theta_star1, theta_star2)
+        pts1[[k]] <- coupled_results_$pts1
+        etas1[k,] <- coupled_results_$minratios1
+        pts2[[k]] <- coupled_results_$pts2
+        etas2[k,] <- coupled_results_$minratios2
+        same_a[[k]] <- coupled_results_$equal
+        ## former, pure R implementation
+        # for (irow in 1:freqX[k]){
+        #   res_ <- rmaxcoupling(k, theta_star1, theta_star2)
+        #   pts1_[irow,] <- res_$pts[,1]
+        #   pts2_[irow,] <- res_$pts[,2]
+        #   same_a[[k]][irow] <- res_$equal
+        # }
         ## compute etas
-        minratios1 <- apply(pts1_ / pts1_[,k], 2, min)
-        minratios2 <- apply(pts2_ / pts2_[,k], 2, min)
-        etas1[k,] <- minratios1
-        etas2[k,] <- minratios2
-        pts1[[k]] <- pts1_
-        pts2[[k]] <- pts2_
+        # minratios1 <- apply(pts1_ / pts1_[,k], 2, min)
+        # minratios2 <- apply(pts2_ / pts2_[,k], 2, min)
+        # etas1[k,] <- minratios1
+        # etas2[k,] <- minratios2
+        # pts1[[k]] <- pts1_
+        # pts2[[k]] <- pts2_
+        
         ## indicate whether all auxiliary variables coincide across two chains
         same_a_in_categoryk <- all(same_a[[k]])
       }

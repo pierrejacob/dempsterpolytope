@@ -1,3 +1,7 @@
+## This scripts computes upper bounds on the total variation distance
+## between the marginal distribution of the Gibbs sampler,
+## for various K and N, and plots the upper bounds as a function of the iteration.
+
 library(montecarlodsm)
 library(doParallel)
 library(doRNG)
@@ -9,22 +13,26 @@ rm(list = ls())
 
 #### Effect of the number of categories on the mixing time
 ## draw meeting times
-NREP <- 5e2
+
+## increase NREP to get smoother curves in the resulting figures
+NREP <- 1e2
+# arbitrary choice of lag (see Biswas et al.)
 lag <- 75
 omega <- 0.8
 meetings <- list()
 # number of categories
 Ks <- c(5, 10, 20)
-# for (iK in seq_along(Ks)){
-#   K <- Ks[iK]
-#   cat("K =", K, "\n")
-#   freqX <- rep(10, K)
-#   n <- sum(freqX)
-#   meetings[[iK]] <- unlist(foreach(irep = 1:NREP) %dorng% {
-#     meeting_times(freqX, lag = lag, rinit = function(){ x = rexp(K); return(x/sum(x))}, omega = omega, max_iterations = 1e5)
-#   })
-# }
-# save(Ks, meetings, file = "inst/mixing.K.RData")
+
+for (iK in seq_along(Ks)){
+  K <- Ks[iK]
+  cat("K =", K, "\n")
+  freqX <- rep(10, K)
+  n <- sum(freqX)
+  meetings[[iK]] <- unlist(foreach(irep = 1:NREP) %dorng% {
+    meeting_times(freqX, lag = lag, rinit = function(){ x = rexp(K); return(x/sum(x))}, omega = omega, max_iterations = 1e5)
+  })
+}
+save(Ks, meetings, file = "inst/mixing.K.RData")
 load(file = "inst/mixing.K.RData")
 
 niterations <- 100
@@ -49,18 +57,18 @@ omega <- 0.8
 meetings <- list()
 # number of categories
 K <- 5
-# Ns <- c(10, 20, 30, 40)
-# for (iN in seq_along(Ns)){
-#   N <- Ns[iN]
-#   lag <- lag_multiplier * N
-#   cat("N =", N, "\n")
-#   freqX <- rep(N, K)
-#   n <- sum(freqX)
-#   meetings[[iN]] <- unlist(foreach(irep = 1:NREP) %dorng% {
-#     meeting_times(freqX, lag = lag, rinit = function(){ x = rexp(K); return(x/sum(x))}, omega = omega, max_iterations = 1e5)
-#   })
-# }
-# save(Ns, lag_multiplier, K, meetings, file = "inst/mixing.N.RData")
+Ns <- c(10, 20, 30, 40)
+for (iN in seq_along(Ns)){
+  N <- Ns[iN]
+  lag <- lag_multiplier * N
+  cat("N =", N, "\n")
+  freqX <- rep(N, K)
+  n <- sum(freqX)
+  meetings[[iN]] <- unlist(foreach(irep = 1:NREP) %dorng% {
+    meeting_times(freqX, lag = lag, rinit = function(){ x = rexp(K); return(x/sum(x))}, omega = omega, max_iterations = 1e5)
+  })
+}
+save(Ns, lag_multiplier, K, meetings, file = "inst/mixing.N.RData")
 load(file = "inst/mixing.N.RData")
 
 niterations <- 200

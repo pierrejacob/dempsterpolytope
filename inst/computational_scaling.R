@@ -1,3 +1,6 @@
+## This scripts times the iterations of the Gibbs sampler,
+## for various K and N, and plots the timings.
+
 library(montecarlodsm)
 library(doParallel)
 library(doRNG)
@@ -6,29 +9,30 @@ set_my_theme()
 set.seed(1)
 rm(list = ls())
 
+# samplesizes <- c(256, 512, 1024, 2048)
+# Ks <- c(4,8,12,16)
 samplesizes <- c(256, 512, 1024, 2048)
 Ks <- c(4,8,12,16)
-Ns <- 
+
 df_ <- data.frame()
 repeats <- 10
-# for (n in samplesizes){
-#   for (K in Ks){
-#     freqX <- rep(floor(n/K), K)
-#     niterations <- 100
-#     elapseds <- c()
-#     for (irepeat in 1:repeats){
-#       pct <- proc.time()
-#       samples_gibbs <- gibbs_sampler(niterations = niterations, freqX = freqX)
-#       elapseds <- c(elapseds, (proc.time() - pct)[3])
-#     }
-#     elapsed <- median(elapseds)
-#     df_ <- rbind(df_, data.frame(n = n, K = K, elapsed = elapsed))
-#   }
-# }
+for (n in samplesizes){
+  for (K in Ks){
+    freqX <- rep(floor(n/K), K)
+    niterations <- 100
+    elapseds <- c()
+    for (irepeat in 1:repeats){
+      pct <- proc.time()
+      samples_gibbs <- gibbs_sampler(niterations = niterations, freqX = freqX)
+      elapseds <- c(elapseds, (proc.time() - pct)[3])
+    }
+    elapsed <- median(elapseds)
+    df_ <- rbind(df_, data.frame(n = n, K = K, elapsed = elapsed))
+  }
+}
 
-# save(df_, file = "inst/computational.scaling.RData")
+save(df_, file = "inst/computational.scaling.RData")
 load(file = "inst/computational.scaling.RData")
-head(df_)
 
 g <- ggplot(df_, aes(x = n, y = elapsed, group = K, linetype = factor(K))) + geom_line() 
 g <- g + scale_linetype(name = "K") + xlab("N")

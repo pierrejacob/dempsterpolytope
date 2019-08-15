@@ -169,6 +169,7 @@ List maxcoupling_runif_piktheta_cpp(int n, int k, const NumericVector & theta1, 
   std::fill(minratios1.begin(), minratios1.end(), 0);
   NumericVector minratios2(K);
   std::fill(minratios2.begin(), minratios2.end(), 0);
+  LogicalVector equal(n);
   for (int irow = 0; irow < n; irow ++){
     // for each point ...
     x = runif_piktheta_one_cpp(k, theta1);
@@ -181,6 +182,7 @@ List maxcoupling_runif_piktheta_cpp(int n, int k, const NumericVector & theta1, 
     if (u(0) < (pdf2_x / pdf1_x)){
       ncoupled ++;
       A2(irow,_) = clone(x);
+      equal(irow) = true;
     } else {
       reject = true;
       std::fill(y.begin(), y.end(), 0.);
@@ -200,6 +202,7 @@ List maxcoupling_runif_piktheta_cpp(int n, int k, const NumericVector & theta1, 
         }
       }
       A2(irow,_) = clone(y);
+      equal(irow) = false;
     }
     // update minimum of A_n,ell/ A_n,k
     if (irow == 0){
@@ -222,6 +225,6 @@ List maxcoupling_runif_piktheta_cpp(int n, int k, const NumericVector & theta1, 
   }
   return List::create(Named("pts1") = A1, Named("minratios1") = minratios1,
                       Named("pts2") = A2, Named("minratios2") = minratios2,
-                      Named("ncoupled") = ncoupled);
+                      Named("ncoupled") = ncoupled, Named("equal") = equal);
 }
 // 

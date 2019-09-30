@@ -3,6 +3,9 @@
 .Rhistory
 .RData
 .Ruserdata
+*.pdf
+*.jpg
+*.png
 src/*.o
 src/*.so
 src/*.dll

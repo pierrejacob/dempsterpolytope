@@ -14,8 +14,8 @@ etas2cvxpolytope <- function(etas){
   # the constraints are on the first K-1 coordinates
   # the first ones say that the feasible set is within the simplex
   A <- matrix(rep(1, K_-1), ncol = K_-1)
-  A <- rbind(A, diag(-1, K-1, K-1))
-  b <- c(1, rep(0, K-1))
+  A <- rbind(A, diag(-1, K_-1, K_-1))
+  b <- c(1, rep(0, K_-1))
   # then the extra constraints come from etas
   for (d in categories){
     for (j in setdiff(categories, d)){
@@ -74,20 +74,19 @@ interval2polytope <- function(K, param, interval){
 ## and whether the two intersects
 #'@export
 compare_polytopes <- function(cvxp1, cvxp2){
+  K_ <- dim(cvxp1$vertices_barcoord)[2]
   ## check whether polytope is contained, i.e. all vertices satisfy linear inequalities
-  contained <- all(apply(cvxp1$vertices_barcoord[,1:(K-1)], 1, function(v) all(cvxp2$constr$constr %*% v <= cvxp2$constr$rhs)))
+  contained <- all(apply(cvxp1$vertices_barcoord[,1:(K_-1)], 1, function(v) all(cvxp2$constr$constr %*% v <= cvxp2$constr$rhs)))
   # check whether there is some intersection
   test_constr <- cvxp2$constr
   test_constr$constr <- rbind(test_constr$constr, cvxp1$constr$constr)
   test_constr$rhs <- c(test_constr$rhs, cvxp1$constr$rhs)
   test_constr$dir <- c(test_constr$dir, cvxp1$constr$dir)
-  test_vertices <- try(hitandrun::findVertices(test_constr), silent = T)
-  intersects <- FALSE
-  if (inherits(test_vertices, "try-error")){
-    intersects <- FALSE
-  } else {
-    intersects <- TRUE
-  }
+  ## make H representation (H for ?)
+  h <- rcdd::makeH(test_constr$constr, test_constr$rhs)
+  ## try to find V representation (V for Vendetta or Vertex?)
+  v <- rcdd::q2d(rcdd::scdd(rcdd::d2q(h))$output)
+  intersects <- (dim(v)[1] != 0)
   return(c(contained, intersects))
 }
 
@@ -142,4 +141,121 @@ check_intersection_independence <- function(etas){
   ## test whether log(eta)-polytope is contained in the set log(theta_1) - log(theta_2) - log(theta_3) + log(theta_4) >= 0
   contained2 <- all(apply(cvxpolytope, 1, function(v) all(constr2$constr %*% v <= constr2$rhs)))
   return(list(intersect1 = intersect1, contained1 = contained1, intersect2 = intersect2, contained2 = contained2))
+}
+
+
+
+## 
+## take an array of etas, as produced by the function gibbs_sampler
+## and a category (index between 1 and K)
+## and compute whether the corresponding sets is contained / intersects 
+## with the intervals [0,x] for x provided in 'xgrid'
+#'@export
+etas_to_lower_upper_cdf <- function(etas, category, xgrid){
+  K_ <- dim(etas)[2]
+  netas <- dim(etas)[1] 
+  n_in_xgrid <- length(xgrid)
+  # create polytopes corresponding to [0,x] on component "category"
+  intervals_ <- list()
+  for (igrid in 1:n_in_xgrid){
+    x <- xgrid[igrid]
+    intervals_[[igrid]] <- interval2polytope(K_, category, c(0, x))
+  }
+  iscontained_ <- matrix(FALSE, nrow = netas, ncol = n_in_xgrid)
+  intersects_ <- matrix(FALSE, nrow = netas, ncol = n_in_xgrid)
+  for (ieta in 1:netas){
+    # get one particular "feasible set"
+    eta <- etas[ieta,,]
+    eta_cvxp <- etas2cvxpolytope(eta)
+    # for elements in the grid
+    comparison_ <- compare_polytopes(eta_cvxp, intervals_[[1]])
+    iscontained_[ieta,1] <- comparison_[1]
+    intersects_[ieta,1] <- comparison_[2]
+    # savings come from the fact that if 
+    # the polytope is contained in [0,x], it is also contained in [0,y] with x<y
+    # and likewise for the "intersects" with relation
+    if (n_in_xgrid>1){
+      for (igrid in 2:n_in_xgrid){
+        interval_ <- intervals_[[igrid]]
+        if (iscontained_[ieta, igrid-1]){
+          iscontained_[ieta, igrid] <- TRUE
+        } else {
+          iscontained_[ieta, igrid] <- all(apply(eta_cvxp$vertices_barcoord[,1:(K_-1)], 1, function(v) all(interval_$constr$constr %*% v <= interval_$constr$rhs)))
+        }
+        if (intersects_[ieta, igrid-1]){
+          intersects_[ieta, igrid] <- TRUE
+        } else {
+          test_constr <- interval_$constr
+          test_constr$constr <- rbind(test_constr$constr, eta_cvxp$constr$constr)
+          test_constr$rhs <- c(test_constr$rhs, eta_cvxp$constr$rhs)
+          test_constr$dir <- c(test_constr$dir, eta_cvxp$constr$dir)
+          ## make H representation (H for ?)
+          h <- rcdd::makeH(test_constr$constr, test_constr$rhs)
+          ## try to find V representation (V for Vendetta or Vertex?)
+          v <- rcdd::q2d(rcdd::scdd(rcdd::d2q(h))$output)
+          intersects_[ieta, igrid] <- (dim(v)[1] != 0)
+        }
+      }  
+    }
+  }  
+  return(list(iscontained = iscontained_, intersects = intersects_))
+}
+
+## same but parallelize the competition with foreach 
+#'@export
+etas_to_lower_upper_cdf_dopar <- function(etas, category, xgrid){
+  K_ <- dim(etas)[2]
+  netas <- dim(etas)[1] 
+  n_in_xgrid <- length(xgrid)
+  # create polytopes corresponding to [0,x] on component "category"
+  intervals_ <- list()
+  for (igrid in 1:n_in_xgrid){
+    x <- xgrid[igrid]
+    intervals_[[igrid]] <- interval2polytope(K_, category, c(0, x))
+  }
+  # iscontained_ <- matrix(FALSE, nrow = netas, ncol = n_in_xgrid)
+  # intersects_ <- matrix(FALSE, nrow = netas, ncol = n_in_xgrid)
+  res_ <- foreach (ieta = 1:netas) %dopar% {
+    
+  # for (ieta in 1:netas){
+    # get one particular "feasible set"
+    eta <- etas[ieta,,]
+    eta_cvxp <- etas2cvxpolytope(eta)
+    # for elements in the grid
+    comparison_ <- compare_polytopes(eta_cvxp, intervals_[[1]])
+    iscontained_ <- rep(0, n_in_xgrid)
+    intersects_ <- rep(0, n_in_xgrid)
+    iscontained_[1] <- comparison_[1]
+    intersects_[1] <- comparison_[2]
+    # savings come from the fact that if 
+    # the polytope is contained in [0,x], it is also contained in [0,y] with x<y
+    # and likewise for the "intersects" with relation
+    if (n_in_xgrid>1){
+      for (igrid in 2:n_in_xgrid){
+        interval_ <- intervals_[[igrid]]
+        if (iscontained_[igrid-1]){
+          iscontained_[igrid] <- TRUE
+        } else {
+          iscontained_[igrid] <- all(apply(eta_cvxp$vertices_barcoord[,1:(K_-1)], 1, function(v) all(interval_$constr$constr %*% v <= interval_$constr$rhs)))
+        }
+        if (intersects_[igrid-1]){
+          intersects_[igrid] <- TRUE
+        } else {
+          test_constr <- interval_$constr
+          test_constr$constr <- rbind(test_constr$constr, eta_cvxp$constr$constr)
+          test_constr$rhs <- c(test_constr$rhs, eta_cvxp$constr$rhs)
+          test_constr$dir <- c(test_constr$dir, eta_cvxp$constr$dir)
+          ## make H representation (H for ?)
+          h <- rcdd::makeH(test_constr$constr, test_constr$rhs)
+          ## try to find V representation (V for Vendetta or Vertex?)
+          v <- rcdd::q2d(rcdd::scdd(rcdd::d2q(h))$output)
+          intersects_[igrid] <- (dim(v)[1] != 0)
+        }
+      }
+    }
+    c(iscontained_, intersects_)
+  }  
+  iscontained_ <- t(sapply(res_, function(x) x[1:n_in_xgrid]))
+  intersects_ <- t(sapply(res_, function(x) x[(n_in_xgrid+1):(2*n_in_xgrid)]))
+  return(list(iscontained = iscontained_, intersects = intersects_))
 }

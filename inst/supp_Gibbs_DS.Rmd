@@ -1,0 +1,354 @@
+---
+title: "Supplementary analysis for `A Gibbs sampler to infer parameters of Categorical distributions' "
+author: "Ruobin Gong"
+date: "06/07/2019"
+output: pdf_document
+fontsize: 11pt
+geometry: margin=1in
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.height = 5, fig.width = 9)
+library(montecarlodsm)
+```
+
+
+### Re ''To Do'', draft v. 06/02/19:
+
+It's perfectly okay to stick with $A/a$ (as opposed to $U/u$) as the notation for auxiliary variable. But I'd like to make a case for switching $\mathcal{R}_{N}/\nu_N$ to $\mathcal{R}_{\bf x}/\nu_{\bf x}$. The latter is actually the notation endorsed by *Dempster (1972)*. More specifically, the notation used therein is ${\bf R(n)}$, where ${\bf n}$ is in fact, in our notation, ${\bf x} = (x_1,...,x_K)$ or the observed $K$-category counts. Indeed, the distribution of (what's currently denoted) $\mathcal{R}_{N}$ can be fully characterized once knowing ${\bf x}$, and not just $N = \| {\bf x} \|$.
+
+
+# *Section 6.1: Inferring parameters of categorical distribution
+
+*Robin's note.* It seems that most interesting exhibitions of multinomial inference ($K > 2$) boil down to estimating/testing certain functions of the proportion parameter. I suspect the reason being when $K > 2$, it's unintuitive to summarize inference for the parameter without projecting to a lower-dimensional margin. Such is the case for both questions that Sections 6.2 (independence) and 6.3 (linkage) address.
+
+There are two ways we may structure Section 6.1. The first idea is to display a DS Gibbs posterior for some arbitrary dataset with $K = 3$. Items to present may include:
+
+* an analogous ''posterior density'', i.e. estimated ${\texttt r}(\boldsymbol{\theta})$ for a grid of values of $\theta$ spanning $\Delta$. The analogous ''MAP'' can be obtained in the same way;
+* an analogous ''posterior credible region'', defined as either the union of $100(1-\alpha)\%$ of poterior draws whose centers have the highest ${\texttt r}$ value, or the union of $100(1-\alpha)\%$ of poterior draws such that it covers the smallest area among unions of all subsets of the same size. Perhaps the former is easier to implement?
+
+Alternatively, we may do another case study of multinomial inference similar to the two succeeding sections. This makes Section 6 a trio of analyses. An interesting dataset/model we may try is discussed in Agresti *Categorical Data Analysis* (2nd ed, p25-26), Section 1.5.6. Inference is sought for a structurallly constrained 2 by 2 table. In particular, it is known for sure that $\theta_10 = 0$ and $x_10 = 0$. The hypothesis of interest is $H: \theta_{00} + \theta_{01} = \theta_{00}/(\theta_{00} + \theta_{01})$. Frequentist test results are readily available therein.
+
+<br>
+<br>
+
+# Section 6.2: Testing 2 by 2 tables.
+
+For $K = 4$ and arranged as a 2 by 2 contingency table with proportions $\boldsymbol{\theta} = (\theta_{00}, \theta_{01}, \theta_{10}, \theta_{11})$, one is interested in testing the hypothesis of independence: $H_0: \theta_{00} \theta_{11} = \theta_{01} \theta_{10}$. Here are a few alternative methods to do so.
+
+## 1. On the numerical example (10, 7, 22, 11). 
+
+We first illustrate with the observation ${\bf x} = (10, 7, 22, 11)$, where $n = \| {\bf x}\| = 50$.
+
+### i) Pearson's Chi-squared test.
+
+Pearson's Chi-squared test statistic is 
+$$X^2 = \sum_{i,j} \frac{(x_{ij} - e_{ij})^2}{e_{ij}},$$
+where $e_{ij} = n\hat{p}_{i+}\hat{p}_{+j}$ is the expected number of counts in cell $ij$ under the null. The Pearson test statistic is asymptotically distributed as $\chi^2_1$ under the null. It is exactly equivalent to the score test. For this example, the test statistic is $X^2 = 0.3$ and its associated p-value is $0.584$. There is no clear evidence to reject the independence hypothesis.
+
+```{r}
+x = matrix(c(10, 7, 22, 11), byrow = T, nrow = 2)
+e = matrix(rowSums(x), nrow = 2) %*% matrix(colSums(x), nrow = 1)/sum(x)
+(pearson = sum((x - e)^2/e))
+(pchisq(pearson, df = 1, lower.tail = F))
+```
+
+
+<br>
+<br>
+
+### ii) Likelihood ratio test. 
+
+The likelihood ratio test is asympotitically equivalent to the Pearson's Chi-squared test, but may differ in finite samples. The likelihood ratio test statistic,
+$$G^2 = -2\log (L_0/L_1) = 2\sum_{i,j} x_{ij} \log(x_{ij}/e_{ij}), $$
+where $e_{ij}$ is as defined previously. Under the null, $G^2 \sim \chi_1^2$ asymptotically. For this example, the LR test statistic $G^2 = 0.297$, and its associated p-value is $0.586$. There is no clear evidence to reject the independence hypothesis. 
+
+```{r}
+(lr = 2*sum(x*log(x/e)))
+(pchisq(lr, df = 1, lower.tail = F))
+```
+
+<br>
+<br>
+
+### iii) Bayesian analysis of association.
+
+The independence hypothesis is challenging for testing from the Bayesian perspective due to its reduced dimensions. One may resort to an analysis of Bayes Factors. An alternative way to think about it is, a strong evidence towards either positive or negative association is also strong evidence against independence. Below we compute the posterior probability of a positive vs. negative association in the two by two table. Suppose the prior distribution on $\boldsymbol{\theta} \sim Dir(\boldsymbol{\alpha})$, where $\boldsymbol{\alpha} = (1, 1, 1, 1)$ or something of the modeler's choice. The posterior distribution $$\boldsymbol{\theta} \mid {\bf x} \sim  Dir({\bf x} + \boldsymbol{\alpha}),$$
+and the posterior probability of positive association is 
+$P(H_+ \mid {\bf x})  = \int_{H_+} p(\boldsymbol{\theta} \mid {\bf x})\partial \boldsymbol{\theta},$
+where $H_+ : \theta_{00} \theta_{11} > \theta_{01} \theta_{10}$. The posterior probability of negative association, $H_- : \theta_{00} \theta_{11} < \theta_{01} \theta_{10}$, can be computed analogously. For the observed dataset, the estimated posterior probabilities are respectively
+$$\hat{P}(H_+ \mid {\bf x}) = 0.286, \quad \hat{P}(H_- \mid {\bf x}) = 0.714.$$
+This quantity can be easily estimated via Monte Carlo. There is no clear evidence to support either association hypotheses $H_+$ or $H_-$.
+
+```{r}
+posterior_association <- function(data = x, prior = 1, nsim = 1e5){
+  r_ = mapply(function(l){rgamma(nsim, l)}, data+prior)
+  positive = mean(r_[,1]*r_[,4] > r_[,2]*r_[,3])
+  return(data.frame(positive = positive, negative = 1-positive, 
+             se = sqrt(positive*(1-positive)/nsim)))
+}
+set.seed(1)
+posterior_association(data = x)
+```
+
+We compare this result with the DS Gibbs sampler output, which reports the $(p,q,r)$ for $H_+$ and $H_-$ respectively. The estimates from SMC output gives
+$$\hat{\texttt p}(H_+) = 0.148, \; \hat{\texttt q}(H_+) = 0.644, \; \hat{\texttt r}(H_+) = 0.209,$$ 
+and on the reverse side (since $H_+ = \neg H_-$ with probability one),
+$$\hat{\texttt p}(H_-) = 0.644, \; \hat{\texttt q}(H_-) =  0.148, \; \hat{\texttt r}(H_-) = 0.209.$$ 
+This result is congruent with the Bayesian analysis results, in the sense that for both hypotheses, the estimated *lower probabilities*, ${\texttt p}(H_+)$ and ${\texttt p}(H_-)$, are lower than the Bayes posterior probabilities, and the estimated *upper probabilities*, ${\texttt p}(H_+) + {\texttt r}(H_+)$ and ${\texttt p}(H_-)+{\texttt r}(H_+)$, are higher than their Bayesian counterparts. Note that this is not always guaranteed, due to Bayesian prior specifications and Monte Carlo errors. Nevertheless, the ${\texttt r}$ component adds an expression of ''don't know'' to the inference.
+
+```{r}
+nparticles <- 128
+K = 4; categories <- 1:K
+set.seed(1)
+X = sample(unlist(sapply(1:4, function(i) rep(i, as.vector(x)[i]))), replace = F) 
+h <- function(etas) unlist(check_intersection_independence(etas))
+samples_smc <- SMC_sampler(nparticles, X, K, essthreshold = 0.75, h = h)
+p.negative <- samples_smc$hestimator[2]
+p.positive <- samples_smc$hestimator[4]
+r = 1 - p.negative - p.positive
+DS_association = data.frame(positive = c(p.positive, p.negative, r),
+           negative = c(p.negative, p.positive, r))
+rownames(DS_association) = c('p', 'q', 'r')
+DS_association
+```
+
+<br>
+<br>
+
+## 2. An example of London underground incidents.
+
+This data comes from *Rosenbaum (2002, p. 191)* and was reanalyzied by *Ding and Miratrix (2019)*, who supplied the following description:
+
+''In the London underground, some train stations have a drainage pit below the tracks. When an incident happens (i.e., a passenger falls, jumps, or is pushed from the station platform), such a pit is a place to escape contact with the wheels of the train. Researchers are interested
+in the mortality in stations with and without such a pit. In stations without a pit, only 5 lived out of 21 recorded incidents. For incidents in stations with a pit, 18 out of 32 lived. ''
+
+The observed data can be summarized by ${\bf x} = (16, 5, 14, 18)$, where the row variable is *no pit/0* versus *with pit/1*, and the column variable is *death/0* versus *survival/1*. The analysis supplied by *Ding and Miratrix (2019)* suggests that the existence of a pit significantly increases the chance of incident survival, reporting an improvement estimate $\hat{\tau} = 0.324$ with an associated confidence interval $(0.106, 0.543)$. They also reported a Neyman's confidence interval of $(0.072, 0.577)$, also excluding 0.
+
+
+We analyze the table to see whether the existence of pit is associated with the chance of survival. Pearson's Chi-squared test yields strong evidence against the null hypothesis of independence, with test statistic $X^2 = 5.43$ and a p-value of $0.02$.
+
+```{r}
+x = matrix(c(16, 5, 14, 18), byrow = T, nrow = 2)
+e = matrix(rowSums(x), nrow = 2) %*% matrix(colSums(x), nrow = 1)/sum(x)
+(pearson = sum((x - e)^2/e))
+(pchisq(pearson, df = 1, lower.tail = F))
+```
+
+Similarly, the LR test statistic $G^2 = 5.63$ and p-value $0.017$.
+
+```{r}
+(lr = 2*sum(x*log(x/e)))
+(pchisq(lr, df = 1, lower.tail = F))
+```
+
+The Bayesian analysis of association also suggests strong positive correlation of the lack of pit and death, with estimated posterior probabilities
+
+$$\hat{P}(H_+ \mid {\bf x}) = 0.99, \quad \hat{P}(H_- \mid {\bf x}) = 0.01.$$
+
+```{r}
+set.seed(1)
+posterior_association(data = x)
+```
+
+Lastly, the DS analysis yields estimated posterior $(p,q,r)$:
+$$\hat{\texttt p}(H_+) = 0.99, \; \hat{\texttt q}(H_+) = 0, \; \hat{\texttt r}(H_+) = 0.01,$$
+which is almost identical with the Bayes result.
+
+```{r}
+set.seed(1)
+X = sample(unlist(sapply(1:4, function(i) rep(i, as.vector(x)[i]))), replace = F) 
+samples_smc <- SMC_sampler(nparticles, X, K, essthreshold = 0.75, h = h)
+p.negative <- samples_smc$hestimator[2]
+p.positive <- samples_smc$hestimator[4]
+r = 1 - p.negative - p.positive
+DS_association = data.frame(positive = c(p.positive, p.negative, r),
+           negative = c(p.negative, p.positive, r))
+rownames(DS_association) = c('p', 'q', 'r')
+DS_association
+```
+
+<br>
+<br>
+<br>
+
+
+# Section 6.3: linkage analysis.
+
+The linkage model from *Rao (1965, pp. 368-369)* was discussed by *Lawrence et al. (2009)*, as a numerical example to illustrate the Dirichlet DSM and the IDM *(Walley, 1996)* for inference of a constrained multinomial. The data consist of $N = 197$ animals that are distributed into $K = 4$ categories, for which the theoretical population cell probabilities are
+
+$$\boldsymbol{\theta} = \left( \frac{1}{2} + \frac{\phi}{4}, \frac{1-\phi}{4}, \frac{1-\phi}{4}, \frac{\phi}{4} \right),$$
+for some $\phi$ with $0 < \phi < 1$. The original observations are ${\bf X} = (125, 18, 20, 34)$, but *Lawrence et al. (2009)* considered counts reduced by a factor of approximately five: ${\bf X} = (25, 3, 4, 7)$, in order to emphasize the three-valued nature of posterior inference. We use the latter data for this document so that to compare results.
+
+```{r}
+x = c(25, 3, 4, 7)
+```
+
+## 1. Dirichlet DSM model.
+
+For a vector of multinomial counts ${\bf X} = \left(X_1,...,X_K\right)$ where $\|{ \bf X} \| = N$, the Dirichlet DSM model expresses its posterior inference for the proportion vector $\boldsymbol{\theta} = \left(\theta_1,...,\theta_K\right) \in  \mathbb{S}_K$ (Simplex-K), via the random set
+
+$$\{ \boldsymbol{\theta} \in \mathbb{S}_K: \theta_1 \ge Z_1, ..., \theta_K \ge Z_K\},$$
+
+where ${\bf Z} = \left(Z_0, Z_1, ..., Z_K\right) \sim Dir_{K+1}(1, X_1,...,X_K)$. Incorporating the parameter constraint $\phi = \phi\left(\boldsymbol{\theta}\right)$, the random set for $\phi$ is
+
+$$ \mathcal{F}_{\phi} ({\bf Z}) = \{\phi \in [0, 1]: \phi_{\min}({\bf Z}) \le \phi \le \phi_{\max}({\bf Z})\},$$
+provided that
+$$\phi_{\min}({\bf Z}) \equiv \max\left(4Z_1 - 2, 4Z_4\right) \le \phi_{\max}({\bf Z}) \equiv \min\left(1 - 4Z_2, 1 - 4Z_3\right).$$
+
+The following function draws compatible samples of $\mathcal{F}_{\phi} ({\bf Z})$ via a rejection algorithm.
+
+```{r, message=F,warning=F}
+library(gtools)
+linkage_ddsm <- function(x, nsim = 1e4, batch = nsim*100){
+  # Rejection algorithm for Dirichlet DSM
+  # x: 4 dimensional data vector
+  # nsim: total samples wanted
+  # batch: sample size per batch
+  
+  sample_phi <- function(n, data = x){
+    z = rdirichlet(n, alpha = c(data, 1))
+    s_ = cbind(4*pmax(z[, 1]-1/2, z[, 4]), 1 - 4*pmax(z[, 2], z[, 3]))
+    return(s_[s_[,2]>s_[,1],])
+  }
+
+  s_ <- sample_phi(batch, data = x); ns = nrow(s_)
+  if (ns == 0){
+    stop('Acceptance rate too low, change batch size')
+  }
+  
+  while(ns < nsim){
+    s_ <- rbind(s_, sample_phi(batch, data = x))
+    ns <- nrow(s_)
+  }
+  return(s_[1:nsim,])
+}
+```
+
+
+The lower and upper CDFs for $\phi$ are respectively
+
+$$\underline{P}_{D}\left(\phi\le\phi_{0}\right)	=	P\left(\mathcal{F}_{\phi}\left({\bf Z}\right)\in[0,\phi_{0}]\right)\approx\frac{1}{M}\sum_{m=1}^{M}{\bf 1}\left\{ \phi_{\max}^{\left(m\right)}\le\phi_{0}\right\},$$
+ 
+and
+
+$$\overline{P}_{D}\left(\phi\le\phi_{0}\right)	=	P\left(\mathcal{F}_{\phi}\left({\bf Z}\right)\cap[0,\phi_{0}]\neq\emptyset\right)\approx\frac{1}{M}\sum_{m=1}^{M}{\bf 1}\left\{ \phi_{\min}^{\left(m\right)}\le\phi_{0}\right\} .$$
+
+These functions are approximated and represented with the red and blue empirical CDFs in the plot below. 
+ 
+```{r}
+phi_ddsm = linkage_ddsm(x = x, nsim = 1e4)
+plot(ecdf(phi_ddsm[, 1]), col = 'red',
+     main = 'Dirichlet DSM upper and lower CDF, nsim = 1e4',
+     xlab = 'phi0', ylab = 'P(phi < phi0)', xlim = c(0, 1))
+plot(ecdf(phi_ddsm[, 2]), col = 'blue', add = T)
+
+```
+
+<br>
+<br>
+
+## 2. Imprecise Dirchlet Model.
+
+The Imprecise Dirichlet Model *(IDM; Walley, 1996)* for multinomial data considers the regular Dirichlet-Multinomial conjugate Bayesian model, but let the Dirichlet prior come from a family with linearly restricted hyperparameter space
+
+$$\Pi_{s}=\left\{ P:P\sim Dir\left(\alpha_{1},...,\alpha_{K}\right), \sum_{i}\alpha_{i}=s\right\}.$$
+The meaning of this class of priors is that there are $s$ prior observations distributed across $K$ categories in an unknown way. The set $\Pi_1$ is of particular interest, as it draws parallel to the Dirichlet DSM and Simplex DSM analysis.
+
+To modify IDM for the linkage model, standard parameters are transformed to $\phi$ and two nuisance parameters are conditioned away. Appendix E of *Lawrence et al.* describes the derivation of this. We have that for prior $\pi \in \Pi_1$, the Bayesian posterior distribution for $\phi$ is
+
+$$\pi\left(\phi\mid{\bf x}, \boldsymbol{\alpha}\right)\propto\left(\frac{1}{2}+\frac{\phi}{4}\right)^{x_{1}+\alpha_{1}-1}\left(\frac{1-\phi}{4}\right)^{\left(x_{2}+x_{3}\right)+\left(\alpha_{2}+\alpha_{3}\right)-1}\left(\frac{\phi}{4}\right)^{x_{4}+\alpha_{4}-1},$$ 
+
+where $\sum \alpha_i  = 1$, and the IDM posterior upper and lower CDFs are respectively
+
+$$\underline{P}_{I}\left(\phi\le\phi_{0}\right)	=	\min_{\|\boldsymbol{\alpha}\|=1}\int_{0}^{\phi_{0}}\pi\left(\phi\mid{\bf x},\boldsymbol{\alpha}\right)d\phi,$$
+
+and
+
+$$\overline{P}_{I}\left(\phi\le\phi_{0}\right)	=	\max_{\|\boldsymbol{\alpha}\|=1}\int_{0}^{\phi_{0}}\pi\left(\phi\mid{\bf x},\boldsymbol{\alpha}\right)d\phi.$$
+
+*Lawrence et al.* found the $\boldsymbol{\alpha}$ values via a grid search over MCMC, and remarked in the Appendix that the lower CDF is achieved at about $\underline{\boldsymbol{\alpha}}=\left(0,0,0,1\right)$, while the upper CDF is achieved at about $\overline{\boldsymbol{\alpha}}=\left(0,1,0,0\right)$ or $\left(0,0,1,0\right)$. Their results were displayed the results as a pair of red and blue dashed lines in the left panel of Figure 6.2. Below we implement the same grid search, but using trapezoidal approximation to the posterior. 
+ 
+```{r}
+post_idm <- function(x, a, by = 1e-3){
+  # trapezoid integration for idm posterior
+  # x: data; a: alpha
+  # function returns a vector of cdf evaluated per ``by''
+  phi <- seq(0, 1, by = by)
+  p_ <- (1/2+phi/4)^(x[1]+a[1]-1)*
+    (1/4-phi/4)^(x[2]+x[3]+a[2]+a[3]-1)*
+    (phi/4)^(x[4]+a[4]-1)
+  vol_ <- (p_[-1] + head(p_, -1))*by/2
+  cdf <- cumsum(vol_)/sum(vol_)
+  return(c(0, cdf))
+}
+
+# a grid of alpha values to try
+a_grid <- expand.grid(a1 = seq(0, 1, by = 0.02),
+                      a2 = seq(0, 1, by = 0.02),
+                      a4 = seq(0, 1, by = 0.02))
+a_grid <- a_grid[which(rowSums(a_grid) == 1), ]
+a_grid$a3 <- 0
+a_grid <- as.matrix(a_grid[, c(1,2,4,3)])
+
+# evaluate idm posterior at a grid of a values
+by = 1e-4
+idm_grid <- array(NA, dim = c(nrow(a_grid), 1/by+1))
+for (i in 1:nrow(a_grid)){
+  alpha <- a_grid[i, ]
+  idm_grid[i, ] <- post_idm(x=x, a=alpha, by=by)
+}
+
+# pointwise lower and upper probabilities of IDM
+lb_idm <- apply(idm_grid, 2, min)
+ub_idm <- apply(idm_grid, 2, max)
+```
+
+The IDM posterior is overlaid with the Dirichlet DSM.
+
+```{r}
+plot(ecdf(phi_ddsm[, 1]), col = 'red', xlim = c(0, 1),
+     main = 'DDSM vs IDM upper and lower CDF',
+     xlab = 'phi0', ylab = 'P(phi < phi0)')
+plot(ecdf(phi_ddsm[, 2]), col = 'blue', add = T)
+lines(seq(0, 1, by=by), lb_idm, col = 'blue', lty = 2)
+lines(seq(0, 1, by=by), ub_idm, col = 'red', lty = 2)
+legend('topleft', lty = c(1, 2), legend = c('DDSM', 'IDM'))
+```
+
+The location of the IDM curves are not quite the same as obtained by *Lawrence et al.*. Instead, we find that the two methods coincide quite closely, with the IDM CDFs stochastically dominated by those of the Dirichlet DSMs by a slight amount.
+
+*Note.* The functions $\underline{P}_{I}\left(\phi\le\phi_{0}\right)$ and $\overline{P}_{I}\left(\phi\le\phi_{0}\right)$ are minimized/maximized over $\boldsymbol{\alpha}$ for every value of $\phi_0$. The analysis that follows show that up to numerical approximation errors, they are respectively minimized/maximized at mostly (but not all -- about 99.8\% of the grid of values tried) the same $\boldsymbol{\alpha}$ values: $\underline{\boldsymbol{\alpha}}=\left(0,0,0,1\right)$, and $\overline{\boldsymbol{\alpha}}=\left(0,1,0,0\right)$ or $\left(0,0,1,0\right)$, which agree with the *Lawrence et al* finding. Moreover, the pairs of functions $\underline{P}_{I}\left(\phi\le\phi_{0}\right)$ and $\int_{0}^{\phi_{0}}\pi\left(\phi\mid{\bf x},\underline{\boldsymbol{\alpha}}\right)$, as well as $\overline{P}_{I}\left(\phi\le\phi_{0}\right)$ and $\int_{0}^{\phi_{0}}\pi\left(\phi\mid{\bf x},\overline{\boldsymbol{\alpha}}\right)$, are nearly indistiguishable.
+
+```{r}
+lb_which <- apply(idm_grid, 2, function(x){which.min(x)})
+ub_which <- apply(idm_grid, 2, function(x){which.max(x)})
+# table(lb_which); table(ub_which) # 1326 and 58 respectively
+
+a_grid[1326, ] # \underline{\alpha}
+a_grid[51, ] # \overline{\alpha}
+
+# idm_grid[1326, ] 
+# This is \int_{0}^{\phi_{0}}\pi\left(\phi\mid{\bf x},\underline{\boldsymbol{\alpha}}\right)
+
+# idm_grid[51, ] 
+# This is \int_{0}^{\phi_{0}}\pi\left(\phi\mid{\bf x},\overline{\boldsymbol{\alpha}}\right)
+```
+
+<br>
+<br>
+<br>
+
+# References
+
+
+* Ding P, Miratrix LW. Model-free causal inference of binary
+experimental data. Scand J Statist. 2019; 46:200–214. https://doi.org/10.1111/sjos.12343
+* Earl Christopher Lawrence, Scott Vander Wiel, Chuanhai Liu, and Jianchun Zhang. A new method for multinomial inference using Dempster-Shafer theory. Technical report, Los Alamos National Lab.(LANL), Los Alamos, NM (United States), 2009.
+* Rao, C. R. (1965). Linear Statistical Inference and its Applications. New York: Wiley.
+* Rosenbaum, P. R. (2002). Observational studies (2nd ed.). New York, NY: Springer.
+* Walley, P. (1996). Inferences from multinomial data: Learning about a bag of marbles (with discussion). J. Roy. Statist. Soc. B., 58 3-57.
+
+
+
+

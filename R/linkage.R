@@ -1,4 +1,11 @@
 ## convenience functions
+## Given K-vectors A and b 
+## and a KxK matrix etas
+## find phi_l, phi_u
+## such that for all phi in [phi_l,phi_u]
+## and theta = A phi + b
+## we have theta_i/theta_j <= eta[j,i] for all i \neq j 
+
 get_lower_upper <- function(etas, A, b){
   upper <- 1
   lower <- 0
@@ -17,6 +24,7 @@ get_lower_upper <- function(etas, A, b){
   return(c(lower, upper))
 }
 
+## same thing, but ignoring etas[k,.]
 get_lower_upper_updatek <- function(etas, A, b, k){
   upper <- 1
   lower <- 0
@@ -45,7 +53,7 @@ gibbs_sampler_linkage <- function(niterations, freqX, phi_0, A, b){
   categories <- 1:K_
   # store points in barycentric coordinates
   Achain <- list()
-  for (k in 1:K_){
+  for (k in categories){
     if (freqX[k] > 0){
       Achain[[k]] <- array(0, dim = c(niterations, freqX[k], K_))
     } else {
@@ -59,7 +67,7 @@ gibbs_sampler_linkage <- function(niterations, freqX, phi_0, A, b){
   init_tmp <- initialize_pts(freqX, theta_0)
   pts <- init_tmp$pts
   # store points
-  for (k in 1:K_){
+  for (k in categories){
     if (freqX[k] > 0){
       Achain[[k]][1,,] <- pts[[k]]
     } else {
@@ -77,7 +85,8 @@ gibbs_sampler_linkage <- function(niterations, freqX, phi_0, A, b){
     for (k in categories){
       if (freqX[k] > 0){
         lu_k <- get_lower_upper_updatek(etas, A, b, k)
-        if ((A * lu_k[1] + b)[k] < (A * lu_k[2] + b)[k]){
+        # if ((A * lu_k[1] + b)[k] < (A * lu_k[2] + b)[k]){
+        if (A[k] > 0){
           # then max theta_k correspond to phi = upper bound
           theta_star <- A * lu_k[2] + b
         } else {

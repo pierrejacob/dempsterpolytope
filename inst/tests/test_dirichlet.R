@@ -5,6 +5,43 @@ v_cartesian <- list(c(1/2, sin(pi/3)), c(0,0), c(1,0))
 cols <- c("red", "green", "blue")
 v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
 
+## going from K = 2 to K = 3
+
+npts <- 10000
+## 
+u1 <- runif(npts, 0, 1)
+u2 <- 1 - u1
+s <- rgamma(npts, 2, 1)
+w <- rexp(npts, 1)
+samples2 <- cbind(u1, u2, s, w)
+# plot(x = samples2[,1], y = samples2[,2])
+
+## transformation
+transf <- function(u1, u2, s, w){
+  return(c(s * u1 / (s + w), s * u2 / (s + w), w / (s + w), s + w))
+}
+invtransf <- function(z1, z2, z3, z4){
+  return(c(z1 / (1 - z3), z2 / (1 - z3), (1-z3) * z4, z3 * z4))
+}
+samples2transf <- t(apply(samples2, 1, function(v) transf(v[1], v[2], v[3], v[4])))
+samples2untransf <- t(apply(samples2transf, 1, function(v) invtransf(v[1], v[2], v[3], v[4])))
+head(samples2 - samples2untransf)
+## ok so inv transformation is valid
+?numDeriv::genD
+## Now are the first three components of samples2transf distributed according to a Dirichlet ?
+# 1st and 2nd components
+plot(x = samples2transf[,1], y = samples2transf[,2], col = rgb(0,0,0,0.1))
+hist(samples2transf[,1], nclass = 100, prob = TRUE)
+curve(dbeta(x, 1, 2), add = TRUE)
+hist(samples2transf[,2], nclass = 100, prob = TRUE)
+curve(dbeta(x, 1, 2), add = TRUE)
+# 4th component
+hist(samples2transf[,4], nclass = 100, prob = TRUE)
+curve(dgamma(x, 3, 1), add = TRUE)
+## it looks like it's correct...
+
+
+##
 K <- 3
 rdiri <- function(K){
   x <- rexp(K)
@@ -63,5 +100,11 @@ g <- g + geom_text(data = data.frame(x = v3[1], y = v3[2]-0.1, label = "3"), aes
 g <- g + geom_text(data = data.frame(x = v1[1], y = v1[2]+0.1, label = "1"), aes(label = label), size = 5)
 g <- g + geom_point(data=data.frame(x = pts_cartesian2[,1], y = pts_cartesian2[,2]), alpha = 0.25)
 g
+
+hist(pts_barcoord_larger2[,1], nclass = 100, prob = TRUE)
+curve(dbeta(x, 1, 2), add = TRUE)
+
+hist(pts_barcoord_larger2[,2], nclass = 100, prob = TRUE)
+curve(dbeta(x, 1, 2), add = TRUE)
 
 

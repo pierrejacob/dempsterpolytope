@@ -124,7 +124,6 @@ SMC_sampler_graph <- function(nparticles, X, K, essthreshold = 0.75, resamplingt
               essthreshold = essthreshold, resamplingtimes = resamplingtimes_sofar, hestimator = hestimator))
 }
 
-# essthreshold = 0.75; resamplingtimes = NULL; verbose = TRUE; h = NULL
 #'@export
 SMC_sampler_lp <- function(nparticles, X, K, essthreshold = 0.75, resamplingtimes = NULL, verbose = FALSE, h = NULL){
   nobs <- length(X)

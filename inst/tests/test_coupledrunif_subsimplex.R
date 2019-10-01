@@ -16,20 +16,20 @@ k <- 1
 
 ## independent sampling
 pts1 <- montecarlodsm:::runif_piktheta_cpp(n, k, theta_star1)$pts
-mean(pts1[,1] * pts1[,K])
+mean(log(pts1[,1]) * pts1[,K]^2)
 pts2 <- montecarlodsm:::runif_piktheta_cpp(n, k, theta_star2)$pts
-mean(pts2[,1] * pts2[,K])
+mean(log(pts2[,1]) * pts2[,K]^2)
 
 ## common random numbers
 pts_ <- montecarlodsm:::crng_runif_piktheta_cpp(n, k, theta_star1, theta_star2)
-mean(pts_$pts1[,1] * pts_$pts1[,K])
-mean(pts_$pts2[,1] * pts_$pts2[,K])
+mean(log(pts_$pts1[,1]) * pts_$pts1[,K]^2)
+mean(log(pts_$pts2[,1]) * pts_$pts2[,K]^2)
 
-rmaxcoupling <- function(k, theta_star1, theta_star2){
+rmaxcoupling <- function(k, theta_star1, theta_star2, multiplier = 0.9){
   x <- montecarlodsm:::runif_piktheta_one_cpp(k, theta_star1)
   pdf1_x <- 1/theta_star1[k]
   pdf2_x <- montecarlodsm:::dunif_piktheta_cpp(x, k, theta_star2)
-  if (runif(1) < (pdf2_x / pdf1_x)){
+  if (runif(1) < (multiplier * pdf2_x / pdf1_x)){
     return(list(pts = cbind(x,x), equal = TRUE))
   } else {
     reject <- TRUE
@@ -38,7 +38,7 @@ rmaxcoupling <- function(k, theta_star1, theta_star2){
       y <- montecarlodsm:::runif_piktheta_one_cpp(k, theta_star2)
       pdf2_y <- 1/theta_star2[k]
       pdf1_y <- montecarlodsm:::dunif_piktheta_cpp(y, k, theta_star1)
-      reject <- (runif(1) < (pdf1_y/pdf2_y))
+      reject <- (runif(1) < min(multiplier, pdf1_y/pdf2_y))
     }
     return(list(pts = cbind(x,y), equal = FALSE))
   }
@@ -51,17 +51,20 @@ pts_maxcoupled <- foreach(irep = 1:n) %dorng% {
 pts_maxcoupled1 <- t(sapply(pts_maxcoupled, function(x) x$pts[,1]))
 pts_maxcoupled2 <- t(sapply(pts_maxcoupled, function(x) x$pts[,2]))
 
-mean(pts_maxcoupled1[,1] * pts_maxcoupled1[,K])
-mean(pts_maxcoupled2[,1] * pts_maxcoupled2[,K])
+mean(log(pts_maxcoupled1[,1]) * pts_maxcoupled1[,K]^2)
+mean(log(pts_maxcoupled2[,1]) * pts_maxcoupled2[,K]^2)
+
 mean(sapply(pts_maxcoupled, function(x) x$equal))
 # 
 # print(theta_star1)
 pts_maxcoupled_cpp <- montecarlodsm:::maxcoupling_runif_piktheta_cpp(n, k, theta_star1, theta_star2)
-mean(pts_maxcoupled_cpp$pts1[,1] * pts_maxcoupled_cpp$pts1[,K])
-mean(pts_maxcoupled_cpp$pts2[,1] * pts_maxcoupled_cpp$pts2[,K])
+mean(log(pts_maxcoupled_cpp$pts1[,1]) * pts_maxcoupled_cpp$pts1[,K]^2)
+mean(log(pts_maxcoupled_cpp$pts2[,1]) * pts_maxcoupled_cpp$pts2[,K]^2)
+
+
 pts_maxcoupled_cpp$ncoupled / n
-pts_maxcoupled_cpp$minratios1
-pts_maxcoupled_cpp$minratios2
+# pts_maxcoupled_cpp$minratios1
+# pts_maxcoupled_cpp$minratios2
 
 ##
 

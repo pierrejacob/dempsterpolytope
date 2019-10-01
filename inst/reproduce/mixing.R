@@ -53,7 +53,7 @@ ggsave(plot = g, filename = "mixing.K.pdf", width = 7, height = 5)
 #### Effect of the number of observations on the mixing time
 ###
 lag_multiplier <- 5
-omega <- 0.8
+omega <- 0.9
 meetings <- list()
 # number of categories
 K <- 5

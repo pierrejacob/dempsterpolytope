@@ -1,10 +1,13 @@
+## Something's wrong here
+
+
 ## convenience functions
-## Given K-vectors A and b 
+## Given K-vectors A and b
 ## and a KxK matrix etas
 ## find phi_l, phi_u
 ## such that for all phi in [phi_l,phi_u]
 ## and theta = A phi + b
-## we have theta_i/theta_j <= eta[j,i] for all i \neq j 
+## we have theta_i/theta_j <= eta[j,i] for all i \neq j
 
 get_lower_upper <- function(etas, A, b){
   upper <- 1
@@ -122,7 +125,7 @@ gibbs_sampler_linkage <- function(niterations, freqX, phi_0, A, b){
 linkage_cdf_lowerupper <- function(phi_0, lu_chain){
   # intersect if phi_lower < phi_0
   cdf_upper <- mean(apply(lu_chain, 1, function(v) v[1] < phi_0))
-  # contains if phi_upper < phi_0 
+  # contains if phi_upper < phi_0
   cdf_lower <- mean(apply(lu_chain, 1, function(v) v[2] < phi_0))
   return(c(cdf_lower, cdf_upper))
 }

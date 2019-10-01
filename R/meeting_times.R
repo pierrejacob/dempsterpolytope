@@ -1,7 +1,6 @@
-## Sample meeting times
-## obtained with a coupled Gibbs kernel
+## Sample meeting times to implement TV upper bounds as in https://arxiv.org/abs/1905.09971
 ## with probability omega, common random numbers are used in a Gibbs sweep
-## otherwise a maximal coupling is used in a Gibbs sweep
+## otherwise a (nearly) maximal coupling is used in a Gibbs sweep
 ## freqX contains the data, i.e. the counts of X_1,...,X_K
 ## lag refers to the lag employed in the coupling
 ## rinit is the distribution of theta_0, used to draw the auxiliary variables at the 
@@ -123,21 +122,6 @@ meeting_times <- function(freqX, lag, rinit, omega, max_iterations = 1e5){
         pts2[[k]] <- coupled_results_$pts2
         etas2[k,] <- coupled_results_$minratios2
         same_a[[k]] <- coupled_results_$equal
-        ## former, pure R implementation
-        # for (irow in 1:freqX[k]){
-        #   res_ <- rmaxcoupling(k, theta_star1, theta_star2)
-        #   pts1_[irow,] <- res_$pts[,1]
-        #   pts2_[irow,] <- res_$pts[,2]
-        #   same_a[[k]][irow] <- res_$equal
-        # }
-        ## compute etas
-        # minratios1 <- apply(pts1_ / pts1_[,k], 2, min)
-        # minratios2 <- apply(pts2_ / pts2_[,k], 2, min)
-        # etas1[k,] <- minratios1
-        # etas2[k,] <- minratios2
-        # pts1[[k]] <- pts1_
-        # pts2[[k]] <- pts2_
-        
         ## indicate whether all auxiliary variables coincide across two chains
         same_a_in_categoryk <- all(same_a[[k]])
       }

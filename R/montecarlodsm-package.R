@@ -2,7 +2,7 @@
 #'@aliases montecarlodsm
 #'@docType package
 #'@title montecarlodsm
-#'@author anonymous <anonymous@@anonymous.com>
+#'@author Pierre E. Jacob <pjacob@@g.harvard.edu>
 #'@description ...
 #'@details ...
 #'@keywords package

@@ -12,6 +12,6 @@
 ...
 }
 \author{
-anonymous <anonymous@anonymous.com>
+Pierre E. Jacob <pjacob@g.harvard.edu>
 }
 \keyword{package}

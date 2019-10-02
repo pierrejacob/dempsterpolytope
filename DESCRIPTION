@@ -8,7 +8,7 @@ Maintainer: Pierre E. Jacob <pierre.jacob.work@gmail.com>
 Description: Implements Markov chain Monte Carlo algorithms for Dempster's inference approach for Categorical distributions 
 License: GNU GPL
 LazyData: TRUE
-Depends: Rcpp, RcppEigen, igraph, hitandrun, dplyr, lpSolveAPI
+Depends: Rcpp, RcppEigen, igraph, rcdd, hitandrun, dplyr, lpSolveAPI
 Imports: Rcpp (>= 1.0.0), RcppEigen (>= 0.3.3.5.0)
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 6.1.1

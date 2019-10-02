@@ -31,18 +31,18 @@ for (n in samplesizes){
   }
 }
 
-save(df_, file = "inst/computational.scaling.RData")
-load(file = "inst/computational.scaling.RData")
+save(df_, file = "inst/reproduce/computational.scaling.RData")
+load(file = "inst/reproduce/computational.scaling.RData")
 
 g <- ggplot(df_, aes(x = n, y = elapsed, group = K, linetype = factor(K))) + geom_line() 
-g <- g + scale_linetype(name = "K") + xlab("N")
+g <- g + scale_linetype(name = "K") + xlab("N") + scale_x_continuous(breaks = samplesizes)
 g
-ggsave(filename = "sdk.scalingn.pdf", plot = g, width = 7, height = 5)
+ggsave(filename = "inst/reproduce/sdk.scalingn.pdf", plot = g, width = 7, height = 5)
 
 g <- ggplot(df_, aes(x = K, y = elapsed, group = n, linetype = factor(n))) + geom_line() 
-g <- g + scale_linetype(name = "N")
+g <- g + scale_linetype(name = "N") + scale_x_continuous(breaks = Ks)
 g
-ggsave(filename = "sdk.scalingK.pdf", plot = g, width = 7, height = 5)
+ggsave(filename = "inst/reproduce/sdk.scalingK.pdf", plot = g, width = 7, height = 5)
 
 
 

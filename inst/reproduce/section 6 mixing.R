@@ -10,15 +10,14 @@ set_my_theme()
 set.seed(1)
 rm(list = ls())
 
-
 #### Effect of the number of categories on the mixing time
 ## draw meeting times
 
 ## increase NREP to get smoother curves in the resulting figures
-NREP <- 1e2
+NREP <- 5e2
 # arbitrary choice of lag (see Biswas et al.)
 lag <- 75
-omega <- 0.8
+omega <- 0.9
 meetings <- list()
 # number of categories
 Ks <- c(5, 10, 20)
@@ -32,8 +31,8 @@ for (iK in seq_along(Ks)){
     meeting_times(freqX, lag = lag, rinit = function(){ x = rexp(K); return(x/sum(x))}, omega = omega, max_iterations = 1e5)
   })
 }
-save(Ks, meetings, file = "inst/mixing.K.RData")
-load(file = "inst/mixing.K.RData")
+save(Ks, meetings, file = "inst/reproduce/mixing.K.RData")
+load(file = "inst/reproduce/mixing.K.RData")
 
 niterations <- 100
 ubounds.df <- data.frame()
@@ -47,7 +46,7 @@ g <- ggplot(ubounds.df, aes(x = iteration, y = ubounds, group = K, linetype = fa
 g <- g + scale_linetype(name = "K")
 g
 
-ggsave(plot = g, filename = "mixing.K.pdf", width = 7, height = 5)
+ggsave(plot = g, filename = "inst/reproduce/mixing.K.pdf", width = 7, height = 5)
 # g + scale_y_log10()
 
 #### Effect of the number of observations on the mixing time
@@ -68,8 +67,8 @@ for (iN in seq_along(Ns)){
     meeting_times(freqX, lag = lag, rinit = function(){ x = rexp(K); return(x/sum(x))}, omega = omega, max_iterations = 1e5)
   })
 }
-save(Ns, lag_multiplier, K, meetings, file = "inst/mixing.N.RData")
-load(file = "inst/mixing.N.RData")
+save(Ns, lag_multiplier, K, meetings, file = "inst/reproduce/mixing.N.RData")
+load(file = "inst/reproduce/mixing.N.RData")
 
 niterations <- 200
 ubounds.df <- data.frame()
@@ -82,8 +81,9 @@ for (iN in seq_along(Ns)){
 g <- ggplot(ubounds.df, aes(x = iteration, y = ubounds, group = N, linetype = factor(N))) + geom_line() + ylab("TV upper bounds") + xlab("iteration")
 g <- g + scale_linetype(name = "N")
 g
-ggsave(plot = g, filename = "mixing.N.pdf", width = 7, height = 5)
+ggsave(plot = g, filename = "inst/reproduce/mixing.N.pdf", width = 7, height = 5)
 
+# scaling of mixing time with N 
 ubounds.df %>% group_by(N) %>% summarise(tmix = iteration[which(ubounds < 0.01)[1]])
 g + geom_hline(yintercept = 0.01, linetype = 1)
 

@@ -1,5 +1,5 @@
 ## This script generates the two plots of Figure 1 of the article.
-library(montecarlodsm)
+library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
 library(latex2exp)

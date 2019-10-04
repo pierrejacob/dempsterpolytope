@@ -1,6 +1,6 @@
 ## This scripts reproduce the results for the linkage model
 
-library(montecarlodsm)
+library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
 registerDoParallel(cores = detectCores()-2)

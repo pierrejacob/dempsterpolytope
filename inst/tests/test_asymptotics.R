@@ -1,6 +1,7 @@
-## To do: obtain lower/upper CDF on the marginals
+## This script looks at whether Dempster's approach
+## appears to be consistent as more and more data are assimilated
 
-library(montecarlodsm)
+library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
 registerDoParallel(cores = detectCores()-2)

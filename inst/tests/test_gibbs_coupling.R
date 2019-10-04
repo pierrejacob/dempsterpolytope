@@ -1,4 +1,4 @@
-library(montecarlodsm)
+library(dempsterpolytope)
 library(doParallel)
 registerDoParallel(cores = detectCores()-2)
 library(doRNG)
@@ -23,18 +23,18 @@ print(freqX)
 ## (note that each count was incremented by one to ensure non zero entries, for simplicity)
 
 rmaxcoupling <- function(k, theta_star1, theta_star2){
-  x <- montecarlodsm:::runif_piktheta_one_cpp(k, theta_star1)
+  x <- dempsterpolytope:::runif_piktheta_one_cpp(k, theta_star1)
   pdf1_x <- 1/theta_star1[k]
-  pdf2_x <- montecarlodsm:::dunif_piktheta_cpp(x, k, theta_star2)
+  pdf2_x <- dempsterpolytope:::dunif_piktheta_cpp(x, k, theta_star2)
   if (runif(1) < (pdf2_x / pdf1_x)){
     return(list(pts = cbind(x,x), equal = TRUE))
   } else {
     reject <- TRUE
     y <- NA
     while (reject){
-      y <- montecarlodsm:::runif_piktheta_one_cpp(k, theta_star2)
+      y <- dempsterpolytope:::runif_piktheta_one_cpp(k, theta_star2)
       pdf2_y <- 1/theta_star2[k]
-      pdf1_y <- montecarlodsm:::dunif_piktheta_cpp(y, k, theta_star1)
+      pdf1_y <- dempsterpolytope:::dunif_piktheta_cpp(y, k, theta_star1)
       reject <- (runif(1) < (pdf1_y/pdf2_y))
     }
     return(list(pts = cbind(x,y), equal = FALSE))
@@ -136,7 +136,7 @@ meeting_times <- function(freqX, lag, rinit, omega, max_iterations = 1e4){
       for (ik in 1:K) set.column(lpobject, ik, mat_cst_[,ik])
       vec_ <- rep(0, K); vec_[k] <- -1; set.objfn(lpobject, vec_)
       solve(lpobject); theta_star1 <- get.variables(lpobject)
-      pts_k <- montecarlodsm:::runif_piktheta_cpp(freqX[k], k, theta_star1)
+      pts_k <- dempsterpolytope:::runif_piktheta_cpp(freqX[k], k, theta_star1)
       pts1[[k]] <- pts_k$pts
       etas1[k,] <- pts_k$minratios
     }}
@@ -174,7 +174,7 @@ meeting_times <- function(freqX, lag, rinit, omega, max_iterations = 1e4){
       ## with probability omega, do common RNG, otherwise max coupling
       u_ <- runif(1)
       if (u_ < omega){
-        coupled_results_ <- montecarlodsm:::crng_runif_piktheta_cpp(freqX[k], k, theta_star1, theta_star2)
+        coupled_results_ <- dempsterpolytope:::crng_runif_piktheta_cpp(freqX[k], k, theta_star1, theta_star2)
         pts1[[k]] <- coupled_results_$pts1
         etas1[k,] <- coupled_results_$minratios1
         pts2[[k]] <- coupled_results_$pts2

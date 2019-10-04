@@ -1,6 +1,6 @@
 ### This scripts illustrates that inference obtained with or without empty categories are not the same.
 
-library(montecarlodsm)
+library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
 registerDoParallel(cores = detectCores()-2)

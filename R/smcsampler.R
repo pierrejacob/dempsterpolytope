@@ -204,7 +204,7 @@ SMC_sampler_lp <- function(nparticles, X, K, essthreshold = 0.75, resamplingtime
         set.objfn(lpobject, vec_)
         solvestatus <- solve(lpobject)
         theta_star <- get.variables(lpobject)
-        pts_k <- montecarlodsm:::runif_piktheta_cpp(1, k_, theta_star)
+        pts_k <- dempsterpolytope:::runif_piktheta_cpp(1, k_, theta_star)
         a <- pts_k$pts[1,]
         for (j in notk_){
           etas[k_,j] <- min(etas[k_,j], a[j] / a[k_])
@@ -262,7 +262,7 @@ SMC_sampler_lp <- function(nparticles, X, K, essthreshold = 0.75, resamplingtime
               solve(lpobject)
               theta_star <- get.variables(lpobject)
               # once we have theta_star, we can draw points in pi_k(theta_star)
-              pts_k <- montecarlodsm:::runif_piktheta_cpp(freqX_[k], k, theta_star)
+              pts_k <- dempsterpolytope:::runif_piktheta_cpp(freqX_[k], k, theta_star)
               # pts[[k]] <- pts_k$pts
               etas[k,] <- pts_k$minratios
             }

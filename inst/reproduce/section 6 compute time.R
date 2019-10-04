@@ -1,7 +1,7 @@
 ## This scripts times the iterations of the Gibbs sampler,
 ## for various K and N, and plots the timings.
 
-library(montecarlodsm)
+library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
 registerDoParallel(cores = detectCores()-2)

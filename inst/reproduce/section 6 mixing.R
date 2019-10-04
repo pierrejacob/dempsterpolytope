@@ -2,7 +2,7 @@
 ## between the marginal distribution of the Gibbs sampler,
 ## for various K and N, and plots the upper bounds as a function of the iteration.
 
-library(montecarlodsm)
+library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
 registerDoParallel(cores = detectCores()-2)

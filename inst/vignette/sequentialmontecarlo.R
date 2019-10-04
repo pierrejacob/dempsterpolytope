@@ -1,39 +1,27 @@
-library(montecarlodsm)
+## This script runs both the Gibbs sampler and a sequential Monte Carlo algorithm
+## and computes some lower and upper probabilities of some assertion
+## to compare the results
+
+library(dempsterpolytope)
 set.seed(1)
 rm(list = ls())
 
-## Let's generate some data 
 ## number of categories
-K <- 5
+K <- 3
 ## number of observations
-n <- 50
-## data-generating value
-theta_dgp <- c(0.2, 0.4, 0.2, 0.1, 0.1)
-## observations
+n <- 20
+## data-generating parameter value
+theta_dgp <- c(0.2, 0.4, 0.4)
+## observations, simulated
 X <- sample(x = 1:K, size = n, replace = TRUE, prob = theta_dgp)
 ## frequencies
 freqX <- tabulate(X, nbins = K)
 print(freqX)
+## these are the observed data
 
 ## run Gibbs sampler to get random polytopes
-niterations_gibbs <- 1e3
+niterations_gibbs <- 2e3
 samples_gibbs <- gibbs_sampler(niterations_gibbs, freqX)
-
-# the "etas" are stored in samples_gibbs$etas_chain, e.g.
-# for the etas corresponding to iteration 100
-# we get a K x K matrix of etas[k,j] for k,j in 1:K
-samples_gibbs$etas_chain[100,,]
-# from which we can get the vertices of the polytope as
-cvxpolytope <- etas2cvxpolytope(samples_gibbs$etas_chain[100,,])
-print(cvxpolytope$vertices_barcoord)
-# as we can see this polytope has 10 vertices, each in the simplex of dimension 4
-
-# and we can also get a representation of the polytope 
-# as the points x satisfying A x <= b with 
-A <- cvxpolytope$constr$constr
-b <- cvxpolytope$constr$rhs
-print(A)
-print(b)
 
 ## from these random polytopes we can estimate lower and upper probabilities 
 ## associated with assertions of interest
@@ -49,15 +37,6 @@ burnin <- 100
 postburn <- niterations_gibbs - burnin
 contained_ <- rep(0, postburn)
 intersects_ <- rep(0, postburn)
-# library(doParallel)
-# registerDoParallel(cores = detectCores()-2)
-# rescvx <- foreach(index = ((burnin+1):niterations_gibbs), .combine = rbind) %dopar% {
-#   cvxp <- etas2cvxpolytope(samples_gibbs$etas_chain[index,,])
-#   res_ <- compare_polytopes(cvxp, intervalcvxp)
-#   res_
-# }
-# contained_ <- rescvx[,1]
-# intersects_ <- rescvx[,2]
 for (index in ((burnin+1):niterations_gibbs)){
   cvxp <- etas2cvxpolytope(samples_gibbs$etas_chain[index,,])
   res_ <- compare_polytopes(cvxp, intervalcvxp)
@@ -68,11 +47,10 @@ for (index in ((burnin+1):niterations_gibbs)){
 ## this gives us the following lower and upper probabilities
 cat(mean(contained_), mean(intersects_), "\n")
 
-## next we can approximate the same quantities but using a different Monte Carlo technique
-## called "sequential Monte Carlo"
+## next we can approximate the same quantities but using sequential Monte Carlo
 nparticles <- 2^10
 samples_smc <- SMC_sampler(nparticles, X, K, essthreshold = 0.75, verbose = FALSE)
-## this gives a number of particle, each of which is a random polytope with a weight
+## this gives a number of particles, each of which is a random polytope with a weight
 ## for instance the 10th particle is
 samples_smc$etas_particles[10,,]
 ## with weight

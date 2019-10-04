@@ -1,11 +1,11 @@
-#'@name montecarlodsm-package
-#'@aliases montecarlodsm
+#'@name dempsterpolytope-package
+#'@aliases dempsterpolytope
 #'@docType package
-#'@title montecarlodsm
+#'@title dempsterpolytope
 #'@author Pierre E. Jacob <pjacob@@g.harvard.edu>
 #'@description ...
 #'@details ...
 #'@keywords package
-#'@useDynLib montecarlodsm
+#'@useDynLib dempsterpolytope
 #'@importFrom Rcpp sourceCpp
 NULL

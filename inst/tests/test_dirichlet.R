@@ -1,4 +1,6 @@
-library(montecarlodsm)
+## This script tests calculations to do with Dirichlet distributions
+
+library(dempsterpolytope)
 set_my_theme()
 ## triangle with equal sides
 v_cartesian <- list(c(1/2, sin(pi/3)), c(0,0), c(1,0))
@@ -27,7 +29,6 @@ samples2transf <- t(apply(samples2, 1, function(v) transf(v[1], v[2], v[3], v[4]
 samples2untransf <- t(apply(samples2transf, 1, function(v) invtransf(v[1], v[2], v[3], v[4])))
 head(samples2 - samples2untransf)
 ## ok so inv transformation is valid
-?numDeriv::genD
 ## Now are the first three components of samples2transf distributed according to a Dirichlet ?
 # 1st and 2nd components
 plot(x = samples2transf[,1], y = samples2transf[,2], col = rgb(0,0,0,0.1))

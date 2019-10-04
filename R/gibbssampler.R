@@ -186,7 +186,7 @@ gibbs_sampler_lp <- function(niterations, freqX, theta_0){
         solve(lpobject)
         theta_star <- get.variables(lpobject)
         # once we have theta_star, we can draw points in pi_k(theta_star)
-        pts_k <- montecarlodsm:::runif_piktheta_cpp(freqX[k], k, theta_star)
+        pts_k <- dempsterpolytope:::runif_piktheta_cpp(freqX[k], k, theta_star)
         pts[[k]] <- pts_k$pts
         etas[k,] <- pts_k$minratios
       }

@@ -1,22 +1,14 @@
-library(montecarlodsm)
+## This scripts tests that the solution of a linear program
+## matches the solution of a shortest path problem 
+library(dempsterpolytope)
 set.seed(1)
 rm(list = ls())
-# install.packages("lpSolveAPI")
 library(lpSolveAPI)
 
-#
-## Let's generate some data 
 ## number of categories
 K <- 3
 ## number of observations
 n <- 5
-## data-generating value
-# theta_dgp <- c(0.2, 0.4, 0.4)
-## observations
-# X <- sample(x = 1:K, size = n, replace = TRUE, prob = theta_dgp)
-## frequencies
-# freqX <- tabulate(X, nbins = K)
-# print(freqX)
 freqX <- 1:K
 
 ## run Gibbs sampler to get random polytopes

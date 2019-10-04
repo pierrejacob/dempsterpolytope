@@ -1,8 +1,7 @@
-###
 ## In this script, we compute lower and upper CDF of marginals 
 ## from the output of a Gibbs sampler for categorical distribution with arbitrary K
 ###
-library(montecarlodsm)
+library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
 registerDoParallel(cores = detectCores()-2)

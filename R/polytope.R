@@ -1,12 +1,11 @@
-# convert "eta" constraints to polytope within simplex of dimension K
-# the polytope describes the feasible set, on barycentric coordinate
-# recall each constraint is of the form: theta_ell / theta_k <= eta[k,l]
-# i.e. theta_ell - eta[k,l] theta_k  <= 0
-# and theta is in the simplex, i.e. sum_{j<K} theta_j <= 1, -theta_j <= 0
-## the following code writes the constraints as a matrix A and a vector b
-## such that A x <= b
-## then calls a function of the package 'hitandrun' to obtain
-## the coordinates of the vertices of the polytope
+## convert "eta" constraints to polytope within simplex of dimension K the
+## polytope describes the feasible set, on barycentric coordinate recall each
+## constraint is of the form: theta_ell / theta_k <= eta[k,l] i.e. theta_ell -
+## eta[k,l] theta_k  <= 0 and theta is in the simplex, i.e. sum_{j<K} theta_j <=
+## 1, -theta_j <= 0 the following code writes the constraints as a matrix A and
+## a vector b such that A x <= b then calls a function of the package 'rcdd'
+## (mimicking what's done in 'hitandrun') to obtain the coordinates of the
+## vertices of the polytope
 #'@export
 etas2cvxpolytope <- function(etas){
   K_ <- dim(etas)[1]
@@ -34,7 +33,15 @@ etas2cvxpolytope <- function(etas){
   }
   constr <- list(constr = A, rhs = b, dir = rep("<=", nrow(A)))
   # get vertices of polytope
-  vertices_barcoord <- hitandrun::findVertices(constr)
+  # vertices_barcoord <- hitandrun::findVertices(constr)
+  ## make H representation
+  h <- rcdd::makeH(constr$constr, constr$rhs)
+  ## try to find V representation (for Vendetta)
+  v <- rcdd::q2d(rcdd::scdd(rcdd::d2q(h))$output)
+  if (any(v[, 1] != "0") || any(v[, 2] != "1")) {
+    stop("Failed to enumerate vertices. Is the polytope unbounded?")
+  }
+  vertices_barcoord <- v[, -c(1, 2), drop = FALSE]
   # then add last coordinate, so that entries sum to one again
   vertices_barcoord <- cbind(vertices_barcoord, 1- apply(vertices_barcoord, 1, sum))
   return(list(vertices_barcoord = vertices_barcoord, constr = constr))
@@ -64,7 +71,15 @@ interval2polytope <- function(K, param, interval){
   A <- rbind(A, matrix(cc[1:(K-1)], nrow = 1))
   # then we get the vertices of polytope
   constr <- list(constr = A, rhs = b, dir = rep("<=", nrow(A)))
-  vertices_barcoord <- hitandrun::findVertices(constr)
+  # vertices_barcoord <- hitandrun::findVertices(constr)
+  ## make H representation
+  h <- rcdd::makeH(constr$constr, constr$rhs)
+  ## try to find V representation (for Vendetta)
+  v <- rcdd::q2d(rcdd::scdd(rcdd::d2q(h))$output)
+  if (any(v[, 1] != "0") || any(v[, 2] != "1")) {
+    stop("Failed to enumerate vertices. Is the polytope unbounded?")
+  }
+  vertices_barcoord <- v[, -c(1, 2), drop = FALSE]
   vertices_barcoord <- cbind(vertices_barcoord, 1- apply(vertices_barcoord, 1, sum))
   return(list(vertices_barcoord = vertices_barcoord, constr = constr))
 }
@@ -131,7 +146,6 @@ compare_with_independence <- function(etas){
   vrepr <- rcdd::q2d(rcdd::scdd(rcdd::d2q(hrepr))$output)
   intersects <- (dim(vrepr)[1] != 0)
   cvxpolytope <- vrepr[,-c(1,2)]
-
   ## "negative correlation" constraint
   ## log(theta_1) + log(theta_4) - log(theta_2) - log(theta_3)  <= 0
   Apos <- matrix(c(1,-1,-1,1), nrow = 1, byrow = T)
@@ -160,7 +174,6 @@ compare_with_independence <- function(etas){
 
 
 
-## 
 ## take an array of etas, as produced by the function gibbs_sampler
 ## and a category (index between 1 and K)
 ## and compute whether the corresponding sets is contained / intersects 
@@ -228,12 +241,7 @@ etas_to_lower_upper_cdf_dopar <- function(etas, category, xgrid){
     x <- xgrid[igrid]
     intervals_[[igrid]] <- interval2polytope(K_, category, c(0, x))
   }
-  # iscontained_ <- matrix(FALSE, nrow = netas, ncol = n_in_xgrid)
-  # intersects_ <- matrix(FALSE, nrow = netas, ncol = n_in_xgrid)
   res_ <- foreach (ieta = 1:netas) %dopar% {
-    
-  # for (ieta in 1:netas){
-    # get one particular "feasible set"
     eta <- etas[ieta,,]
     eta_cvxp <- etas2cvxpolytope(eta)
     # for elements in the grid

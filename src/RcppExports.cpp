@@ -8,7 +8,7 @@ using namespace Rcpp;
 
 // systematic_resampling_
 IntegerVector systematic_resampling_(int nsamples, const NumericVector& weights);
-RcppExport SEXP _montecarlodsm_systematic_resampling_(SEXP nsamplesSEXP, SEXP weightsSEXP) {
+RcppExport SEXP _dempsterpolytope_systematic_resampling_(SEXP nsamplesSEXP, SEXP weightsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -20,7 +20,7 @@ END_RCPP
 }
 // multinomial_resampling_
 IntegerVector multinomial_resampling_(int nsamples, const NumericVector& weights);
-RcppExport SEXP _montecarlodsm_multinomial_resampling_(SEXP nsamplesSEXP, SEXP weightsSEXP) {
+RcppExport SEXP _dempsterpolytope_multinomial_resampling_(SEXP nsamplesSEXP, SEXP weightsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -32,7 +32,7 @@ END_RCPP
 }
 // SSP_resampling_
 IntegerVector SSP_resampling_(int nsamples, const NumericVector& weights);
-RcppExport SEXP _montecarlodsm_SSP_resampling_(SEXP nsamplesSEXP, SEXP weightsSEXP) {
+RcppExport SEXP _dempsterpolytope_SSP_resampling_(SEXP nsamplesSEXP, SEXP weightsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -44,7 +44,7 @@ END_RCPP
 }
 // runif_piktheta_cpp
 List runif_piktheta_cpp(int n, int k, NumericVector theta);
-RcppExport SEXP _montecarlodsm_runif_piktheta_cpp(SEXP nSEXP, SEXP kSEXP, SEXP thetaSEXP) {
+RcppExport SEXP _dempsterpolytope_runif_piktheta_cpp(SEXP nSEXP, SEXP kSEXP, SEXP thetaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -57,7 +57,7 @@ END_RCPP
 }
 // crng_runif_piktheta_cpp
 List crng_runif_piktheta_cpp(int n, int k, NumericVector& theta1, NumericVector& theta2);
-RcppExport SEXP _montecarlodsm_crng_runif_piktheta_cpp(SEXP nSEXP, SEXP kSEXP, SEXP theta1SEXP, SEXP theta2SEXP) {
+RcppExport SEXP _dempsterpolytope_crng_runif_piktheta_cpp(SEXP nSEXP, SEXP kSEXP, SEXP theta1SEXP, SEXP theta2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -71,7 +71,7 @@ END_RCPP
 }
 // runif_piktheta_one_cpp
 NumericVector runif_piktheta_one_cpp(int k, const NumericVector& theta);
-RcppExport SEXP _montecarlodsm_runif_piktheta_one_cpp(SEXP kSEXP, SEXP thetaSEXP) {
+RcppExport SEXP _dempsterpolytope_runif_piktheta_one_cpp(SEXP kSEXP, SEXP thetaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -83,7 +83,7 @@ END_RCPP
 }
 // dunif_piktheta_cpp
 double dunif_piktheta_cpp(const NumericVector& x_, int k, const NumericVector& theta);
-RcppExport SEXP _montecarlodsm_dunif_piktheta_cpp(SEXP x_SEXP, SEXP kSEXP, SEXP thetaSEXP) {
+RcppExport SEXP _dempsterpolytope_dunif_piktheta_cpp(SEXP x_SEXP, SEXP kSEXP, SEXP thetaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -96,7 +96,7 @@ END_RCPP
 }
 // maxcoupling_runif_piktheta_cpp
 List maxcoupling_runif_piktheta_cpp(int n, int k, const NumericVector& theta1, const NumericVector& theta2);
-RcppExport SEXP _montecarlodsm_maxcoupling_runif_piktheta_cpp(SEXP nSEXP, SEXP kSEXP, SEXP theta1SEXP, SEXP theta2SEXP) {
+RcppExport SEXP _dempsterpolytope_maxcoupling_runif_piktheta_cpp(SEXP nSEXP, SEXP kSEXP, SEXP theta1SEXP, SEXP theta2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -110,18 +110,18 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_montecarlodsm_systematic_resampling_", (DL_FUNC) &_montecarlodsm_systematic_resampling_, 2},
-    {"_montecarlodsm_multinomial_resampling_", (DL_FUNC) &_montecarlodsm_multinomial_resampling_, 2},
-    {"_montecarlodsm_SSP_resampling_", (DL_FUNC) &_montecarlodsm_SSP_resampling_, 2},
-    {"_montecarlodsm_runif_piktheta_cpp", (DL_FUNC) &_montecarlodsm_runif_piktheta_cpp, 3},
-    {"_montecarlodsm_crng_runif_piktheta_cpp", (DL_FUNC) &_montecarlodsm_crng_runif_piktheta_cpp, 4},
-    {"_montecarlodsm_runif_piktheta_one_cpp", (DL_FUNC) &_montecarlodsm_runif_piktheta_one_cpp, 2},
-    {"_montecarlodsm_dunif_piktheta_cpp", (DL_FUNC) &_montecarlodsm_dunif_piktheta_cpp, 3},
-    {"_montecarlodsm_maxcoupling_runif_piktheta_cpp", (DL_FUNC) &_montecarlodsm_maxcoupling_runif_piktheta_cpp, 4},
+    {"_dempsterpolytope_systematic_resampling_", (DL_FUNC) &_dempsterpolytope_systematic_resampling_, 2},
+    {"_dempsterpolytope_multinomial_resampling_", (DL_FUNC) &_dempsterpolytope_multinomial_resampling_, 2},
+    {"_dempsterpolytope_SSP_resampling_", (DL_FUNC) &_dempsterpolytope_SSP_resampling_, 2},
+    {"_dempsterpolytope_runif_piktheta_cpp", (DL_FUNC) &_dempsterpolytope_runif_piktheta_cpp, 3},
+    {"_dempsterpolytope_crng_runif_piktheta_cpp", (DL_FUNC) &_dempsterpolytope_crng_runif_piktheta_cpp, 4},
+    {"_dempsterpolytope_runif_piktheta_one_cpp", (DL_FUNC) &_dempsterpolytope_runif_piktheta_one_cpp, 2},
+    {"_dempsterpolytope_dunif_piktheta_cpp", (DL_FUNC) &_dempsterpolytope_dunif_piktheta_cpp, 3},
+    {"_dempsterpolytope_maxcoupling_runif_piktheta_cpp", (DL_FUNC) &_dempsterpolytope_maxcoupling_runif_piktheta_cpp, 4},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_montecarlodsm(DllInfo *dll) {
+RcppExport void R_init_dempsterpolytope(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

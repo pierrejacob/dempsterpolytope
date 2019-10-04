@@ -2,34 +2,34 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 systematic_resampling_ <- function(nsamples, weights) {
-    .Call('_montecarlodsm_systematic_resampling_', PACKAGE = 'dempsterpolytope', nsamples, weights)
+    .Call('_dempsterpolytope_systematic_resampling_', PACKAGE = 'dempsterpolytope', nsamples, weights)
 }
 
 multinomial_resampling_ <- function(nsamples, weights) {
-    .Call('_montecarlodsm_multinomial_resampling_', PACKAGE = 'dempsterpolytope', nsamples, weights)
+    .Call('_dempsterpolytope_multinomial_resampling_', PACKAGE = 'dempsterpolytope', nsamples, weights)
 }
 
 SSP_resampling_ <- function(nsamples, weights) {
-    .Call('_montecarlodsm_SSP_resampling_', PACKAGE = 'dempsterpolytope', nsamples, weights)
+    .Call('_dempsterpolytope_SSP_resampling_', PACKAGE = 'dempsterpolytope', nsamples, weights)
 }
 
 runif_piktheta_cpp <- function(n, k, theta) {
-    .Call('_montecarlodsm_runif_piktheta_cpp', PACKAGE = 'dempsterpolytope', n, k, theta)
+    .Call('_dempsterpolytope_runif_piktheta_cpp', PACKAGE = 'dempsterpolytope', n, k, theta)
 }
 
 crng_runif_piktheta_cpp <- function(n, k, theta1, theta2) {
-    .Call('_montecarlodsm_crng_runif_piktheta_cpp', PACKAGE = 'dempsterpolytope', n, k, theta1, theta2)
+    .Call('_dempsterpolytope_crng_runif_piktheta_cpp', PACKAGE = 'dempsterpolytope', n, k, theta1, theta2)
 }
 
 runif_piktheta_one_cpp <- function(k, theta) {
-    .Call('_montecarlodsm_runif_piktheta_one_cpp', PACKAGE = 'dempsterpolytope', k, theta)
+    .Call('_dempsterpolytope_runif_piktheta_one_cpp', PACKAGE = 'dempsterpolytope', k, theta)
 }
 
 dunif_piktheta_cpp <- function(x_, k, theta) {
-    .Call('_montecarlodsm_dunif_piktheta_cpp', PACKAGE = 'dempsterpolytope', x_, k, theta)
+    .Call('_dempsterpolytope_dunif_piktheta_cpp', PACKAGE = 'dempsterpolytope', x_, k, theta)
 }
 
 maxcoupling_runif_piktheta_cpp <- function(n, k, theta1, theta2) {
-    .Call('_montecarlodsm_maxcoupling_runif_piktheta_cpp', PACKAGE = 'dempsterpolytope', n, k, theta1, theta2)
+    .Call('_dempsterpolytope_maxcoupling_runif_piktheta_cpp', PACKAGE = 'dempsterpolytope', n, k, theta1, theta2)
 }
 

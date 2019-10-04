@@ -1,5 +1,5 @@
 ## This script looks at whether Dempster's approach
-## appears to be consistent as more and more data are assimilated
+## appears to be consistent with large data sets 
 
 library(dempsterpolytope)
 library(doParallel)
@@ -10,7 +10,7 @@ set.seed(1)
 rm(list = ls())
 
 # number of observations
-n <- 1000
+n <- 10000
 # number of categories
 K <- 4
 categories <- 1:K
@@ -19,9 +19,6 @@ theta_dgp <- c(0.2, 0.4, 0.3, 0.1)
 X <- sample(x = categories, size = n, replace = TRUE, prob = theta_dgp)
 freqX <- tabulate(X)
 ##
-## encompassing triangle has three vertices
-v_cartesian <- list(c(1/2, sin(pi/3)), c(0,0), c(1,0))
-cols <- c("red", "green", "blue")
 
 ###
 niterations <- 5000

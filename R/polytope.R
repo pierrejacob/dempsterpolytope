@@ -91,7 +91,7 @@ interval2polytope <- function(K, param, interval){
 compare_polytopes <- function(cvxp1, cvxp2){
   K_ <- dim(cvxp1$vertices_barcoord)[2]
   ## check whether polytope is contained, i.e. all vertices satisfy linear inequalities
-  contained <- all(apply(cvxp1$vertices_barcoord[,1:(K_-1)], 1, function(v) all(cvxp2$constr$constr %*% v <= cvxp2$constr$rhs)))
+  contained <- all(apply(cvxp1$vertices_barcoord[,1:(K_-1),drop=F], 1, function(v) all(cvxp2$constr$constr %*% v <= cvxp2$constr$rhs)))
   # check whether there is some intersection
   test_constr <- cvxp2$constr
   test_constr$constr <- rbind(test_constr$constr, cvxp1$constr$constr)
@@ -208,7 +208,7 @@ etas_to_lower_upper_cdf <- function(etas, category, xgrid){
         if (iscontained_[ieta, igrid-1]){
           iscontained_[ieta, igrid] <- TRUE
         } else {
-          iscontained_[ieta, igrid] <- all(apply(eta_cvxp$vertices_barcoord[,1:(K_-1)], 1, function(v) all(interval_$constr$constr %*% v <= interval_$constr$rhs)))
+          iscontained_[ieta, igrid] <- all(apply(eta_cvxp$vertices_barcoord[,1:(K_-1),drop=F], 1, function(v) all(interval_$constr$constr %*% v <= interval_$constr$rhs)))
         }
         if (intersects_[ieta, igrid-1]){
           intersects_[ieta, igrid] <- TRUE
@@ -259,7 +259,7 @@ etas_to_lower_upper_cdf_dopar <- function(etas, category, xgrid){
         if (iscontained_[igrid-1]){
           iscontained_[igrid] <- TRUE
         } else {
-          iscontained_[igrid] <- all(apply(eta_cvxp$vertices_barcoord[,1:(K_-1)], 1, function(v) all(interval_$constr$constr %*% v <= interval_$constr$rhs)))
+          iscontained_[igrid] <- all(apply(eta_cvxp$vertices_barcoord[,1:(K_-1),drop=F], 1, function(v) all(interval_$constr$constr %*% v <= interval_$constr$rhs)))
         }
         if (intersects_[igrid-1]){
           intersects_[igrid] <- TRUE

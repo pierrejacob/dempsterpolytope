@@ -52,7 +52,6 @@ xgrid <- c(0, seq(from = theta_dgp[param]-0.1, to = theta_dgp[param]+0.1, length
 cdfs_ <- etas_to_lower_upper_cdf_dopar(samples_gibbs$etas_chain[subiterations,,], param, xgrid)
 lowercdf <- colMeans(cdfs_$iscontained)
 uppercdf <- colMeans(cdfs_$intersects)
-uppercdf <- colMeans(cdfs_$iscontained)
 
 # lower / upper 
 plot(xgrid, lowercdf, type = "l")

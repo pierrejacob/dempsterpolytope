@@ -10,4 +10,5 @@ src/*.o
 src/*.so
 src/*.dll
 inst/backup/
+inst/clusterscripts/
 inst/*RData

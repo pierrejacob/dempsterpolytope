@@ -1,12 +1,12 @@
 Package: dempsterpolytope
 Type: Package
-Title: Gibbs sampler to implement Dempster 1966's inference approach for Categorical distributions 
+Title: Gibbs sampler for Dempster's inference in Categorical distributions 
 Version: 1.0
 Date: 2019-03-05
 Author: Pierre E. Jacob
 Maintainer: Pierre E. Jacob <pierre.jacob.work@gmail.com>
-Description: Implements a Gibbs sampler for Dempster's inference approach for Categorical distributions; this package is a companion to an article by Pierre E. Jacob, Arthur P. Dempster, Paul T. Edlefsen, Ruobin Gong
-License: GNU GPL
+Description: Implements a Gibbs sampler for Dempster's inference approach for Categorical distributions; this package is a companion to an article by Pierre E. Jacob, Ruobin Gong, Paul T. Edlefsen, Arthur P. Dempster
+License: GNU GPL-3
 LazyData: TRUE
 Depends: Rcpp, RcppEigen, igraph, rcdd, dplyr, lpSolveAPI
 Imports: Rcpp (>= 1.0.0), RcppEigen (>= 0.3.3.5.0)

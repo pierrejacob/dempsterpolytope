@@ -1,7 +1,7 @@
 ## This folder contains the scripts that produce the numerical results
 ## for the article, including figures and various numbers
 
-## the R scripts' file name should be pretty descriptive;
+## the R scripts' file names should be pretty descriptive;
 ## they contain the section of the paper where the results appear
 
 

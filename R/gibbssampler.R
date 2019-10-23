@@ -115,7 +115,6 @@ gibbs_sampler_graph <- function(niterations, freqX, theta_0){
 }
 
 ## Gibbs sampler that relies on the lpSolve library
-## instead of igraph
 #'@export
 gibbs_sampler_lp <- function(niterations, freqX, theta_0){
   K <- length(freqX)
@@ -225,6 +224,30 @@ gibbs_sampler_lp <- function(niterations, freqX, theta_0){
 # niterations must be...
 # freqX must be...
 # theta_0 must be...
+#'@rdname gibbs_sampler
+#'@title Gibbs sampler for Categorical inference 
+#'@description This is the main function of the package. It runs the proposed Gibbs sampler
+#' for a desired number of iterations, for a given vector of counts.
+#' It generates a convex polytope at each iteration. Below the number of categories is denoted by K,
+#' and corresponds to the length of the input vector 'freqX'.
+#'@param niterations a number of iterations to perform (each iteration is a full sweep of Gibbs updates)
+#'@param freqX a vector of non-negative integers containing the count data; its length defines K, the number of categories.
+#'@param theta_0 (optional) a vector in the K-simplex used to initialize the sampler.
+#' If missing, it is set to freqX / sum(freqX). 
+#'@return A list containing 'etas_chain', an array of dimension niterations x K x K
+#' and 'Achains', a list of K arrays, each of dimension niterations x N_k x K where N_k is the number of 
+#' observations in category k. 
+#' \enumerate{
+#' \item etas_chain: for iteration 'iteration', etas_chain[iteration,,] is a K x K matrix.
+#' The generated polytope at that iteration is made of all the vectors theta such that theta_l/theta_k < etas_chain[iteration,k,l]
+#' for all k,l in {1,...,K}.
+#' \item Achains: for iteration 'iteration', and category 'k' in {1,...,K}, Achains[[k]][iteration,,]
+#' is made of N_k rows, where N_k is the k-th entry of freqX, i.e. the number of counts in category k.
+#' Each row contains one of the vectors u_{n} with n in I_k in the notation of the article.
+#' } 
+#'@examples
+#' gibbs_results <- gibbs_sampler(niterations = 5, freqX = c(1,2,3))
+#' gibbs_results$etas_chain[5,,]
 #'@export
 gibbs_sampler <- function(niterations, freqX, theta_0){
   # return(gibbs_sampler_graph(niterations, freqX, theta_0))

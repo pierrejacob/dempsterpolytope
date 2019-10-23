@@ -3,12 +3,14 @@ Type: Package
 Title: Gibbs sampler for Dempster's inference in Categorical distributions 
 Version: 1.0
 Date: 2019-03-05
-Author: Pierre E. Jacob
+Author: Pierre E. Jacob, Ruobin Gong, Paul T. Edlefsen, Arthur P. Dempster
 Maintainer: Pierre E. Jacob <pierre.jacob.work@gmail.com>
 Description: Implements a Gibbs sampler for Dempster's inference approach for Categorical distributions; this package is a companion to an article by Pierre E. Jacob, Ruobin Gong, Paul T. Edlefsen, Arthur P. Dempster
 License: GNU GPL-3
 LazyData: TRUE
+Encoding: UTF-8
 Depends: Rcpp, RcppEigen, igraph, rcdd, dplyr, lpSolveAPI
+Suggests: ggplot2
 Imports: Rcpp (>= 1.0.0), RcppEigen (>= 0.3.3.5.0)
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 6.1.1

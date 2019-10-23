@@ -17,8 +17,6 @@
 #'@export
 set_my_theme <- function(){
   library(ggplot2)
-  library(ggthemes)
-  library(gridExtra)  
   theme_set(theme_bw())
   theme_update(axis.text.x = element_text(size = 20),
                axis.text.y = element_text(size = 20),

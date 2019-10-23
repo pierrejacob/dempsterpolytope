@@ -12,3 +12,4 @@ src/*.dll
 inst/backup/
 inst/clusterscripts/
 inst/*RData
+README_cache/

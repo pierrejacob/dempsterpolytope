@@ -3,6 +3,7 @@ library(doParallel)
 library(doRNG)
 registerDoParallel(cores = detectCores()-2)
 set_my_theme()
+library(gridExtra)
 set.seed(1)
 rm(list = ls())
 

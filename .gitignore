@@ -11,4 +11,6 @@ src/*.dll
 inst/backup/
 inst/clusterscripts/
 inst/*RData
+inst/reproduce/*RData
+
 README_cache/

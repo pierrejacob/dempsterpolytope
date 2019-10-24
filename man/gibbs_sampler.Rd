@@ -20,7 +20,7 @@ and 'Us', a list of K arrays, each of dimension niterations x N_k x K where N_k 
 observations in category k. 
 \enumerate{
 \item etas: for iteration 'iteration', etas[iteration,,] is a K x K matrix.
-The generated polytope at that iteration is made of all the vectors theta such that theta_l/theta_k < etas[iteration,k,l]
+The feasible set at that iteration, is the set of all vectors theta such that, theta_l/theta_k < etas[iteration,k,l]
 for all k,l in {1,...,K}.
 \item Us: for iteration 'iteration', and category 'k' in {1,...,K}, Us[[k]][iteration,,]
 is made of N_k rows, where N_k is the k-th entry of counts, i.e. the number of counts in category k.

@@ -20,14 +20,14 @@ categories <- 1:K
 theta_dgp <- c(0.5, 0.2, 0.3)
 # theta_dgp <- c(0.1, 0.2, 0.3, 0.4)
 X <- sample(x = categories, size = n, replace = TRUE, prob = theta_dgp)
-freqX <- tabulate(X, nbins = K)
-cat("Data:", freqX, "\n")
+counts <- tabulate(X, nbins = K)
+cat("Data:", counts, "\n")
 #
 niterations <- 25000
-samples_gibbs <- gibbs_sampler(niterations = niterations, freqX = freqX)
-samples_gibbs_extended <- gibbs_sampler(niterations, freqX = c(freqX, 0))
+samples_gibbs <- gibbs_sampler(niterations = niterations, counts = counts)
+samples_gibbs_extended <- gibbs_sampler(niterations, counts = c(counts, 0))
 names(samples_gibbs)
-dim(samples_gibbs$etas_chain)
+dim(samples_gibbs$etas)
 #
 warmup <- 500
 nsubiterations <- 5000
@@ -37,7 +37,7 @@ subiterations <- floor(seq(from = warmup, to = niterations, length.out = nsubite
 param <- 1
 ngrid01 <- 75
 grid01 <- seq(from = 0, to = 1, length.out = ngrid01)
-etas <- samples_gibbs$etas_chain[subiterations,,]
+etas <- samples_gibbs$etas[subiterations,,]
 res_ <- etas_to_lower_upper_cdf_dopar(etas, 1, grid01)
 lowercdf <- colMeans(res_$iscontained)
 uppercdf <- colMeans(res_$intersects)
@@ -45,9 +45,9 @@ uppercdf <- colMeans(res_$intersects)
 plot(grid01, lowercdf, type = "l")
 lines(grid01, uppercdf)
 abline(v = theta_dgp[param], lty = 2)
-abline(v = freqX[param]/n, lty = 3)
+abline(v = counts[param]/n, lty = 3)
 
-etas_extended <- samples_gibbs_extended$etas_chain[subiterations,,]
+etas_extended <- samples_gibbs_extended$etas[subiterations,,]
 res_extended <- etas_to_lower_upper_cdf_dopar(etas_extended, 1, grid01)
 lowercdf_extended <- colMeans(res_extended$iscontained)
 uppercdf_extended <- colMeans(res_extended$intersects)
@@ -55,15 +55,15 @@ lines(grid01, lowercdf_extended, lty = 2)
 lines(grid01, uppercdf_extended, lty = 2)
 
 ## add empty category
-length(samples_gibbs$Achain)
-dim(samples_gibbs$Achain[[1]])
+length(samples_gibbs$Us)
+dim(samples_gibbs$Us[[1]])
 
 newA <- list()
 for (category in 1:K){
-  newA[[category]] <- array(NA, dim = c(niterations, freqX[category], K+1))
+  newA[[category]] <- array(NA, dim = c(niterations, counts[category], K+1))
   for (iter in 1:niterations){
-    for (iA in 1:freqX[category]){
-      oldA <- samples_gibbs$Achain[[category]][iter,iA,]
+    for (iA in 1:counts[category]){
+      oldA <- samples_gibbs$Us[[category]][iter,iA,]
       s <- rgamma(1, K, 1)
       w <- rexp(1, 1)
       newA[[category]][iter,iA,] <- c(s * oldA / (s + w), w / (s + w))
@@ -81,7 +81,7 @@ newA[[1]][1,,]
 new_etas <- array(NA, dim = c(niterations, K + 1, K + 1))
 ## etas[k,l] = min_u u_l/u_k
 for (iter in 1:niterations){
-  new_etas[iter,1:K,1:K] <- samples_gibbs$etas_chain[iter,,] 
+  new_etas[iter,1:K,1:K] <- samples_gibbs$etas[iter,,] 
   new_etas[iter,K+1,] <- Inf
   for (category in 1:K){
     new_etas[iter,category,K+1] <- min(newA[[category]][iter,,K+1]/newA[[category]][iter,,category]) 
@@ -96,12 +96,12 @@ lines(grid01, new_uppercdf, lty = 3, col = "red")
 
 
 
-# samples_gibbs_extended$etas_chain[1,,]
+# samples_gibbs_extended$etas[1,,]
 
 ## next, removal of a category
 removed_etas <- array(NA, dim = c(niterations, K, K))
 for (iter in 1:niterations){
-  removed_etas[iter,,] <- samples_gibbs_extended$etas_chain[iter,1:K,1:K]
+  removed_etas[iter,,] <- samples_gibbs_extended$etas[iter,1:K,1:K]
 }
 ##
 

@@ -11,19 +11,19 @@ rm(list = ls())
 K <- 3
 categories <- 1:K
 # data 
-freqX <- c(4,3,2)
-cat("Data:", freqX, "\n")
+counts <- c(4,3,2)
+cat("Data:", counts, "\n")
 ##
 niterations <- 10000
-samples_gibbs_K3 <- gibbs_sampler(niterations, freqX)
-samples_gibbs_K4 <- gibbs_sampler(niterations, c(freqX, 0))
+samples_gibbs_K3 <- gibbs_sampler(niterations, counts)
+samples_gibbs_K4 <- gibbs_sampler(niterations, c(counts, 0))
 ##
 ## burnin and thinning
 warmup <- 1000
 nsubiterations <- 2000
 subiterations <- floor(seq(from = warmup, to = niterations, length.out = nsubiterations))
-etas_K3 <- samples_gibbs_K3$etas_chain[subiterations,,]
-etas_K4 <- samples_gibbs_K4$etas_chain[subiterations,,]
+etas_K3 <- samples_gibbs_K3$etas[subiterations,,]
+etas_K4 <- samples_gibbs_K4$etas[subiterations,,]
 
 ## compare empirical lower/upper CDF of first parameter
 ngrid01 <- 100
@@ -44,7 +44,7 @@ g1 <- qplot(x = grid01, y = lowercdf_K31, linetype = "3", geom = "line") + xlab(
   geom_line(aes(y = uppercdf_K41, linetype = "4")) + scale_linetype(name = "# categories: ")
 g1
 
-ggsave(filename = "inst/reproduce/emptycategory.theta1.pdf", plot = g1, width = 7, height = 5)
+ggsave(filename = "emptycategory.theta1.pdf", plot = g1, width = 7, height = 5)
 ###
 res_K32 <- etas_to_lower_upper_cdf_dopar(etas_K3, 2, grid01)
 lowercdf_K32 <- colMeans(res_K32$iscontained)
@@ -61,7 +61,7 @@ g2 <- qplot(x = grid01, y = lowercdf_K32, linetype = "3", geom = "line") + xlab(
   geom_line(aes(y = uppercdf_K42, linetype = "4")) + scale_linetype(name = "# categories: ")
 g2
 
-ggsave(filename = "inst/reproduce/emptycategory.theta2.pdf", plot = g2, width = 7, height = 5)
+ggsave(filename = "emptycategory.theta2.pdf", plot = g2, width = 7, height = 5)
 
 
 
@@ -72,10 +72,10 @@ ggsave(filename = "inst/reproduce/emptycategory.theta2.pdf", plot = g2, width = 
 ## first, extend from K = 3
 pts_extended_from_K3 <- list()
 for (category in 1:K){
-  pts_extended_from_K3[[category]] <- array(NA, dim = c(niterations, freqX[category], K+1))
+  pts_extended_from_K3[[category]] <- array(NA, dim = c(niterations, counts[category], K+1))
   for (iter in 1:niterations){
-    for (iA in 1:freqX[category]){
-      oldA <- samples_gibbs_K3$Achain[[category]][iter,iA,]
+    for (iA in 1:counts[category]){
+      oldA <- samples_gibbs_K3$Us[[category]][iter,iA,]
       s <- rgamma(1, K, 1)
       w <- rexp(1, 1)
       pts_extended_from_K3[[category]][iter,iA,] <- c(s * oldA / (s + w), w / (s + w))
@@ -86,7 +86,7 @@ for (category in 1:K){
 etas_K4_from_K3 <- array(NA, dim = c(niterations, K + 1, K + 1))
 ## etas[k,l] = min_u u_l/u_k
 for (iter in 1:niterations){
-  etas_K4_from_K3[iter,1:K,1:K] <- samples_gibbs_K3$etas_chain[iter,,] 
+  etas_K4_from_K3[iter,1:K,1:K] <- samples_gibbs_K3$etas[iter,,] 
   etas_K4_from_K3[iter,K+1,] <- Inf
   for (category in 1:K){
     etas_K4_from_K3[iter,category,K+1] <- min(pts_extended_from_K3[[category]][iter,,K+1]/pts_extended_from_K3[[category]][iter,,category]) 
@@ -98,7 +98,7 @@ for (iter in 1:niterations){
 ## that's simpler...
 etas_K3_from_K4 <- array(NA, dim = c(niterations, K, K))
 for (iter in 1:niterations){
-  etas_K3_from_K4[iter,,] <- samples_gibbs_K4$etas_chain[iter,1:K,1:K]
+  etas_K3_from_K4[iter,,] <- samples_gibbs_K4$etas[iter,1:K,1:K]
 }
 ##
 

@@ -15,22 +15,21 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ### refresh etas and graph using Gibbs sampler 
-#'@export
-smc_refresh_category_graph <- function(etas, g, freqX){
-  K <- length(freqX)
+smc_refresh_category_graph <- function(etas, g, counts){
+  K <- length(counts)
   for (k in 1:K){
-    if (freqX[k] > 0){
+    if (counts[k] > 0){
       notk <- setdiff(1:K, k)
       theta_star <- rep(0, K)
       # 
       # minimum value among paths from k to ell ("eta star")
       minimum_values <- rep(1, K)
-      minimum_values[notk] <- distances(g, v = notk, to = k, mode = "out")[,1]
+      minimum_values[notk] <- igraph::distances(g, v = notk, to = k, mode = "out")[,1]
       # theta_star is the intersection of theta_ell/theta_k = etastar[k,ell]
       theta_star <- exp(-minimum_values)
       theta_star[k] <- 1
       theta_star <- theta_star / sum(theta_star)
-      pts_k <- runif_piktheta_cpp(freqX[k], k, theta_star)
+      pts_k <- dempsterpolytope:::runif_piktheta_cpp(counts[k], k, theta_star)
       etas[k,] <- pts_k$minratios
       seqedges <- as.numeric(sapply(notk, function(x) c(k, x)))
       E(g, seqedges)$weight <- log(etas[k, notk])
@@ -40,8 +39,7 @@ smc_refresh_category_graph <- function(etas, g, freqX){
 }
 
 
-## SMC sampler
-#'@export
+## SMC sampler using igraph
 SMC_sampler_graph <- function(nparticles, X, K, essthreshold = 0.75, resamplingtimes = NULL, verbose = FALSE, h = NULL){
   nobs <- length(X)
   etas_particles <- array(dim = c(nparticles, K, K))
@@ -58,7 +56,7 @@ SMC_sampler_graph <- function(nparticles, X, K, essthreshold = 0.75, resamplingt
       etas[k_,j] <- a[j] / a[k_]
     }
     etas_particles[iparticle,,] <- etas  
-    graphs[[iparticle]] <- graph_from_adjacency_matrix(log(etas), mode = "directed", weighted = TRUE, diag = FALSE)
+    graphs[[iparticle]] <- igraph::graph_from_adjacency_matrix(log(etas), mode = "directed", weighted = TRUE, diag = FALSE)
   }
   # storage
   logweights <- rep(0, nparticles)
@@ -72,7 +70,7 @@ SMC_sampler_graph <- function(nparticles, X, K, essthreshold = 0.75, resamplingt
   if (nobs > 1){
     for (iobs in 2:nobs){
       if (verbose) cat("assimilating observation ", iobs, "\n")
-      freqX_ <- tabulate(X[1:iobs], nbins = K)
+      counts_ <- tabulate(X[1:iobs], nbins = K)
       k_ <- X[iobs]
       notk_ <- setdiff(1:K, k_)
       # propagate particles
@@ -82,7 +80,7 @@ SMC_sampler_graph <- function(nparticles, X, K, essthreshold = 0.75, resamplingt
         theta_star <- rep(0, K)
         # minimum value among paths from k to ell ("eta star")
         minimum_values <- rep(1, K)
-        minimum_values[notk_] <- distances(g, v = notk_, to = k_, mode = "out")[,1]
+        minimum_values[notk_] <- igraph::distances(g, v = notk_, to = k_, mode = "out")[,1]
         
         theta_star <- exp(-minimum_values)
         theta_star[k_] <- 1
@@ -120,7 +118,7 @@ SMC_sampler_graph <- function(nparticles, X, K, essthreshold = 0.75, resamplingt
         etas_particles <- etas_particles[ancestors,,]
         # MCMC moves
         for (iparticle in 1:nparticles){
-          res_ <- smc_refresh_category_graph(etas_particles[iparticle,,], g = graphs[[iparticle]], freqX_)
+          res_ <- smc_refresh_category_graph(etas_particles[iparticle,,], g = graphs[[iparticle]], counts_)
           graphs[[iparticle]] <- res_$g
           etas_particles[iparticle,,] <- res_$etas
         }
@@ -139,7 +137,7 @@ SMC_sampler_graph <- function(nparticles, X, K, essthreshold = 0.75, resamplingt
               essthreshold = essthreshold, resamplingtimes = resamplingtimes_sofar, hestimator = hestimator))
 }
 
-#'@export
+## SMC sampler using lpSolveAPI
 SMC_sampler_lp <- function(nparticles, X, K, essthreshold = 0.75, resamplingtimes = NULL, verbose = FALSE, h = NULL){
   nobs <- length(X)
   categories <- 1:K
@@ -187,7 +185,7 @@ SMC_sampler_lp <- function(nparticles, X, K, essthreshold = 0.75, resamplingtime
   if (nobs > 1){
     for (iobs in 2:nobs){
       if (verbose) cat("assimilating observation ", iobs, "\n")
-      freqX_ <- tabulate(X[1:iobs], nbins = K) # could be updated recursively
+      counts_ <- tabulate(X[1:iobs], nbins = K) # could be updated recursively
       k_ <- X[iobs]
       notk_ <- setdiff(1:K, k_)
       # propagate particles
@@ -249,7 +247,7 @@ SMC_sampler_lp <- function(nparticles, X, K, essthreshold = 0.75, resamplingtime
           etas <- etas_particles[iparticle,,]
           # loop over categories
           for (k in categories){
-            if (freqX_[k] > 0){
+            if (counts_[k] > 0){
               # set Linear Program for this update
               mat_cst_ <- mat_cst
               # find theta_star
@@ -277,7 +275,7 @@ SMC_sampler_lp <- function(nparticles, X, K, essthreshold = 0.75, resamplingtime
               solve(lpobject)
               theta_star <- get.variables(lpobject)
               # once we have theta_star, we can draw points in pi_k(theta_star)
-              pts_k <- dempsterpolytope:::runif_piktheta_cpp(freqX_[k], k, theta_star)
+              pts_k <- dempsterpolytope:::runif_piktheta_cpp(counts_[k], k, theta_star)
               # pts[[k]] <- pts_k$pts
               etas[k,] <- pts_k$minratios
             }

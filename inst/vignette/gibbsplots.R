@@ -16,7 +16,7 @@ n <- 20
 K <- 3
 categories <- 1:K
 ## data 
-freqX <- c(7,5,8)
+counts <- c(7,5,8)
 ##
 ## encompassing triangle has three vertices
 v_cartesian <- list(c(1/2, sin(pi/3)), c(0,0), c(1,0))
@@ -25,7 +25,7 @@ cols <- c("red", "green", "blue")
 ###
 niterations <- 200
 pct <- proc.time()
-samples_gibbs <- gibbs_sampler(niterations = niterations, freqX = freqX, theta_0 = c(0.8,0.1,0.1))
+samples_gibbs <- gibbs_sampler(niterations = niterations, counts = counts, theta_0 = c(0.8,0.1,0.1))
 (proc.time() - pct)[3]
 ##
 
@@ -34,8 +34,8 @@ samples_gibbs <- gibbs_sampler(niterations = niterations, freqX = freqX, theta_0
 ## and overlay them in plot
 df.polytope <- data.frame()
 for (iteration in 1:niterations){
-  etas <- samples_gibbs$etas_chain[iteration,,]
-  etascvxp <- etas2cvxpolytope(etas)
+  etas_iteration <- samples_gibbs$etas[iteration,,]
+  etascvxp <- etas2cvxpolytope(etas_iteration)
   ## convert coordinates to cartesian
   vertices_cart <- t(apply(etascvxp$vertices_barcoord, 1, function(v) barycentric2cartesian(v, v_cartesian)))
   # order vertices according to angles
@@ -51,8 +51,8 @@ g
 
 ### Show an instance of a feasible plot with all six linear constraints
 iteration <- 170
-etas <- samples_gibbs$etas_chain[iteration,,]
-pts_barcoord <- lapply(samples_gibbs$Achain, function(l) l[iteration,,])
+etas <- samples_gibbs$etas[iteration,,]
+pts_barcoord <- lapply(samples_gibbs$Us, function(l) l[iteration,,])
 pts_cart <- lapply(pts_barcoord, function(l) t(apply(matrix(l, ncol = K), 1, function(v) barycentric2cartesian(v, v_cartesian))))
 g <- ggplot_triangle(v_cartesian, pts_cart, etas, addpolytope = T, cols = cols)
 g

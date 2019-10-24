@@ -41,7 +41,7 @@ meanpi3 <- c(pt_xy[1]/3 + v2[1]/3 + v1[1]/3, pt_xy[2]/3 + v2[2]/3 + v1[2]/3)
 g <- g + annotate(geom = "text", x = meanpi3[1], y = meanpi3[2], label = expression(Delta[3](theta)), parse = FALSE, size = 5) 
 g <- g + annotate(geom = 'text', size = 5, x = .56, y = .28, label = TeX("$\\theta$", output = "character"), parse = TRUE)
 g
-# ggsave(filename = "sdk.plottriangle.pdf", plot = g, width = 5, height = 5)
+ggsave(filename = "sdk.plottriangle.pdf", plot = g, width = 5, height = 5)
 
 ## show constraints
 barconstraint2cartconstraint <- function(d, j, eta, matrixT, v_cartesian){
@@ -87,7 +87,7 @@ g <- g + geom_polygon(data=data.frame(x = vertices_cart[,1], y= vertices_cart[,2
 g <- g + annotate(geom = 'text', size = 5, x = .7, y = .18, label = TeX("$\\theta_1/\\theta_3 \\leq \\eta$", output = "character"), parse = TRUE)
 g
 
-# ggsave(filename = "sdk.plottriangle.linearconstraint.pdf", plot = g, width = 5, height = 5)
+ggsave(filename = "sdk.plottriangle.linearconstraint.pdf", plot = g, width = 5, height = 5)
 
 
 

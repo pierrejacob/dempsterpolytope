@@ -15,20 +15,20 @@ theta_dgp <- c(0.2, 0.4, 0.2, 0.1, 0.1)
 ## observations, simulated
 X <- sample(x = 1:K, size = n, replace = TRUE, prob = theta_dgp)
 ## frequencies
-freqX <- tabulate(X, nbins = K)
-print(freqX)
+counts <- tabulate(X, nbins = K)
+print(counts)
 ## these are the observed data
 
 ## run Gibbs sampler to get random polytopes
 niterations_gibbs <- 1e3
-samples_gibbs <- gibbs_sampler(niterations_gibbs, freqX)
+samples_gibbs <- gibbs_sampler(niterations_gibbs, counts)
 
-# the "etas" are stored in samples_gibbs$etas_chain, e.g.
+# the "etas" are stored in samples_gibbs$etas, e.g.
 # for the etas corresponding to iteration 100
 # we get a K x K matrix of etas[k,j] for k,j in 1:K
-samples_gibbs$etas_chain[100,,]
+samples_gibbs$etas[100,,]
 # from which we can get the vertices of the polytope as
-cvxpolytope <- etas2cvxpolytope(samples_gibbs$etas_chain[100,,])
+cvxpolytope <- etas2cvxpolytope(samples_gibbs$etas[100,,])
 print(cvxpolytope$vertices_barcoord)
 # as we can see this polytope has many vertices, each in the simplex of dimension K
 
@@ -54,7 +54,7 @@ postburn <- niterations_gibbs - burnin
 contained_ <- rep(0, postburn)
 intersects_ <- rep(0, postburn)
 for (index in ((burnin+1):niterations_gibbs)){
-  cvxp <- etas2cvxpolytope(samples_gibbs$etas_chain[index,,])
+  cvxp <- etas2cvxpolytope(samples_gibbs$etas[index,,])
   res_ <- compare_polytopes(cvxp, intervalcvxp)
   contained_[index-burnin] <- res_[1]
   intersects_[index-burnin] <- res_[2]
@@ -73,11 +73,11 @@ library(doParallel)
 registerDoParallel(cores = detectCores()-2)
 
 grid01 <- seq(from = 0, to = 1, length.out = 50)
-loweruppercdf <- etas_to_lower_upper_cdf_dopar(samples_gibbs$etas_chain[(burnin+1):niterations_gibbs,,], 1, grid01)
+loweruppercdf <- etas_to_lower_upper_cdf_dopar(samples_gibbs$etas[(burnin+1):niterations_gibbs,,], 1, grid01)
 lowercdf_ <- colMeans(loweruppercdf$iscontained)
 uppercdf_ <- colMeans(loweruppercdf$intersects)
 
 # plot lower and upper CDFs
 plot(x = grid01, y = lowercdf_, type = "l", xlab = expression(theta[1]), ylab = "CDF")
 lines(x = grid01, y = uppercdf_)
-abline(v = freqX[1]/n, lty = 3) # add vertical dotted line at the MLE
+abline(v = counts[1]/n, lty = 3) # add vertical dotted line at the MLE

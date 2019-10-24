@@ -15,13 +15,13 @@ theta_dgp <- c(0.2, 0.4, 0.4)
 ## observations, simulated
 X <- sample(x = 1:K, size = n, replace = TRUE, prob = theta_dgp)
 ## frequencies
-freqX <- tabulate(X, nbins = K)
-print(freqX)
+counts <- tabulate(X, nbins = K)
+print(counts)
 ## these are the observed data
 
 ## run Gibbs sampler to get random polytopes
 niterations_gibbs <- 2e3
-samples_gibbs <- gibbs_sampler(niterations_gibbs, freqX)
+samples_gibbs <- gibbs_sampler(niterations_gibbs, counts)
 
 ## from these random polytopes we can estimate lower and upper probabilities 
 ## associated with assertions of interest
@@ -38,7 +38,7 @@ postburn <- niterations_gibbs - burnin
 contained_ <- rep(0, postburn)
 intersects_ <- rep(0, postburn)
 for (index in ((burnin+1):niterations_gibbs)){
-  cvxp <- etas2cvxpolytope(samples_gibbs$etas_chain[index,,])
+  cvxp <- etas2cvxpolytope(samples_gibbs$etas[index,,])
   res_ <- compare_polytopes(cvxp, intervalcvxp)
   contained_[index-burnin] <- res_[1]
   intersects_[index-burnin] <- res_[2]

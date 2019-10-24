@@ -13,13 +13,13 @@ n <- 50
 K <- 3
 categories <- 1:K
 # data 
-# freqX <- c(70,150,0)
+# counts <- c(70,150,0)
 # theta_dgp <- c(0.3, 0.3, 0.4)
 # X <- sample(x = categories, size = n, replace = TRUE, prob = theta_dgp)
 
 X <- c(categories, sample(x = categories, size = n - K, replace = TRUE))
-freqX <- tabulate(X)
-freqX
+counts <- tabulate(X)
+counts
 
 ## encompassing triangle has three vertices
 if (K == 3){
@@ -53,20 +53,20 @@ if (K == 3){
 
 ###
 niterations <- 200
-samples_gibbs <- gibbs_sampler(niterations = niterations, freqX = freqX)
+samples_gibbs <- gibbs_sampler(niterations = niterations, counts = counts)
 
 ##
-length(samples_gibbs$Achain)
-dim(samples_gibbs$Achain[[1]])
-dim(samples_gibbs$Achain[[2]])
-dim(samples_gibbs$Achain[[3]])
+length(samples_gibbs$Us)
+dim(samples_gibbs$Us[[1]])
+dim(samples_gibbs$Us[[2]])
+dim(samples_gibbs$Us[[3]])
 
 if (K == 3){
   ## now get all polytopes of feasible parameters at all iterations
   ## and overlay them in plot
   df.polytope <- data.frame()
   for (iteration in 1:niterations){
-    etas <- samples_gibbs$etas_chain[iteration,,]
+    etas <- samples_gibbs$etas[iteration,,]
     etascvxp <- etas2cvxpolytope(etas)
     ## convert coordinates to cartesian
     vertices_cart <- t(apply(etascvxp$vertices_barcoord, 1, function(v) barycentric2cartesian(v, v_cartesian)))
@@ -86,64 +86,38 @@ if (K == 3){
 nparticles <- 2^5
 
 set.seed(1)
-smc_res_graph <- SMC_sampler_graph(nparticles, X, K, verbose = TRUE)
+smc_res_graph <- dempsterpolytope:::SMC_sampler_graph(nparticles, X, K, verbose = TRUE)
 set.seed(1)
-smc_res_lp <- SMC_sampler_lp(nparticles, X, K, verbose = TRUE)
+smc_res_lp <- dempsterpolytope:::SMC_sampler_lp(nparticles, X, K, verbose = TRUE)
 
 smc_res_graph$etas_particles[1,,]
 smc_res_lp$etas_particles[1,,]
 
-
-# etas <- smc_res$etas_particles[1,,]
-# g <- graph_from_adjacency_matrix(log(etas), mode = "directed", weighted = TRUE, diag = FALSE)
-# g2 <- g
-# E(g2, c(1,2))$weight <- 0.5
-# E(g2, c(1,3))$weight <- 0.5
-# 
-# E(g2, c(1,2))$weight
-# E(g2, c(1,3))$weight
-# 
-# g3 <- g
-# E(g3, c(1,2,1,3))$weight <- c(0.5, 0.5)
-# E(g3, c(1,2))$weight
-# E(g3, c(1,3))$weight
-# k_ <- 2
-# minimum_values <- rep(1, K)
-# for (ell in setdiff(1:K, k_)){
-#   minimum_values[ell] <- distances(g, v = ell, to = k_, mode = "out")
-# }
-# minimum_values
-# minimum_values2 <- rep(1, K)
-# minimum_values2[setdiff(1:K, k_)] <-distances(g, v = setdiff(1:K, k_), to = k_, mode = "out")[,1]
+smc_res_graph$etas_particles[10,,]
+smc_res_lp$etas_particles[10,,]
 
 
 library(microbenchmark)
 microbenchmark(
-  smcgraph = SMC_sampler_graph(nparticles, X, K),
-  smclp = SMC_sampler_lp(nparticles, X, K),
+  smcgraph = dempsterpolytope:::SMC_sampler_graph(nparticles, X, K),
+  smclp = dempsterpolytope:::SMC_sampler_lp(nparticles, X, K),
   times = 10)
 
 
 nrep <- 2*(detectCores()-2)
-smc_res <- foreach(irep = 1:nrep) %dorng% {
-  SMC_sampler_graph(nparticles, X, K)
+smc_res_graph <- foreach(irep = 1:nrep) %dorng% {
+  dempsterpolytope:::SMC_sampler_graph(nparticles, X, K)
 }
 
-var(sapply(smc_res, function(v) sum(v$normcst)))
-hist(sapply(smc_res, function(v) sum(v$normcst)))
+var(sapply(smc_res_graph, function(v) sum(v$normcst)))
+hist(sapply(smc_res_graph, function(v) sum(v$normcst)))
 
 smc_res_lp <- foreach(irep = 1:nrep) %dorng% {
-  SMC_sampler_lp(nparticles, X, K)
+  dempsterpolytope:::SMC_sampler_lp(nparticles, X, K)
 }
 
 var(sapply(smc_res_lp, function(v) sum(v$normcst)))
 hist(sapply(smc_res_lp, function(v) sum(v$normcst)))
-
-
-
-## now try to assimilate X[2]
-# assimilate <- function(etas, x){
-#   k_ <- x
 
 #  visualize etas
 plot_etas <- function(etas){
@@ -162,28 +136,28 @@ plot_etas <- function(etas){
   g
 }
 if (K==3){
-  grid.arrange(plot_etas(smc_res_graph$etas_particles[1,,]), plot_etas(smc_res_graph$etas_particles[2,,]),
-             plot_etas(smc_res_graph$etas_particles[3,,]), plot_etas(smc_res_graph$etas_particles[4,,]), nrow = 2)
+  grid.arrange(plot_etas(smc_res_graph[[1]]$etas_particles[1,,]), plot_etas(smc_res_graph[[1]]$etas_particles[2,,]),
+             plot_etas(smc_res_graph[[1]]$etas_particles[3,,]), plot_etas(smc_res_graph[[1]]$etas_particles[4,,]), nrow = 2)
 }
 
 
-smc_res <- SMC_sampler_lp(2^10, X, K, verbose = FALSE)
+smc_res <- SMC_sampler(2^10, X, K, verbose = FALSE)
 etas_particles <- smc_res$etas_particles
 weights <- smc_res$weights
 
 ### test
 burnin <- 1000
 niterations <- 5000 + burnin
-samples_gibbs <- gibbs_sampler(niterations = niterations, freqX = freqX)
+samples_gibbs <- gibbs_sampler(niterations = niterations, counts = counts)
 param <- 1
-interval <- c(freqX[1]/sum(freqX)-0.05, freqX[1]/sum(freqX)+0.05)
+interval <- c(counts[1]/sum(counts)-0.05, counts[1]/sum(counts)+0.05)
 intervalcvxp <- interval2polytope(K, param, interval)
 # 
 postburn <- niterations - burnin
 contained_mcmc <- rep(0, postburn)
 intersects_mcmc <- rep(0, postburn)
 for (index in ((burnin+1):niterations)){
-  cvxp <- etas2cvxpolytope(samples_gibbs$etas_chain[index,,])
+  cvxp <- etas2cvxpolytope(samples_gibbs$etas[index,,])
   res_ <- compare_polytopes(cvxp, intervalcvxp)
   contained_mcmc[index-burnin] <- res_[1]
   intersects_mcmc[index-burnin] <- res_[2]
@@ -204,7 +178,7 @@ interval
 # on parameter
 param
 # equal to 
-(freqX/sum(freqX))[param]
+(counts/sum(counts))[param]
 # lower/upper probabilities, post burn-in
 cat(mean(contained_mcmc), mean(intersects_mcmc), "\n")
 cat(sum(contained_smc), sum(intersect_smc), "\n")

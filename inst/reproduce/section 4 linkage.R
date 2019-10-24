@@ -123,7 +123,7 @@ etas <- foreach(irep = 1:nchains, .combine = 'acomb') %dorng% {
   init <- rexp(K)
   init <- init/sum(init)
   samples_gibbs <- gibbs_sampler(niterations, counts, theta_0 = init)
-  samples_gibbs$etas_chain[(burnin+1):niterations,,]
+  samples_gibbs$etas[(burnin+1):niterations,,]
 }
 dim(etas)
 ##
@@ -174,6 +174,14 @@ mean(!is.na(intersections_[,1]))
 ## retain feasible sets that intersect with segment constraint 
 intersections_ <- intersections_[!is.na(intersections_[,1]),]
 
+linkage_cdf_lowerupper <- function(phi_0, lu_chain){
+  # intersect if phi_lower < phi_0
+  cdf_upper <- mean(apply(lu_chain, 1, function(v) v[1] < phi_0))
+  # contains if phi_upper < phi_0
+  cdf_lower <- mean(apply(lu_chain, 1, function(v) v[2] < phi_0))
+  return(c(cdf_lower, cdf_upper))
+}
+
 phi_grid_length <- 50
 phi_grid <- seq(from = 0, to = 1, length.out = phi_grid_length)
 cdf_lower_values <- rep(0, phi_grid_length)
@@ -206,7 +214,7 @@ df_ <- data.frame(x = c(phi_intervals_ddsm[,1], phi_intervals_ddsm[,2], intersec
 g <- ggplot(df_, aes(x = x, linetype = dsm, group = interaction(side, dsm))) + stat_ecdf()
 g <- g + xlab(expression(phi)) +  ylab("CDF") + scale_linetype(name = "DSM: ")
 g
-ggsave(filename = "inst/reproduce/linkage.cdf.pdf", plot = g, width = 7, height = 5)
+ggsave(filename = "linkage.cdf.pdf", plot = g, width = 7, height = 5)
 
 ##
 ddsm_cdf_lower_values <- rep(0, phi_grid_length)
@@ -222,7 +230,8 @@ gr <- qplot(x = phi_grid, y =  ddsm_cdf_upper_values - ddsm_cdf_lower_values, ge
   geom_line(aes(y = cdf_upper_values - cdf_lower_values, linetype = "Simplex")) + ylab("r-CDF") + xlab(expression(phi))
 gr <- gr + scale_linetype(name = "DSM: ")
 gr            
-ggsave(filename = "inst/reproduce/linkage.r.pdf", plot = gr, width = 7, height = 5)
+
+ggsave(filename = "linkage.r.pdf", plot = gr, width = 7, height = 5)
 
 
 

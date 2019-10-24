@@ -39,17 +39,27 @@ sample_uniform_etas <- function(X, K){
 ## for all L, for all j_1, ..., j_L etas[j_1,j_2] * etas[j_2,j_3] * ... * etas[j_L,j_1] >= 1
 ## return TRUE if inequalities are satisfied, FALSE otherwise
 check_cst_graph <- function(etas){
-  g <- graph_from_adjacency_matrix(log(etas), mode = "directed", weighted = TRUE, diag = FALSE)
-  negativecycle <- inherits(try(distances(g, mode = "out"), silent = TRUE), "try-error")
+  g <- igraph::graph_from_adjacency_matrix(log(etas), mode = "directed", weighted = TRUE, diag = FALSE)
+  negativecycle <- inherits(try(igraph::distances(g, mode = "out"), silent = TRUE), "try-error")
   return(!negativecycle)
 }
 
-## rejection sampler
-## sample etas uniformly and then check if constraints are satisfied
-## returns accepted etas, for which constraints are satisfied, 
-## and number of attempts it took 
+#'@rdname rejectionsampler
+#'@title Rejection sampler to obtain convex polytopes for DS inference in Categorical distributions 
+#'@description This is implemented to perform quick comparison on very small data sets; the method does not 
+#'scale well with the number of counts. It samples auxiliary variables uniformly in the simplex,
+#'and then checks whether constraints are satisfied. The implementation uses the igraph package.
+#'@param counts a vector of counts, of length K
+#'It returns accepted states only, and 
+#' and the number of attempts it took 
+#'@examples 
+#' \dontrun{
+#' rejectionsampler(c(1,2,3,1,2,3,2,2,1), 3)
+#' }
 #'@export
-rejectionsampler <- function(X, K){
+rejectionsampler <- function(counts){
+  X <- rep(1:length(counts), times = counts)
+  K <- length(counts)
   accept <- FALSE
   etas <- NULL
   nattempts <- 0

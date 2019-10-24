@@ -62,7 +62,7 @@ gibbs_results <- gibbs_sampler(niterations, counts)
 
 # obtain a K x K matrix representing a convex polytope in the simplex
 # by taking the terminal iteration of the Gibbs chain
-eta <- gibbs_results$etas_chain[niterations,,]
+eta <- gibbs_results$etas[niterations,,]
 # convert polytope to H-representation and V-representation
 eta_converted <- etas2cvxpolytope(eta)
 # H-representation, or "half-plane" representation

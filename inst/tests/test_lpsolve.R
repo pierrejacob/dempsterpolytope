@@ -9,12 +9,12 @@ library(lpSolveAPI)
 K <- 3
 ## number of observations
 n <- 5
-freqX <- 1:K
+counts <- 1:K
 
 ## run Gibbs sampler to get random polytopes
 niterations_gibbs <- 1e2
-samples_gibbs <- gibbs_sampler(niterations_gibbs, freqX)
-etas <- samples_gibbs$etas_chain[44,,]
+samples_gibbs <- gibbs_sampler(niterations_gibbs, counts)
+etas <- samples_gibbs$etas[44,,]
 
 # now suppose we want to optimize theta_k
 # under the constraint that theta is in the simplex

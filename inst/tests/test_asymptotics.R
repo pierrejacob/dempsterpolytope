@@ -17,13 +17,13 @@ categories <- 1:K
 # data 
 theta_dgp <- c(0.2, 0.4, 0.3, 0.1)
 X <- sample(x = categories, size = n, replace = TRUE, prob = theta_dgp)
-freqX <- tabulate(X)
+counts <- tabulate(X)
 ##
 
 ###
 niterations <- 5000
 pct <- proc.time()
-samples_gibbs <- gibbs_sampler(niterations = niterations, freqX = freqX)
+samples_gibbs <- gibbs_sampler(niterations = niterations, counts = counts)
 (proc.time() - pct)[3]
 ##
 
@@ -38,7 +38,7 @@ subiterations <- floor(seq(from = burnin+1, to = niterations, length.out = nsubi
 contained_ <- rep(0, nsubiterations)
 intersects_ <- rep(0, nsubiterations)
 for (index in 1:nsubiterations){
-  cvxp <- etas2cvxpolytope(samples_gibbs$etas_chain[subiterations[index],,])
+  cvxp <- etas2cvxpolytope(samples_gibbs$etas[subiterations[index],,])
   res_ <- compare_polytopes(cvxp, intervalcvxp)
   contained_[index] <- res_[1]
   intersects_[index] <- res_[2]
@@ -49,7 +49,7 @@ cat(mean(contained_), mean(intersects_), "\n")
 
 
 xgrid <- c(0, seq(from = theta_dgp[param]-0.1, to = theta_dgp[param]+0.1, length.out = 100), 1)
-cdfs_ <- etas_to_lower_upper_cdf_dopar(samples_gibbs$etas_chain[subiterations,,], param, xgrid)
+cdfs_ <- etas_to_lower_upper_cdf_dopar(samples_gibbs$etas[subiterations,,], param, xgrid)
 lowercdf <- colMeans(cdfs_$iscontained)
 uppercdf <- colMeans(cdfs_$intersects)
 
@@ -57,5 +57,5 @@ uppercdf <- colMeans(cdfs_$intersects)
 plot(xgrid, lowercdf, type = "l")
 lines(xgrid, uppercdf)
 abline(v = theta_dgp[param], lty = 2)
-abline(v = freqX[param]/n, lty = 3)
+abline(v = counts[param]/n, lty = 3)
 

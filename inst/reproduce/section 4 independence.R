@@ -124,7 +124,7 @@ parallelestimators <- foreach(irep = 1:nchains, .combine = rbind) %dorng% {
   init <- rexp(K)
   init <- init/sum(init)
   samples_gibbs <- gibbs_sampler(niterations, counts, theta_0 = init)
-  etas <- samples_gibbs$etas_chain[(burnin+1):niterations,,]
+  etas <- samples_gibbs$etas[(burnin+1):niterations,,]
   estimators <- t(apply(etas, 1, h))
   colMeans(estimators)[c(2,4)] ## extracts lower probabilities of negative and positive associations
 }
@@ -203,7 +203,7 @@ parallelestimators <- foreach(irep = 1:nchains, .combine = rbind) %dorng% {
   init <- rexp(K)
   init <- init/sum(init)
   samples_gibbs <- gibbs_sampler(niterations, counts, theta_0 = init)
-  etas <- samples_gibbs$etas_chain[(burnin+1):niterations,,]
+  etas <- samples_gibbs$etas[(burnin+1):niterations,,]
   estimators <- t(apply(etas, 1, h))
   colMeans(estimators)[c(2,4)] ## extracts lower probabilities of negative and positive associations
 }

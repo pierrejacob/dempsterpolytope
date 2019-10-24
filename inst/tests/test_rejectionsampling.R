@@ -16,19 +16,21 @@ n <- 6
 K <- 3
 categories <- 1:K
 # data 
-# freqX <- c(70,150,0)
+# counts <- c(70,150,0)
 # theta_dgp <- c(0.3, 0.3, 0.4)
 # X <- sample(x = categories, size = n, replace = TRUE, prob = theta_dgp)
 X <- c(categories, sample(x = categories, size = n - K, replace = TRUE))
-freqX <- tabulate(X)
-freqX
+counts <- tabulate(X)
+counts
 ##
 
-### Rejection sampling
-# rejectionsampler(X, K)
+## Rejection sampling
+dempsterpolytope::rejectionsampler(counts)
+
+## repeatedly
 nsamples_rs <- 5e2
 samples_rs <- foreach(irep = 1:nsamples_rs) %dorng% {
-  rejectionsampler(X, K)
+  dempsterpolytope::rejectionsampler(counts)
 }
 
 ## to estimate the volume of accept region
@@ -53,7 +55,7 @@ mean(sapply(samples_rs, function(x) x$nattempts))
 ##
 niterations_gibbs <- 5100
 pct <- proc.time()
-samples_gibbs <- gibbs_sampler(niterations = niterations_gibbs, freqX = freqX)
+samples_gibbs <- gibbs_sampler(niterations = niterations_gibbs, counts = counts)
 elapsed <- (proc.time() - pct)[3]
 elapsed
 burnin <- 100
@@ -64,7 +66,7 @@ nsubiterations_gibbs <- 500
 subiterations <- floor(seq(from = burnin, to = niterations_gibbs, length.out = nsubiterations_gibbs))
 
 xgrid <- seq(from = 0, to = 1, length.out = 100)
-etas <- samples_gibbs$etas_chain[subiterations,,]
+etas <- samples_gibbs$etas[subiterations,,]
 cdf_ <- etas_to_lower_upper_cdf_dopar(etas, param, xgrid)
 lowercdf <- colMeans(cdf_$iscontained)
 uppercdf <- colMeans(cdf_$intersects)
@@ -86,28 +88,16 @@ lines(xgrid, uppercdf_rs, lty = 2)
 
 dim(cdf_rs$iscontained)
 
-# # and with SMC... 
+## and with SMC... 
+# nparticles <- 2^10
+# smc_res <- SMC_sampler(nparticles, X, K, essthreshold = 0.9)
+# etas_particles <- smc_res$etas_particles
+# weights <- smc_res$weights
+# cdf_smc <- etas_to_lower_upper_cdf_dopar(etas_particles, param, xgrid)
 # 
-nparticles <- 2^10
-smc_res <- SMC_sampler(nparticles, X, K, essthreshold = 0.9)
-etas_particles <- smc_res$etas_particles
-weights <- smc_res$weights
-cdf_smc <- etas_to_lower_upper_cdf_dopar(etas_particles, param, xgrid)
+# dim(cdf_smc$iscontained)
+# lowercdf_smc <- apply(cdf_smc$iscontained, 2, function(v) sum(v * weights))
+# uppercdf_smc <- apply(cdf_smc$intersects, 2, function(v) sum(v * weights))
+# lines(xgrid, lowercdf_smc, lty = 3)
+# lines(xgrid, uppercdf_smc, lty = 3)
 
-dim(cdf_smc$iscontained)
-lowercdf_smc <- apply(cdf_smc$iscontained, 2, function(v) sum(v * weights))
-uppercdf_smc <- apply(cdf_smc$intersects, 2, function(v) sum(v * weights))
-lines(xgrid, lowercdf_smc, lty = 3)
-lines(xgrid, uppercdf_smc, lty = 3)
-
-
-
-# contained_smc <- rep(0, length(weights))
-# intersect_smc <- rep(0, length(weights))
-# for (iparticle in 1:length(weights)){
-#   cvxp <- etas2cvxpolytope(etas_particles[iparticle,,])
-#   res_ <- compare_polytopes(cvxp, intervalcvxp)
-#   contained_smc[iparticle] <- res_[1]
-#   intersect_smc[iparticle] <- res_[2]
-# }
-# cat(sum(weights*contained_smc), sum(weights*intersect_smc), "\n")

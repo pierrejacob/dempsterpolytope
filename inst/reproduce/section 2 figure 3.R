@@ -35,24 +35,6 @@ barconstraint2cartconstraint <- function(d, j, eta, matrixT, v_cartesian){
   return(c(g/f[2], -f[1]/f[2]))
 }
 
-# ## add polytope theta_3/theta_1 < pt_bar[3]/pt_bar[1]
-# ## ie - pt_bar[3]/pt_bar[1] theta_1 + theta_3 < 0
-# A <- matrix(rep(1, K-1), ncol = K-1)
-# A <- rbind(A, diag(-1, K-1, K-1))
-# b <- c(1, rep(0, K-1))
-# # then we add the constraint theta_k < b
-# ccc <- rep(0, K)
-# ccc[1] <- pt_bar[3]/pt_bar[1]
-# ccc[3] <- -1
-# cc <- ccc - ccc[K]
-# b <- c(b, -ccc[K])
-# A <- rbind(A, matrix(cc[1:(K-1)], nrow = 1))
-# 
-# constr <- list(constr = A, rhs = b, dir = rep("<=", nrow(A)))
-# vertices_barcoord <- hitandrun::findVertices(constr)
-# vertices_barcoord <- cbind(vertices_barcoord, 1- apply(vertices_barcoord, 1, sum))
-# vertices_cart <- t(apply(vertices_barcoord, 1, function(v) barycentric2cartesian(v, v_cartesian)))
-
 
 ####
 set.seed(4)
@@ -62,12 +44,7 @@ n <- 20
 K <- 3
 categories <- 1:K
 # data 
-freqX <- c(9,8,3)
-# niterations <- 200
-# samples_gibbs <- gibbs_sampler(niterations = niterations, freqX = freqX)
-# iteration <- 100
-# etas <- samples_gibbs$etas_chain[iteration,,]
-# pts_barcoord <- lapply(samples_gibbs$Achain, function(l) l[iteration,,])
+counts <- c(9,8,3)
 
 etas <- structure(c(1, 3.97840569581908, 5.78277269927406, 0.50153243920328, 
                     1, 2.40371666744944, 0.254985206727502, 1.10872229394467, 1), .Dim = c(3L, 
@@ -149,7 +126,8 @@ g <- add_L2const(g, 1, 2, etas)
 g <- add_L2const(g, 1, 3, etas)
 g <- add_L2const(g, 2, 3, etas)
 g
-# ggsave(filename = "sdk.plottriangle.constraintsL2.pdf", plot = g, width = 5, height = 5)
+
+ggsave(filename = "sdk.plottriangle.constraintsL2.pdf", plot = g, width = 5, height = 5)
 
 
 # function to plot triangle with ggplot
@@ -210,5 +188,6 @@ add_L3const <- function(g, i1, i2, i3, etas){
 
 g <- add_L3const(add_L3const(g, 1, 2, 3, etas), 3, 2, 1, etas)
 g
-# ggsave(filename = "sdk.plottriangle.constraintsL3.pdf", plot = g, width = 5, height = 5)
+
+ggsave(filename = "sdk.plottriangle.constraintsL3.pdf", plot = g, width = 5, height = 5)
 

@@ -17,107 +17,135 @@
 # initialize points by defining a point in the simplex as theta_0
 # then sampling a_n uniformly on pi_k(theta_0) if X_n == k
 # also returns 'minratios', a list of K vectors, where the k-th vector contains min_{a in A_k} a_ell / a_k at element ell
+
+#'@rdname initialize_pts
+#'@title Initialize auxiliary variables 
+#'@description For a point theta in the simplex, a vector of counts, sample points 'u_n' uniformly in the subsimplex Delta_k(theta) 
+#' where x_n = k.  
+#'@param counts a vector of K integers representing counts 
+#'@param theta a point in the simplex, represented by a K-vector of non-negative values summing to one
+#'@return A list with 'pts', containing a list of K matrices of size N_k x K containing the auxiliary variables
+#' and 'minratios', containing a list of K vectors of size K, where minratios[[k]] has entry ell equal to min_{n in I_k} u_{n,ell} / u_{n,k}
+#' which are later used to define 'eta'. The notation follows that of the paper. 
+#'@examples
+#' initialize_pts(c(3,1,2), c(1/3,1/3,1/3))
 #'@export
-initialize_pts <- function(freqX, theta_0){
-  K <- length(freqX)
+initialize_pts <- function(counts, theta){
+  # number of categories
+  K <- length(counts)
+  # create list to store points
   pts <- list()
+  # create list to store minimum ratio
   minratios <- list()
+  # for each category
   for (k in 1:K){
-    if (freqX[k] > 0){
-      tmp <- runif_piktheta_cpp(freqX[k], k, theta_0)
+    # if there are counts in that category
+    if (counts[k] > 0){
+      # generate sample in appropriate subsimplex
+      tmp <- dempsterpolytope:::runif_piktheta_cpp(counts[k], k, theta)
+      # store them and associated minimum ratios
       pts[[k]] <- tmp$pts
       minratios[[k]] <- tmp$minratios
-    } else { #?
+    } else { # no count in that category
       pts[[k]] <- NA
       minratios[[k]] <- rep(Inf, K)
     }
   }
+  # return points and associated minimum ratios ('eta')
   return(list(pts = pts, minratios = minratios))
 }
-#
-### redraw points in category k, using graph g
-#'@export
-refresh_pts_category_graph <- function(g, k, freqX){
-  K <- length(freqX)
+
+## function to perform one Gibbs update, of auxiliary variables corresponding to category k
+## using the "shortest path approach" implemented in the igraph package
+refresh_pts_category_graph <- function(g, k, counts){
+  # number of categories
+  K <- length(counts)
+  # solution 
   theta_star <- rep(0, K)
-  # minimum value among paths from k to ell ("eta star")
+  # minimum value among paths from k to ell
   notk <- setdiff(1:K, k)
   minimum_values <- rep(1, K)
-  minimum_values[notk] <- distances(g, v = notk, to = k, mode = "out")[,1]
+  # compute shortest paths in the graph
+  minimum_values[notk] <- igraph::distances(g, v = notk, to = k, mode = "out")[,1]
+  # compute solution based on values of shortest paths 
   theta_star <- exp(-minimum_values)
   theta_star[k] <- 1
   theta_star <- theta_star / sum(theta_star)
-  pts_k <- runif_piktheta_cpp(freqX[k], k, theta_star)
+  # draw points in the sub-simplex Delta_k(theta^{star,k})
+  pts_k <- dempsterpolytope:::runif_piktheta_cpp(counts[k], k, theta_star)
+  # return points
   return(pts_k)
 }
 
-### Gibbs sampler
-#'@export
-gibbs_sampler_graph <- function(niterations, freqX, theta_0){
-  K <- length(freqX)
+### Gibbs sampler using the igraph package
+gibbs_sampler_graph <- function(niterations, counts, theta_0){
+  # number of categories
+  K <- length(counts)
+  # if theta_0 not specified, started from MLE 
   if (missing(theta_0)){
-    theta_0 <- freqX / sum(freqX)
+    theta_0 <- counts / sum(counts)
   }
+  # categories
   categories <- 1:K
   # store points in barycentric coordinates
-  Achain <- list()
+  Us <- list()
   for (k in 1:K){
-    if (freqX[k] > 0){
-      Achain[[k]] <- array(0, dim = c(niterations, freqX[k], K))
+    if (counts[k] > 0){
+      Us[[k]] <- array(0, dim = c(niterations, counts[k], K))
     } else {
-      Achain[[k]] <- array(0, dim = c(niterations, 1, K))
+      Us[[k]] <- array(0, dim = c(niterations, 1, K))
     }
   }
   # store constraints in barycentric coordinates
-  etas_chain <- array(0, dim = c(niterations, K, K))
+  etas <- array(0, dim = c(niterations, K, K))
   ## initialization
-  init_tmp <- initialize_pts(freqX, theta_0)
+  init_tmp <- initialize_pts(counts, theta_0)
   pts <- init_tmp$pts
   # store points
   for (k in 1:K){
-    if (freqX[k] > 0){
-      Achain[[k]][1,,] <- pts[[k]]
+    if (counts[k] > 0){
+      Us[[k]][1,,] <- pts[[k]]
     } else {
-      Achain[[k]][1,1,] <- rep(1/(K-1), K)
-      Achain[[k]][1,1,k] <- 0
+      Us[[k]][1,1,] <- rep(1/(K-1), K)
+      Us[[k]][1,1,k] <- 0
     }
   }
-  etas <- do.call(rbind, init_tmp$minratios)
-  g <- graph_from_adjacency_matrix(log(etas), mode = "directed", weighted = TRUE, diag = FALSE)
+  etas_current <- do.call(rbind, init_tmp$minratios)
+  g <- igraph::graph_from_adjacency_matrix(log(etas_current), mode = "directed", weighted = TRUE, diag = FALSE)
   # store constraints
-  etas_chain[1,,] <- etas
+  etas[1,,] <- etas_current
   # loop over Gibbs sampler iterations
   for (iter_gibbs in 2:niterations){
     # loop over categories
     for (k in categories){
-      if (freqX[k] > 0){
+      if (counts[k] > 0){
         notk <- setdiff(1:K, k)
-        tmp <- refresh_pts_category_graph(g, k, freqX)
+        tmp <- refresh_pts_category_graph(g, k, counts)
         pts[[k]] <- tmp$pts
-        etas[k,] <- tmp$minratios
+        etas_current[k,] <- tmp$minratios
         # refresh etas and graph
         seqedges <- as.numeric(sapply(notk, function(x) c(k, x)))
-        E(g, seqedges)$weight <- log(etas[k, notk])
+        E(g, seqedges)$weight <- log(etas_current[k, notk])
       }
     }
     # store points and constraints
     for (k in categories){
-      if (freqX[k] > 0){
-        Achain[[k]][iter_gibbs,,] <- pts[[k]]
+      if (counts[k] > 0){
+        Us[[k]][iter_gibbs,,] <- pts[[k]]
       } else {
-        Achain[[k]][iter_gibbs,1,] <- rep(1/(K-1), K)
-        Achain[[k]][iter_gibbs,1,k] <- 0
+        Us[[k]][iter_gibbs,1,] <- rep(1/(K-1), K)
+        Us[[k]][iter_gibbs,1,k] <- 0
       }
     }
-    etas_chain[iter_gibbs,,] <- etas
+    etas[iter_gibbs,,] <- etas_current
   }
-  return(list(etas_chain = etas_chain, Achain = Achain))
+  return(list(etas = etas, Us = Us))
 }
 
 ## Gibbs sampler that relies on the lpSolve library
-#'@export
-gibbs_sampler_lp <- function(niterations, freqX, theta_0){
-  K <- length(freqX)
+gibbs_sampler_lp <- function(niterations, counts, theta_0){
+  # number of categories
+  K <- length(counts)
   # set LP 
   # precompute (K-1)*(K-1)
   Km1squared <- (K-1)*(K-1)
@@ -133,46 +161,46 @@ gibbs_sampler_lp <- function(niterations, freqX, theta_0){
   # right hand side of constraints
   rhs_ <- c(1, rep(0, K), rep(0, Km1squared))
   # create LP object
-  lpobject <- make.lp(nrow = nconstraints, ncol = K)
+  lpobject <- lpSolveAPI::make.lp(nrow = nconstraints, ncol = K)
   # set right hand side and direction
-  set.rhs(lpobject, rhs_)
-  set.constr.type(lpobject, dir_)
+  lpSolveAPI::set.rhs(lpobject, rhs_)
+  lpSolveAPI::set.constr.type(lpobject, dir_)
   # now we have the basic LP set up and we will update it during the run of Gibbs  
   if (missing(theta_0)){
-    theta_0 <- freqX / sum(freqX)
+    theta_0 <- counts / sum(counts)
   }
   categories <- 1:K
   # store points in barycentric coordinates
-  Achain <- list()
+  Us <- list()
   for (k in 1:K){
-    if (freqX[k] > 0){
-      Achain[[k]] <- array(0, dim = c(niterations, freqX[k], K))
+    if (counts[k] > 0){
+      Us[[k]] <- array(0, dim = c(niterations, counts[k], K))
     } else {
-      Achain[[k]] <- array(0, dim = c(niterations, 1, K))
+      Us[[k]] <- array(0, dim = c(niterations, 1, K))
     }
   }
   # store constraints in barycentric coordinates
-  etas_chain <- array(0, dim = c(niterations, K, K))
+  etas <- array(0, dim = c(niterations, K, K))
   ## initialization
-  init_tmp <- initialize_pts(freqX, theta_0)
+  init_tmp <- initialize_pts(counts, theta_0)
   pts <- init_tmp$pts
   # store points
   for (k in 1:K){
-    if (freqX[k] > 0){
-      Achain[[k]][1,,] <- pts[[k]]
+    if (counts[k] > 0){
+      Us[[k]][1,,] <- pts[[k]]
     } else {
-      Achain[[k]][1,1,] <- rep(1/(K-1), K)
-      Achain[[k]][1,1,k] <- 0
+      Us[[k]][1,1,] <- rep(1/(K-1), K)
+      Us[[k]][1,1,k] <- 0
     }
   }
-  etas <- do.call(rbind, init_tmp$minratios)
+  etas_current <- do.call(rbind, init_tmp$minratios)
   # store constraints
-  etas_chain[1,,] <- etas
+  etas[1,,] <- etas_current
   # loop over Gibbs sampler iterations
   for (iter_gibbs in 2:niterations){
     # loop over categories
     for (k in categories){
-      if (freqX[k] > 0){
+      if (counts[k] > 0){
         # set Linear Program for this update
         mat_cst_ <- mat_cst
         # find theta_star
@@ -181,76 +209,72 @@ gibbs_sampler_lp <- function(niterations, freqX, theta_0){
           for (i in setdiff(1:K, j)){
             ## constraint of the form
             # theta_i - eta_{j,i} theta_j < 0 
-            if (all(is.finite(etas[j,]))){
+            if (all(is.finite(etas_current[j,]))){
               row_ <- (K+1)+icst
               mat_cst_[row_,i] <- 1
-              mat_cst_[row_,j] <- -etas[j,i]
+              mat_cst_[row_,j] <- -etas_current[j,i]
             }
             icst <- icst + 1
           }
         }
         # set LP with current constraints
         for (ik in 1:K){
-          set.column(lpobject, ik, mat_cst_[,ik])
+          lpSolveAPI::set.column(lpobject, ik, mat_cst_[,ik])
         }
         # solve LP
         vec_ <- rep(0, K)
         vec_[k] <- -1
-        set.objfn(lpobject, vec_)
-        # print(lpobject)
+        lpSolveAPI::set.objfn(lpobject, vec_)
         solve(lpobject)
-        theta_star <- get.variables(lpobject)
+        theta_star <- lpSolveAPI::get.variables(lpobject)
         # once we have theta_star, we can draw points in pi_k(theta_star)
-        pts_k <- dempsterpolytope:::runif_piktheta_cpp(freqX[k], k, theta_star)
+        pts_k <- dempsterpolytope:::runif_piktheta_cpp(counts[k], k, theta_star)
         pts[[k]] <- pts_k$pts
-        etas[k,] <- pts_k$minratios
+        etas_current[k,] <- pts_k$minratios
       }
     }
     # store points and constraints
     for (k in categories){
-      if (freqX[k] > 0){
-        Achain[[k]][iter_gibbs,,] <- pts[[k]]
+      if (counts[k] > 0){
+        Us[[k]][iter_gibbs,,] <- pts[[k]]
       } else {
-        Achain[[k]][iter_gibbs,1,] <- rep(1/(K-1), K)
-        Achain[[k]][iter_gibbs,1,k] <- 0
+        Us[[k]][iter_gibbs,1,] <- rep(1/(K-1), K)
+        Us[[k]][iter_gibbs,1,k] <- 0
       }
     }
-    etas_chain[iter_gibbs,,] <- etas
+    etas[iter_gibbs,,] <- etas_current
   }
   rm(lpobject)
-  return(list(etas_chain = etas_chain, Achain = Achain))
+  return(list(etas = etas, Us = Us))
 }
 
-# niterations must be...
-# freqX must be...
-# theta_0 must be...
 #'@rdname gibbs_sampler
 #'@title Gibbs sampler for Categorical inference 
 #'@description This is the main function of the package. It runs the proposed Gibbs sampler
 #' for a desired number of iterations, for a given vector of counts.
 #' It generates a convex polytope at each iteration. Below the number of categories is denoted by K,
-#' and corresponds to the length of the input vector 'freqX'.
+#' and corresponds to the length of the input vector 'counts'.
 #'@param niterations a number of iterations to perform (each iteration is a full sweep of Gibbs updates)
-#'@param freqX a vector of non-negative integers containing the count data; its length defines K, the number of categories.
+#'@param counts a vector of non-negative integers containing the count data; its length defines K, the number of categories.
 #'@param theta_0 (optional) a vector in the K-simplex used to initialize the sampler.
-#' If missing, it is set to freqX / sum(freqX). 
-#'@return A list containing 'etas_chain', an array of dimension niterations x K x K
-#' and 'Achains', a list of K arrays, each of dimension niterations x N_k x K where N_k is the number of 
+#' If missing, it is set to counts / sum(counts). 
+#'@return A list containing 'etas', an array of dimension niterations x K x K
+#' and 'Us', a list of K arrays, each of dimension niterations x N_k x K where N_k is the number of 
 #' observations in category k. 
 #' \enumerate{
-#' \item etas_chain: for iteration 'iteration', etas_chain[iteration,,] is a K x K matrix.
-#' The generated polytope at that iteration is made of all the vectors theta such that theta_l/theta_k < etas_chain[iteration,k,l]
+#' \item etas: for iteration 'iteration', etas[iteration,,] is a K x K matrix.
+#' The feasible set at that iteration, is the set of all vectors theta such that, theta_l/theta_k < etas[iteration,k,l]
 #' for all k,l in {1,...,K}.
-#' \item Achains: for iteration 'iteration', and category 'k' in {1,...,K}, Achains[[k]][iteration,,]
-#' is made of N_k rows, where N_k is the k-th entry of freqX, i.e. the number of counts in category k.
+#' \item Us: for iteration 'iteration', and category 'k' in {1,...,K}, Us[[k]][iteration,,]
+#' is made of N_k rows, where N_k is the k-th entry of counts, i.e. the number of counts in category k.
 #' Each row contains one of the vectors u_{n} with n in I_k in the notation of the article.
 #' } 
 #'@examples
-#' gibbs_results <- gibbs_sampler(niterations = 5, freqX = c(1,2,3))
-#' gibbs_results$etas_chain[5,,]
+#' gibbs_results <- gibbs_sampler(niterations = 5, counts = c(1,2,3))
+#' gibbs_results$etas[5,,]
 #'@export
-gibbs_sampler <- function(niterations, freqX, theta_0){
-  # return(gibbs_sampler_graph(niterations, freqX, theta_0))
-  return(gibbs_sampler_lp(niterations, freqX, theta_0))
+gibbs_sampler <- function(niterations, counts, theta_0){
+  # return(gibbs_sampler_graph(niterations, counts, theta_0))
+  return(gibbs_sampler_lp(niterations, counts, theta_0))
 }
 

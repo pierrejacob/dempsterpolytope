@@ -20,7 +20,7 @@ categories <- 1:K
 # data 
 theta_dgp <- c(0.2, 0.8)
 X <- sample(x = categories, size = n, replace = TRUE, prob = theta_dgp)
-freqX <- tabulate(X)
+counts <- tabulate(X)
 ##
 
 # ## determine sensible burn-in using coupled chains 
@@ -30,7 +30,7 @@ freqX <- tabulate(X)
 # nrep <- 1e3
 # lag <- 200
 # meetingtimes <- unlist(foreach(irep = 1:nrep) %dorng% {
-#   meeting_times(freqX, lag = lag, rinit = function(){ x = rexp(K); return(x/sum(x))}, omega = omega, max_iterations = 1e5)
+#   meeting_times(counts, lag = lag, rinit = function(){ x = rexp(K); return(x/sum(x))}, omega = omega, max_iterations = 1e5)
 # })
 # 
 # ## and we can obtain upper bounds on the Total Variation distance between 
@@ -46,17 +46,17 @@ freqX <- tabulate(X)
 burnin <- 500
 niterations <- 1e5
 pct <- proc.time()
-samples_gibbs <- gibbs_sampler(niterations = niterations, freqX = freqX)
+samples_gibbs <- gibbs_sampler(niterations = niterations, counts = counts)
 (proc.time() - pct)[3]
 ##
 
-dim(samples_gibbs$etas_chain)
-length(samples_gibbs$Achain)
-dim(samples_gibbs$Achain[[1]])
-dim(samples_gibbs$Achain[[2]])
+dim(samples_gibbs$etas)
+length(samples_gibbs$Us)
+dim(samples_gibbs$Us[[1]])
+dim(samples_gibbs$Us[[2]])
 
 ##
-cvxp <- etas2cvxpolytope(samples_gibbs$etas_chain[1,,])
+cvxp <- etas2cvxpolytope(samples_gibbs$etas[1,,])
 cvxp
 ##
 cvxp$vertices_cart <- t(apply(cvxp$vertices_barcoord, 1, function(v) barycentric2cartesian(v, v_cartesian)))
@@ -69,7 +69,7 @@ nsubiterations <- 1e4
 subiterations <- floor(seq(from = burnin+1, to = niterations, length.out = nsubiterations))
 
 xgrid <- seq(from = 0, to = 1, length.out = 100)
-cdfs_ <- etas_to_lower_upper_cdf_dopar(samples_gibbs$etas_chain[subiterations,,], param, xgrid)
+cdfs_ <- etas_to_lower_upper_cdf_dopar(samples_gibbs$etas[subiterations,,], param, xgrid)
 lowercdf <- colMeans(cdfs_$iscontained)
 uppercdf <- colMeans(cdfs_$intersects)
 
@@ -77,34 +77,34 @@ uppercdf <- colMeans(cdfs_$intersects)
 plot(xgrid, lowercdf, type = "l")
 lines(xgrid, uppercdf)
 abline(v = theta_dgp[param], lty = 2)
-abline(v = freqX[param]/n, lty = 3)
+abline(v = counts[param]/n, lty = 3)
 
 ## Now manual implementation of the Gibbs sampler, as described in Algorithm 1 of the paper
-gibbs_sampler_K2_with_uniforms <- function(niterations, freqX){
-  if (length(freqX) != 2){
-    stop("freqX argument should be made of two integers")
+gibbs_sampler_K2_with_uniforms <- function(niterations, counts){
+  if (length(counts) != 2){
+    stop("counts argument should be made of two integers")
   }
-  nobs <- sum(freqX)
-  X <- c(rep(1, freqX[1]), rep(2, freqX[2]))
+  nobs <- sum(counts)
+  X <- c(rep(1, counts[1]), rep(2, counts[2]))
   # initialization
   intervals <- matrix(nrow = niterations, ncol = 2)
   U <- rep(0, nobs)
   # initialization
-  U[X==1] <- runif(freqX[1], min = 0, max = 0.5)
-  U[X==2] <- runif(freqX[2], min = 0.5, max = 1)
+  U[X==1] <- runif(counts[1], min = 0, max = 0.5)
+  U[X==2] <- runif(counts[2], min = 0.5, max = 1)
   current <- c(max(U[X==1]), min(U[X==2]))
   intervals[1,] <- current
   for (iteration in 2:niterations){
-    U[X==1] <- runif(freqX[1], min = 0, max = current[2])
+    U[X==1] <- runif(counts[1], min = 0, max = current[2])
     current[1] <- max(U[X==1])
-    U[X==2] <- runif(freqX[2], min = current[1], max = 1)
+    U[X==2] <- runif(counts[2], min = current[1], max = 1)
     current[2] <- min(U[X==2])
     intervals[iteration,] <- current  
   }
   return(intervals)
 }
 
-intervals_K2_ <- gibbs_sampler_K2_with_uniforms(niterations, freqX)
+intervals_K2_ <- gibbs_sampler_K2_with_uniforms(niterations, counts)
 intervals_K2_ <- intervals_K2_[subiterations,]
 cdf_lowerupper <- function(theta, lu_chain){
   # intersect if luchain[1] < theta
@@ -128,32 +128,32 @@ plot(xgrid, lowercdf, type = "l", ylab = "CDF")
 lines(xgrid, uppercdf)
 lines(xgrid, lowercdf_alt, lty = 2, col = "red")
 lines(xgrid, uppercdf_alt, lty = 2, col = "red")
-abline(v = freqX[param]/n, lty = 3)
+abline(v = counts[param]/n, lty = 3)
 
 
 ## Now another Gibbs sampler that directly samples the end point of the feasible set
 ## without explicitly instantiating uniforms
 
-gibbs_sampler_K2 <- function(niterations, freqX){
-  if (length(freqX) != 2){
-    stop("freqX argument should be made of two integers")
+gibbs_sampler_K2 <- function(niterations, counts){
+  if (length(counts) != 2){
+    stop("counts argument should be made of two integers")
   }
-  nobs <- sum(freqX)
-  X <- c(rep(1, freqX[1]), rep(2, freqX[2]))
+  nobs <- sum(counts)
+  X <- c(rep(1, counts[1]), rep(2, counts[2]))
   # initialization
   intervals <- matrix(nrow = niterations, ncol = 2)
   # initialization
   current <- c(0, 1)
   intervals[1,] <- current
   for (iteration in 2:niterations){
-    current[1] <- current[2] * rbeta(1, freqX[1], 1)
-    current[2] <- current[1] + (1-current[1]) * rbeta(1, 1, freqX[2])
+    current[1] <- current[2] * rbeta(1, counts[1], 1)
+    current[2] <- current[1] + (1-current[1]) * rbeta(1, 1, counts[2])
     intervals[iteration,] <- current  
   }
   return(intervals)
 }
 
-intervals_K2_ <- gibbs_sampler_K2(niterations, freqX)
+intervals_K2_ <- gibbs_sampler_K2(niterations, counts)
 intervals_K2_ <- intervals_K2_[subiterations,]
 cdf_lowerupper <- function(theta, lu_chain){
   # intersect if luchain[1] < theta
@@ -177,7 +177,7 @@ plot(xgrid, lowercdf, type = "l", ylab = "CDF")
 lines(xgrid, uppercdf)
 lines(xgrid, lowercdf_alt, lty = 2, col = "red")
 lines(xgrid, uppercdf_alt, lty = 2, col = "red")
-abline(v = freqX[param]/n, lty = 3)
+abline(v = counts[param]/n, lty = 3)
 
 ## All these approaches seem to agree with each other
 

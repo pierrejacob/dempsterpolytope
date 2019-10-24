@@ -6,10 +6,12 @@ counts <- c(12, 14, 7)
 # number of MCMC iterations
 niterations <- 1e2
 # run Gibbs sampler
-gibbs_results <- gibbs_sampler(niterations, counts)
+gibbs_results <- dempsterpolytope:::gibbs_sampler(niterations, counts)
+# gibbs_results <- dempsterpolytope:::gibbs_sampler_lp(niterations, counts)
+# gibbs_results <- dempsterpolytope:::gibbs_sampler_graph(niterations, counts)
 
 # obtain K x K matrix 
-eta <- gibbs_results$etas_chain[niterations,,]
+eta <- gibbs_results$etas[niterations,,]
 
 # convert it to H-representation and V-representation of a convex polytope
 eta_converted <- etas2cvxpolytope(eta)

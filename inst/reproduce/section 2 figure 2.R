@@ -39,7 +39,7 @@ g <- g + geom_label(data = data.frame(x = 0.15, y = 0.7, label = TeX("$\\theta_2
                     aes(x = x, y = y, label = label), parse = TRUE, col = "red", alpha = 0.75)
 g
 
-ggsave(filename = "sdk.plottriangle.points.pdf", plot = g, width = 5, height = 5)
+ggsave(filename = "gibbsiteration.pdf", plot = g, width = 5, height = 5)
 
 
 ## now get all polytopes of feasible parameters at all iterations
@@ -61,6 +61,6 @@ g <- ggplot_triangle(v_cartesian) +
   geom_polygon(data=df.polytope %>% filter(iteration >= 100), aes(x = x, y = y, group = iteration), alpha = .3)
 g
 
-ggsave(filename = "sdk.plottriangle.polytopeS.pdf", plot = g, width = 5, height = 5)
+ggsave(filename = "overlaidpolytopes.pdf", plot = g, width = 5, height = 5)
 
 

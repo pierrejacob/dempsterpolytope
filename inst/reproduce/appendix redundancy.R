@@ -118,7 +118,7 @@ for (d in categories){
 }
 g <- add_L3const(add_L3const(g, 1, 2, 3, etas1), 3, 2, 1, etas1)
 g
-ggsave(filename = "sdk.plottriangle.violateconstraintsL2.pdf", plot = g, width = 5, height = 5)
+ggsave(filename = "violateconstraintsL2.pdf", plot = g, width = 5, height = 5)
 
 
 
@@ -149,4 +149,4 @@ g <- add_L2const(g, 1, 3, etas1)
 g <- add_L2const(g, 2, 3, etas1)
 g
 
-ggsave(filename = "sdk.plottriangle.violateconstraintsL3.pdf", plot = g, width = 5, height = 5)
+ggsave(filename = "violateconstraintsL3.pdf", plot = g, width = 5, height = 5)

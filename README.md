@@ -3,9 +3,8 @@
 
 Implements a Gibbs sampler for Dempster’s inference approach for
 Categorical distributions; this package is a companion to an article by
-Pierre E. Jacob, Ruobin Gong, Paul T. Edlefsen, Arthur P. Dempster. The
-link to an online version of the article will be added here at some
-point.
+Pierre E. Jacob, Ruobin Gong, Paul T. Edlefsen, Arthur P. Dempster,
+available at <https://www.researchers.one/article/2019-10-14>.
 
 This is not a general-purpose statistical software. This is just a
 collection of scripts intended to reproduce figures and tables of a
@@ -68,13 +67,13 @@ niterations <- 100
 # run Gibbs sampler
 gibbs_results <- gibbs_sampler(niterations, counts)
 
-# obtain a K x K matrix representing a convex polytope in the simplex by
-# taking the terminal iteration of the Gibbs chain
-eta <- gibbs_results$etas[niterations, , ]
+# obtain a K x K matrix representing a convex polytope in the simplex
+# by taking the terminal iteration of the Gibbs chain
+eta <- gibbs_results$etas[niterations,,]
 # convert polytope to H-representation and V-representation
 eta_converted <- etas2cvxpolytope(eta)
-# H-representation, or 'half-plane' representation means the set is
-# represented as points x such that 'constr' times x <= 'rhs'
+# H-representation, or "half-plane" representation
+# means the set is represented as points x such that 'constr' times x <= 'rhs' 
 eta_converted$constr
 #> $constr
 #>            [,1]      [,2]
@@ -94,8 +93,8 @@ eta_converted$constr
 #> 
 #> $dir
 #> [1] "<=" "<=" "<=" "<=" "<=" "<=" "<=" "<=" "<="
-# V-representation, or 'vertex' representation means the set is represented
-# by its vertices
+# V-representation, or "vertex" representation
+# means the set is represented by its vertices
 eta_converted$vertices_barcoord
 #>           [,1]      [,2]      [,3]
 #> [1,] 0.5120778 0.1764902 0.3114321
@@ -103,13 +102,11 @@ eta_converted$vertices_barcoord
 #> [3,] 0.5827381 0.1738669 0.2433950
 #> [4,] 0.5674307 0.1955678 0.2370015
 
-# next we can view the polytope in the K-simplex as a triangle, since here K
-# = 3
-v_cartesian <- list(c(1/2, sin(pi/3)), c(0, 0), c(1, 0))
-cols <- c("red", "green", "blue")
-v1 <- v_cartesian[[1]]
-v2 <- v_cartesian[[2]]
-v3 <- v_cartesian[[3]]
+# next we can view the K-simplex as a triangle, with K = 3 here
+# and the feasible polytope can be shown as a polygon within the simplex
+v_cartesian <- list(c(1/2, sin(pi/3)), c(0,0), c(1,0))
+cols <- c("red", "orange", "blue")
+v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
 ## this loads ggplot2
 set_my_theme()
 g <- ggplot_triangle(v_cartesian, etas = eta, addpolytope = T, cols = cols)
@@ -119,4 +116,4 @@ g
 ![](README-usage-1.png)<!-- -->
 
 The generated polytope is the black polygon in the middle of the
-triangle, which represents the entire simplex.
+simplex.

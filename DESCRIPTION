@@ -13,4 +13,4 @@ Depends: Rcpp, RcppEigen, igraph, rcdd, dplyr, lpSolveAPI
 Suggests: ggplot2
 Imports: Rcpp (>= 1.0.0), RcppEigen (>= 0.3.3.5.0)
 LinkingTo: Rcpp, RcppEigen
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0

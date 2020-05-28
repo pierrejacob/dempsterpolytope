@@ -107,8 +107,81 @@ create_plot_triangle <- function(graphsettings){
 add_plot_points <- function(graphsettings, g, barypoints, colour, fill){
   if (missing(colour)) colour <- "black"
   if (missing(fill)) fill <- "black"
+  if (is.null(dim(barypoints))){
+    barypoints <- matrix(barypoints, ncol = 3)
+  }
   cartipoints <- t(apply(barypoints, 1, function(v) barycentric2cartesian(v, graphsettings$v_cartesian)))
   g <- g + geom_point(data=data.frame(x = cartipoints[,1], y = cartipoints[,2]), aes(x = x, y = y), colour = colour, fill = fill, size = 3, shape = 21)
+  return(g)
+}
+
+#'@export
+add_plot_polytope <- function(graphsettings, g, polytope, colour = "black", fill = "black", alpha = 0.5){
+  vertices_cart <- t(apply(polytope$vertices_barcoord, 1, function(v) barycentric2cartesian(v, v_cartesian)))
+  average_ <- colMeans(vertices_cart)
+  o_ <- order(apply(sweep(vertices_cart, 2, average_, "-"), 1, function(v) atan2(v[2], v[1])))
+  vertices_cart <- vertices_cart[o_,]
+  polygon_df <- data.frame(x = vertices_cart[,1], y = vertices_cart[,2])
+  g <- g + geom_polygon(data = polygon_df, aes(x = x, y = y), colour = colour, fill = fill, alpha = alpha)
+  return(g)
+}
+
+#'@export
+add_plot_subsimplex <- function(graphsettings, g, theta, k, direction = "subsimplex", colour = "black", fill = "black", alpha = 0.5){
+  K <- 3
+  ## create simplex constraints
+  A <- matrix(rep(1, K-1), ncol = K-1)
+  A <- rbind(A, diag(-1, K-1, K-1))
+  b <- c(1, rep(0, K-1))
+  categories <- 1:3
+  if (direction == "subsimplex"){
+    sign <- +1 
+  } else {
+    sign <- -1
+  } 
+  for (j in setdiff(categories, k)){
+    # cccc (wA wB wC ... )' = 0
+    ccc <- rep(0, K)
+    ccc[k] <- sign * (theta[j])/(theta[k])
+    ccc[j] <- -sign * 1
+    cc <- ccc - ccc[K]
+    b <- c(b, -ccc[K])
+    A <- rbind(A, matrix(cc[1:(K-1)], nrow = 1))
+  }
+  constr <- list(constr = A, rhs = b, dir = rep("<=", nrow(A)))
+  ## make H representation
+  h <- rcdd::makeH(constr$constr, constr$rhs)
+  ## try to find V representation (for Vendetta)
+  v <- rcdd::q2d(rcdd::scdd(rcdd::d2q(h))$output)
+  if (any(v[, 1] != "0") || any(v[, 2] != "1")) {
+    stop("Failed to enumerate vertices. Is the polytope unbounded?")
+  }
+  vertices_barcoord <- v[, -c(1, 2), drop = FALSE]
+  # then add last coordinate, so that entries sum to one again
+  vertices_barcoord <- cbind(vertices_barcoord, 1- apply(vertices_barcoord, 1, sum))
+  cvxpolytope <- list(vertices_barcoord = vertices_barcoord, constr = constr)
+  g <- add_plot_polytope(graphsettings, g, cvxpolytope, colour, fill, alpha)
+  return(g)
+}
+
+#'@export
+add_ratioconstraint <- function(graphsettings, g, eta, from, to, colour = "black", linetype = 2){
+  barconstraint2cartconstraint <- function(d, j, eta, matrixT, v_cartesian){
+    # ccc * (wA wB wC) = 0 with:
+    ccc <- rep(0, 3)
+    ccc[d] <- 1
+    ccc[j] <- - eta
+    # which is equivalent to ftilde * (wA wB) = gtilde with
+    ftilde <- c(ccc[1] - ccc[3], ccc[2] - ccc[3])
+    gtilde <- -ccc[3]
+    # we can generically express that as a constraint on x,y through
+    f <- solve(t(matrixT), ftilde)
+    g <- gtilde + sum(f * v_cartesian[[3]])
+    # f1 x + f2 y = g is equivalent to a = g/f2, b = - f1/f2
+    return(c(g/f[2], -f[1]/f[2]))
+  }
+  cartconstraint <- barconstraint2cartconstraint(from, to, 1/eta, graphsettings$matrixT, graphsettings$v_cartesian)
+  g <- g + geom_abline(intercept = cartconstraint[1], slope = cartconstraint[2], colour = colour, linetype = linetype)
   return(g)
 }
 

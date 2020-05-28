@@ -2,6 +2,9 @@
 
 export(SMC_sampler)
 export(add_plot_points)
+export(add_plot_polytope)
+export(add_plot_subsimplex)
+export(add_ratioconstraint)
 export(barycentric2cartesian)
 export(cartesian2barycentric)
 export(compare_polytopes)

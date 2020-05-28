@@ -32,7 +32,7 @@ set_custom_theme <- function(){
                plot.margin = unit(c(1,1,1,1), "cm"))
   v_cartesian <- list(c(1/2, sin(pi/3)), c(0,0), c(1,0))
   cols <- c("red", "yellow", "blue")
-  contcols <- c("darkred", "goldenrod3", "darkblue")
+  contcols <- c("darkred", "goldenrod4", "darkblue")
   v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
   triangle.df <- data.frame(x = c(v1[1], v2[1], v3[1]), y = c(v1[2], v2[2], v3[2]))
   ## the matrix T is used to go from Cartesian coordinates to barycentric coordinates

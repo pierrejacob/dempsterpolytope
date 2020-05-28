@@ -1,11 +1,11 @@
 ## This scripts reproduce the results for the linkage model
 
+set.seed(1)
 library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
 registerDoParallel(cores = detectCores()-2)
-set_my_theme()
-set.seed(1)
+graphsettings <- set_custom_theme()
 rm(list = ls())
 # define A and b such that theta = A phi + b where phi is in the interval (0,1)
 A <- c(1/4, -1/4, -1/4, 1/4)

@@ -117,7 +117,7 @@ add_plot_points <- function(graphsettings, g, barypoints, colour, fill){
 
 #'@export
 add_plot_polytope <- function(graphsettings, g, polytope, colour = "black", fill = "black", alpha = 0.5){
-  vertices_cart <- t(apply(polytope$vertices_barcoord, 1, function(v) barycentric2cartesian(v, v_cartesian)))
+  vertices_cart <- t(apply(polytope$vertices_barcoord, 1, function(v) barycentric2cartesian(v, graphsettings$v_cartesian)))
   average_ <- colMeans(vertices_cart)
   o_ <- order(apply(sweep(vertices_cart, 2, average_, "-"), 1, function(v) atan2(v[2], v[1])))
   vertices_cart <- vertices_cart[o_,]

@@ -51,14 +51,12 @@ for the data set (10, 4, 7), meaning 10 observations in category 1, 4 in categor
 ```{r usage, tidy = T, cache = TRUE, warning=FALSE, message=FALSE, fig.width=7}
 library(dempsterpolytope)
 set.seed(1)
-
 # count data
 counts <- c(10, 4, 7)
 # number of MCMC iterations
 niterations <- 100
 # run Gibbs sampler
 gibbs_results <- gibbs_sampler(niterations, counts)
-
 # obtain a K x K matrix representing a convex polytope in the simplex
 # by taking the terminal iteration of the Gibbs chain
 eta <- gibbs_results$etas[niterations,,]
@@ -70,15 +68,11 @@ eta_converted$constr
 # V-representation, or "vertex" representation
 # means the set is represented by its vertices
 eta_converted$vertices_barcoord
-
 # next we can view the K-simplex as a triangle, with K = 3 here
 # and the feasible polytope can be shown as a polygon within the simplex
-v_cartesian <- list(c(1/2, sin(pi/3)), c(0,0), c(1,0))
-cols <- c("red", "orange", "blue")
-v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
-## this loads ggplot2
-set_my_theme()
-g <- ggplot_triangle(v_cartesian, etas = eta, addpolytope = T, cols = cols)
+gs <- set_custom_theme()
+g <- create_plot_triangle(gs)
+g <- add_plot_polytope(gs, g, eta_converted)
 g
 ```
 

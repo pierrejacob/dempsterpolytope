@@ -59,14 +59,12 @@ category 1, 4 in category 2, 7 in category 3.
 ``` r
 library(dempsterpolytope)
 set.seed(1)
-
 # count data
 counts <- c(10, 4, 7)
 # number of MCMC iterations
 niterations <- 100
 # run Gibbs sampler
 gibbs_results <- gibbs_sampler(niterations, counts)
-
 # obtain a K x K matrix representing a convex polytope in the simplex
 # by taking the terminal iteration of the Gibbs chain
 eta <- gibbs_results$etas[niterations,,]
@@ -101,15 +99,11 @@ eta_converted$vertices_barcoord
 #> [2,] 0.5245116 0.1564944 0.3189940
 #> [3,] 0.5827381 0.1738669 0.2433950
 #> [4,] 0.5674307 0.1955678 0.2370015
-
 # next we can view the K-simplex as a triangle, with K = 3 here
 # and the feasible polytope can be shown as a polygon within the simplex
-v_cartesian <- list(c(1/2, sin(pi/3)), c(0,0), c(1,0))
-cols <- c("red", "orange", "blue")
-v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
-## this loads ggplot2
-set_my_theme()
-g <- ggplot_triangle(v_cartesian, etas = eta, addpolytope = T, cols = cols)
+gs <- set_custom_theme()
+g <- create_plot_triangle(gs)
+g <- add_plot_polytope(gs, g, eta_converted)
 g
 ```
 

@@ -1,12 +1,22 @@
 ## This scripts reproduce the results for the linkage model
 
-set.seed(1)
+rm(list = ls())
+set.seed(2)
 library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
 registerDoParallel(cores = detectCores()-2)
 graphsettings <- set_custom_theme()
-rm(list = ls())
+theme_set(ggthemes::theme_tufte(ticks = TRUE))
+theme_update(axis.text.x = element_text(size = 20), axis.text.y = element_text(size = 20), 
+             axis.title.x = element_text(size = 25, margin = margin(20, 0, 0, 0), hjust = 1), 
+             axis.title.y = element_text(size = 25, angle = 90, margin = margin(0, 20, 0, 0), vjust = 1), 
+             legend.text = element_text(size = 20), 
+             legend.title = element_text(size = 20), title = element_text(size = 30), 
+             strip.text = element_text(size = 25), strip.background = element_rect(fill = "white"), 
+             legend.position = "bottom")
+
+
 # define A and b such that theta = A phi + b where phi is in the interval (0,1)
 A <- c(1/4, -1/4, -1/4, 1/4)
 b <- c(1/2, 1/4, 1/4, 0)
@@ -212,8 +222,9 @@ df_ <- data.frame(x = c(phi_intervals_ddsm[,1], phi_intervals_ddsm[,2], intersec
 
 
 g <- ggplot(df_, aes(x = x, linetype = dsm, group = interaction(side, dsm))) + stat_ecdf()
-g <- g + xlab(expression(phi)) +  ylab("CDF") + scale_linetype(name = "DSM: ")
+g <- g + xlab(expression(phi)) +  ylab("cdf") + scale_linetype(name = "DSM: ")
 g
+
 ggsave(filename = "linkage.cdf.pdf", plot = g, width = 7, height = 5)
 
 ##
@@ -227,7 +238,7 @@ for (iphi in 1:phi_grid_length){
 plot(phi_grid, cdf_upper_values - cdf_lower_values, type = "l", ylim = c(0,.17), lty = 2)
 lines(phi_grid, ddsm_cdf_upper_values - ddsm_cdf_lower_values)
 gr <- qplot(x = phi_grid, y =  ddsm_cdf_upper_values - ddsm_cdf_lower_values, geom = "line", linetype = "Dirichlet") + 
-  geom_line(aes(y = cdf_upper_values - cdf_lower_values, linetype = "Simplex")) + ylab("r-CDF") + xlab(expression(phi))
+  geom_line(aes(y = cdf_upper_values - cdf_lower_values, linetype = "Simplex")) + ylab("r-cdf") + xlab(expression(phi))
 gr <- gr + scale_linetype(name = "DSM: ")
 gr            
 

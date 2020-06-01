@@ -59,8 +59,6 @@ etas2cvxpolytope <- function(etas){
     }
   }
   constr <- list(constr = A, rhs = b, dir = rep("<=", nrow(A)))
-  # get vertices of polytope
-  # vertices_barcoord <- hitandrun::findVertices(constr)
   ## make H representation
   h <- rcdd::makeH(constr$constr, constr$rhs)
   ## try to find V representation (for Vendetta)
@@ -131,75 +129,6 @@ compare_polytopes <- function(cvxp1, cvxp2){
   intersects <- (dim(v)[1] != 0)
   return(c(contained, intersects))
 }
-
-#'@export
-compare_with_independence <- function(etas){
-  ## check relation between feasible set, i.e. polypote of theta s.t. theta_j / theta_d <= etas[d,j] 
-  ## with independence assumption
-  ## log(theta_1) + log(theta_4) - log(theta_2) - log(theta_3) = 0
-  ## i.e. log(theta_1) + log(theta_4) - log(theta_2) - log(theta_3)  <= 0
-  ## and  log(theta_1) + log(theta_4) - log(theta_2) - log(theta_3)  >= 0
-  ## this function returns four booleans
-  ## 1) whether feasible set intersects with the 'negative association polytope' of thetas 
-  ## satisfying log(theta_1) + log(theta_4) - log(theta_2) - log(theta_3)  <= 0
-  ## 2) whether feasible set is contained in 'negative association polytope'
-  ## 3) whether feasible set intersects with the 'positive association polytope' of thetas 
-  ## satisfying log(theta_1) + log(theta_4) - log(theta_2) - log(theta_3)  >= 0
-  ## 4) whether feasible set is contained in 'positive association polytope'
-  if (dim(etas)[1] != 4){
-    stop("The matix etas must be 4x4 for the function 'check_intersection_independence' to be called.")
-  }
-  K_ <- dim(etas)[1]
-  categories <- 1:K_
-  A <- matrix(0, nrow = K_*(K_-1), ncol = K_-1)
-  b <- rep(0, K*(K_-1))
-  # then the extra constraints come from etas
-  # log(theta_j) - log(theta_d) <= log(etas[d,j])
-  index <- 1
-  for (d in categories){
-    for (j in setdiff(categories, d)){
-      # cccc (wA wB wC ... )' = 0
-      ccc <- rep(0, K_)
-      ccc[d] <- -1
-      ccc[j] <- +1
-      cc <- ccc - ccc[K_]
-      b[index] <- log(etas[d,j])
-      A[index,] <- cc[1:(K_-1)]
-      index <- index + 1
-    }
-  }
-  constr <- list(constr = A, rhs = b, dir = rep("<=", nrow(A)))
-  hrepr <- rcdd::makeH(constr$constr, constr$rhs)
-  vrepr <- rcdd::q2d(rcdd::scdd(rcdd::d2q(hrepr))$output)
-  intersects <- (dim(vrepr)[1] != 0)
-  cvxpolytope <- vrepr[,-c(1,2)]
-  ## "negative correlation" constraint
-  ## log(theta_1) + log(theta_4) - log(theta_2) - log(theta_3)  <= 0
-  Apos <- matrix(c(1,-1,-1,1), nrow = 1, byrow = T)
-  Apos <- Apos[,1:(K_-1),drop=F] - Apos[,K_]
-  bpos <- 0
-  ncst <- nrow(constr$constr)
-  constr1 <- list(constr = Apos, rhs = bpos, dir = "<=")
-  ## test intersection between log(eta)-polytope and log(theta_1) - log(theta_2) - log(theta_3) + log(theta_4) <= 0
-  intersectconstr <- list(constr = rbind(constr$constr, Apos), rhs = c(constr$rhs, bpos), dir = rep("<=", ncst+1))
-  hrepr <- rcdd::makeH(intersectconstr$constr, intersectconstr$rhs)
-  vrepr <- rcdd::q2d(rcdd::scdd(rcdd::d2q(hrepr))$output)
-  intersect1 <- (dim(vrepr)[1] != 0)
-  ## test whether log(eta)-polytope is contained in the set log(theta_1) - log(theta_2) - log(theta_3) + log(theta_4) <= 0
-  contained1 <- all(apply(cvxpolytope, 1, function(v) all(constr1$constr %*% v <= constr1$rhs)))
-  ## positive association constraint
-  ## test intersection between log(eta)-polytope and log(theta_1) - log(theta_2) - log(theta_3) + log(theta_4) >= 0
-  constr2 <- list(constr = -Apos, rhs = bpos, dir = "<=")
-  intersectconstr <- list(constr = rbind(constr$constr, -Apos), rhs = c(constr$rhs, bpos), dir = rep("<=", ncst+1))
-  hrepr <- rcdd::makeH(intersectconstr$constr, intersectconstr$rhs)
-  vrepr <- rcdd::q2d(rcdd::scdd(rcdd::d2q(hrepr))$output)
-  intersect2 <- (dim(vrepr)[1] != 0)
-  ## test whether log(eta)-polytope is contained in the set log(theta_1) - log(theta_2) - log(theta_3) + log(theta_4) >= 0
-  contained2 <- all(apply(cvxpolytope, 1, function(v) all(constr2$constr %*% v <= constr2$rhs)))
-  return(list(intersect1 = intersect1, contained1 = contained1, intersect2 = intersect2, contained2 = contained2))
-}
-
-
 
 ## take an array of etas, as produced by the function gibbs_sampler
 ## and a category (index between 1 and K)

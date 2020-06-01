@@ -181,6 +181,10 @@ SMC_sampler_lp <- function(nparticles, X, K, essthreshold = 0.75, resamplingtime
   normcst[1] <- 0
   ess <- rep(1, nobs)
   resamplingtimes_sofar <- c()
+  etas_history <- list()
+  weights_history <- list()
+  etas_history[[1]] <- etas_particles
+  weights_history[[1]] <- weights
   #
   if (nobs > 1){
     for (iobs in 2:nobs){
@@ -283,6 +287,8 @@ SMC_sampler_lp <- function(nparticles, X, K, essthreshold = 0.75, resamplingtime
           etas_particles[iparticle,,] <- etas
         }
       }
+      etas_history[[iobs]] <- etas_particles
+      weights_history[[iobs]] <- weights
     }
   }
   hestimator <- NULL
@@ -295,7 +301,8 @@ SMC_sampler_lp <- function(nparticles, X, K, essthreshold = 0.75, resamplingtime
   }
   rm(lpobject)
   return(list(etas_particles = etas_particles, normcst = normcst, weights = weights, ess = ess,
-              essthreshold = essthreshold, resamplingtimes = resamplingtimes_sofar, hestimator = hestimator))
+              essthreshold = essthreshold, resamplingtimes = resamplingtimes_sofar, hestimator = hestimator,
+              etas_history = etas_history, weights_history = weights_history))
 }
 
 #'@export

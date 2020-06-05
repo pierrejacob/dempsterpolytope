@@ -2,13 +2,17 @@
 ## on counts in 3 categories
 ## and shows resulting polytopes in plots
 
+rm(list = ls())
 library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
+library(latex2exp)
 registerDoParallel(cores = detectCores()-2)
-set_my_theme()
+graphsettings <- set_custom_theme()
 set.seed(1)
-rm(list = ls())
+attach(graphsettings)
+v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
+set.seed(4)
 
 ## number of observations
 n <- 20
@@ -17,11 +21,6 @@ K <- 3
 categories <- 1:K
 ## data 
 counts <- c(7,5,8)
-##
-## encompassing triangle has three vertices
-v_cartesian <- list(c(1/2, sin(pi/3)), c(0,0), c(1,0))
-cols <- c("red", "green", "blue")
-
 ###
 niterations <- 200
 pct <- proc.time()
@@ -45,15 +44,9 @@ for (iteration in 1:niterations){
   df.polytope <- rbind(df.polytope, data.frame(x = vertices_cart[,1], y= vertices_cart[,2], 
                                    iteration = iteration))
 }
-g <- ggplot_triangle(v_cartesian) +
-  geom_polygon(data=df.polytope %>% filter(iteration >= 100), aes(x = x, y = y, group = iteration), alpha = .3)
+g <- create_plot_triangle(graphsettings) +
+  geom_polygon(data=df.polytope %>% filter(iteration >= 100), aes(x = x, y = y, group = iteration), alpha = .2,
+               colour = 'black', size = 0.25)
 g
 
-### Show an instance of a feasible plot with all six linear constraints
-iteration <- 170
-etas <- samples_gibbs$etas[iteration,,]
-pts_barcoord <- lapply(samples_gibbs$Us, function(l) l[iteration,,])
-pts_cart <- lapply(pts_barcoord, function(l) t(apply(matrix(l, ncol = K), 1, function(v) barycentric2cartesian(v, v_cartesian))))
-g <- ggplot_triangle(v_cartesian, pts_cart, etas, addpolytope = T, cols = cols)
-g
 

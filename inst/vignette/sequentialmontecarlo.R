@@ -2,9 +2,16 @@
 ## and computes some lower and upper probabilities of some assertion
 ## to compare the results
 
-library(dempsterpolytope)
-set.seed(1)
 rm(list = ls())
+library(dempsterpolytope)
+library(doParallel)
+library(doRNG)
+library(latex2exp)
+registerDoParallel(cores = detectCores()-2)
+graphsettings <- set_custom_theme()
+attach(graphsettings)
+v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
+set.seed(13)
 
 ## number of categories
 K <- 3

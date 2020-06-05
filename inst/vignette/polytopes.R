@@ -1,21 +1,18 @@
 ## This scripts illustrates some manipulation of polytopes
+rm(list = ls())
 library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
+library(latex2exp)
 registerDoParallel(cores = detectCores()-2)
-set_my_theme()
-set.seed(3)
-rm(list = ls())
-
+graphsettings <- set_custom_theme()
+attach(graphsettings)
+v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
+set.seed(13)
 ## number of categories
 K <- 3
 categories <- 1:K
 ##
-## encompassing triangle has three vertices
-v_cartesian <- list(c(1/2, sin(pi/3)), c(0,0), c(1,0))
-cols <- c("red", "green", "blue")
-# ggplot_triangle(v_cartesian, cols = cols)
-
 ## data 
 counts <- c(3,1,2)
 ## run Gibbs sampler
@@ -41,12 +38,12 @@ cvxpolytope$vertices_barcoord
 # ?barycentric2cartesian
 cvxpolytope_cartesian.df <- data.frame(t(apply(cvxpolytope$vertices_barcoord, 1, function(row_) barycentric2cartesian(row_, v_cartesian))))
 
-g <- ggplot_triangle(v_cartesian) +
+g <- create_plot_triangle(graphsettings) +
   geom_point(data=cvxpolytope_cartesian.df, aes(x = X1, y = X2))
 g
 
 ## and we can plot it as a polygon
-g <- ggplot_triangle(v_cartesian) +
+g <- create_plot_triangle(graphsettings) +
   geom_polygon(data=cvxpolytope_cartesian.df, aes(x = X1, y = X2))
 g
 ## but here we see that the polygon is looking weird, because we haven't cared about the ordering of the points.
@@ -54,18 +51,12 @@ g
 average_ <- colMeans(cvxpolytope_cartesian.df)
 o_ <- order(apply(sweep(cvxpolytope_cartesian.df, 2, average_, "-"), 1, function(v) atan2(v[2], v[1])))
 cvxpolytope_cartesian.df <- cvxpolytope_cartesian.df[o_,]
-g <- ggplot_triangle(v_cartesian) +
+g <- create_plot_triangle(graphsettings) +
   geom_polygon(data=cvxpolytope_cartesian.df, aes(x = X1, y = X2))
 g
 
-## we can also display the whole thing 
-pts_barcoord <- lapply(samples_gibbs$Us, function(l) l[niterations,,])
-pts_cart <- lapply(pts_barcoord, function(l) t(apply(matrix(l, ncol = K), 1, function(v) barycentric2cartesian(v, v_cartesian))))
-gall <- ggplot_triangle(v_cartesian, pts_cart, etas, addpolytope = T, cols = cols)
-gall
-
 ## next we check whether randomly drawn points are inside the polytope or not
-g <- ggplot_triangle(v_cartesian) +
+g <- create_plot_triangle(graphsettings) +
   geom_polygon(data=cvxpolytope_cartesian.df, aes(x = X1, y = X2))
 g
 ## draw points

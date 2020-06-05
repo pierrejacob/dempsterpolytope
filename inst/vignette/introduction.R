@@ -69,15 +69,22 @@ cat(mean(contained_), mean(intersects_), "\n")
 ## as follows
 
 ## we are going to speed things up a little bit with parallel computation
-library(doParallel)
-registerDoParallel(cores = detectCores()-2)
 
-grid01 <- seq(from = 0, to = 1, length.out = 50)
-loweruppercdf <- etas_to_lower_upper_cdf_dopar(samples_gibbs$etas[(burnin+1):niterations_gibbs,,], 1, grid01)
-lowercdf_ <- colMeans(loweruppercdf$iscontained)
-uppercdf_ <- colMeans(loweruppercdf$intersects)
+## find vertices of polytopes with minimum and maximum first component
+minmax1 <- apply(samples_gibbs$etas[(burnin+1):niterations_gibbs,,], 1, function(eta){ 
+  baryeta <- etas2cvxpolytope(eta)$vertices_barcoord
+  mincoord1 <- min(baryeta[,1])
+  maxcoord1 <- max(baryeta[,1])
+  return(c(mincoord1, maxcoord1))
+})
+
+## obtain empirical cdf functions based on these 
+ecdf_lower <- ecdf(minmax1[1,])
+ecdf_upper <- ecdf(minmax1[2,])w
+
 
 # plot lower and upper CDFs
-plot(x = grid01, y = lowercdf_, type = "l", xlab = expression(theta[1]), ylab = "CDF")
-lines(x = grid01, y = uppercdf_)
+grid01 <- seq(from = 0, to = 1, length.out = 500)
+plot(x = grid01, y = ecdf_lower(grid01), type = "l", xlab = expression(theta[1]), ylab = "CDF")
+lines(x = grid01, y = ecdf_upper(grid01))
 abline(v = counts[1]/n, lty = 3) # add vertical dotted line at the MLE

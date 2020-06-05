@@ -32,57 +32,36 @@ g
 ggsave(filename = "subsimplices.pdf", plot = g, width = 5, height = 5)
 
 
-## create subsimplex as convex polytope
-X <- rep(1:length(counts), times = counts)
-K <- length(counts)
 
-sample_uniform <- function(X, K){
-  # number of observations
-  n <- length(X)
-  # matrix of uniform a's in the simplex
-  us <- matrix(rexp(K*n), ncol = K)
-  us <- t(apply(us, 1, function(v) v / sum(v)))
-  pts <- list()
-  # create eta
-  eta <- diag(1, K, K)
-  for (k in 1:K){
-    notk <- setdiff(1:K, k)
-    u_k <- us[X == k,,drop=F]
-    pts[[k]] <- u_k
-    for (ell in notk){
-      eta[k,ell] <- min(u_k[,ell]/u_k[,k])
-    }
-  }
-  return(list(pts = pts, eta = eta))
-}
 
-ntrials <- 2e2
-etas <- list()
-pts <- list()
-accept <- c()
-for (itrial in 1:ntrials){
-  result <- sample_uniform(X, K)
-  etas[[itrial]] <- result$eta
-  pts[[itrial]] <- result$pts
-  accept <- c(accept, dempsterpolytope:::check_cst_graph(etas[[itrial]]))
-}
-mean(accept)
-index <- which(accept)[2]
-eta <- etas[[index]]
-pts_barcoord <- pts[[index]]
-
-## draw some points uniformly on the simplex
-g <- create_plot_triangle(graphsettings)
-# ## points are each related to one of the x
-gpoints <- g
-gpoints <- add_plot_points(graphsettings, gpoints, pts_barcoord[[1]], colour = graphsettings$contcols[1], fill = graphsettings$cols[1])
-gpoints <- add_plot_points(graphsettings, gpoints, pts_barcoord[[2]], colour = graphsettings$contcols[2], fill = graphsettings$cols[2])
-gpoints <- add_plot_points(graphsettings, gpoints, pts_barcoord[[3]], colour = graphsettings$contcols[3], fill = graphsettings$cols[3])
-
+## triangle with equal sides
 attach(graphsettings)
-eta_cvx <- etas2cvxpolytope(eta)
-gpoints_polytope <- add_plot_polytope(graphsettings, gpoints, eta_cvx)
-gpoints_polytope
-##
-ggsave(filename = "onesample.pdf", plot = gpoints_polytope, width = 5, height = 5)
+v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
+# Now with ggplot2
+g <- create_plot_triangle(graphsettings)
+
+pt_bar1 <- c(0.3, 0.25, 0.45)
+g <- add_plot_subsimplex(graphsettings, g, pt_bar1, 1, direction = "reverse", fill = graphsettings$cols[1], 
+                         colour = graphsettings$contcols[1], alpha = 0.8)
+g <- add_plot_points(graphsettings, g, pt_bar1)
+
+pt_bar2 <- c(0.4, 0.5, 0.1)
+g <- add_plot_subsimplex(graphsettings, g, pt_bar2, 2, direction = "reverse", fill = graphsettings$cols[2], 
+                         colour = graphsettings$contcols[2], alpha = 0.8)
+g <- add_plot_points(graphsettings, g, pt_bar2)
+
+pt_bar3 <- c(0.1, 0.45, 0.45)
+g <- add_plot_subsimplex(graphsettings, g, pt_bar3, 3, direction = "reverse", fill = graphsettings$cols[3], 
+                         colour = graphsettings$contcols[3], alpha = 0.8)
+g <- add_plot_points(graphsettings, g, pt_bar3)
+
+g <- g + annotate(geom = 'text', size = 5, x = .6, y = .2, label = TeX("$u_1$", output = "character"), parse = TRUE)
+# g <- g + annotate(geom = 'text', size = 5, x = .55, y = .45, label = TeX("$\\theta_2/\\theta_1 < u_{1,2}/u_{1,1}$", output = "character"), parse = TRUE)
+# g <- g + annotate(geom = 'text', size = 5, x = .55, y = .5, label = TeX("$\\theta_3/\\theta_1 < u_{1,3}/u_{1,1}$", output = "character"), parse = TRUE)
+g <- g + annotate(geom = 'text', size = 5, x = .45, y = .1, label = TeX("$u_2$", output = "character"), parse = TRUE)
+g <- g + annotate(geom = 'text', size = 5, x = .3, y = .4, label = TeX("$u_3$", output = "character"), parse = TRUE)
+g
+
+ggsave(filename = "cups.pdf", plot = g, width = 5, height = 5)
+
 

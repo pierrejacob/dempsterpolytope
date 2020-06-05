@@ -1,14 +1,12 @@
-## This script ...
+## This script shows step by step whether a set of us 
+## corresponds to a non-empty feasible set F(u), or not
 rm(list = ls())
 library(dempsterpolytope)
 library(latex2exp)
 graphsettings <- set_custom_theme()
-set.seed(1)
-
 set.seed(4)
+
 # number of observations
-n <- 20
-# number of categories
 K <- 3
 categories <- 1:K
 # data 
@@ -58,7 +56,7 @@ gpoints <- add_plot_points(graphsettings, g, pts_barcoord[[1]])
 gpoints <- add_plot_points(graphsettings, gpoints, pts_barcoord[[2]])
 gpoints <- add_plot_points(graphsettings, gpoints, pts_barcoord[[3]])
 gpoints 
-# ggsave(filename = "stepbystep.feasibleset.1.pdf", plot = gpoints, width = 5, height = 5)
+ggsave(filename = "stepbystep.feasibleset.1.pdf", plot = gpoints, width = 5, height = 5)
 
 # ## points are each related to one of the x
 gpoints <- add_plot_points(graphsettings, gpoints, pts_barcoord[[1]], colour = graphsettings$contcols[1], fill = graphsettings$cols[1])
@@ -66,10 +64,7 @@ gpoints <- add_plot_points(graphsettings, gpoints, pts_barcoord[[2]], colour = g
 gpoints <- add_plot_points(graphsettings, gpoints, pts_barcoord[[3]], colour = graphsettings$contcols[3], fill = graphsettings$cols[3])
 gpoints 
 
-eta
-
-
-# ggsave(filename = "stepbystep.feasibleset.2.pdf", plot = gpoints, width = 5, height = 5)
+ggsave(filename = "stepbystep.feasibleset.2.pdf", plot = gpoints, width = 5, height = 5)
 
 ## show feasible region for theta 
 attach(graphsettings)
@@ -114,19 +109,19 @@ gpointsshaded <- gpoints +  geom_polygon(data = polygon_df %>% filter(cat == 1),
 gpointsshaded <- gpointsshaded + scale_fill_manual("", values = cols) + scale_color_manual("", values = contcols) + theme(legend.position = "none")
 gpointsshaded
 
-# ggsave(filename = "stepbystep.feasibleset.3.pdf", plot = gpointsshaded, width = 5, height = 5)
+ggsave(filename = "stepbystep.feasibleset.3.pdf", plot = gpointsshaded, width = 5, height = 5)
 
 gpointsshaded <- gpoints +  geom_polygon(data = polygon_df %>% filter(cat <= 2), alpha = 0.5, aes(fill = factor(cat))) 
 gpointsshaded <- gpointsshaded + scale_fill_manual("", values = cols) + scale_color_manual("", values = contcols) + theme(legend.position = "none")
 gpointsshaded
 
-# ggsave(filename = "stepbystep.feasibleset.4.pdf", width = 5, height = 5, plot = gpointsshaded)
+ggsave(filename = "stepbystep.feasibleset.4.pdf", width = 5, height = 5, plot = gpointsshaded)
 
 gpointsshaded <- gpoints +  geom_polygon(data = polygon_df %>% filter(cat <= 3), alpha = 0.5, aes(fill = factor(cat)))
 gpointsshaded <- gpointsshaded + scale_fill_manual("", values = cols) + scale_color_manual("", values = contcols) + theme(legend.position = "none")
 gpointsshaded
 
-# ggsave(filename = "stepbystep.feasibleset.5.pdf", width = 5, height = 5, plot = gpointsshaded)
+ggsave(filename = "stepbystep.feasibleset.5.pdf", width = 5, height = 5, plot = gpointsshaded)
 
 ## feasible set 
 
@@ -163,7 +158,7 @@ gpointsshaded <- gpoints + geom_polygon(data = data.frame(x = vertices_cart[,1],
 gpointsshaded <- gpointsshaded + scale_fill_manual("", values = cols) + scale_color_manual("", values = contcols) + theme(legend.position = "none")
 gpointsshaded
 
-# ggsave(filename = "stepbystep.feasibleset.6.pdf", width = 5, height = 5, plot = gpointsshaded)
+ggsave(filename = "stepbystep.feasibleset.6.pdf", width = 5, height = 5, plot = gpointsshaded)
 
 ## if we take any point in the feasible set ...
 v1 <- graphsettings$v_cartesian[[1]]
@@ -180,7 +175,7 @@ gpoints_split <- gpoints_split + geom_polygon(data = data.frame(x = c(pt_xy[1], 
                       colour = "black", alpha = 0.5)
 gpoints_split <- gpoints_split + scale_fill_manual("", values = cols) + scale_color_manual("", values = contcols) + theme(legend.position = "none")
 gpoints_split
-# ggsave(filename = "stepbystep.feasibleset.7.pdf", width = 5, height = 5, plot = gpoints_split)
+ggsave(filename = "stepbystep.feasibleset.7.pdf", width = 5, height = 5, plot = gpoints_split)
 
 ## now with a non feasible 
 index <- which(!accept)[2]
@@ -201,7 +196,7 @@ gpoints <- g + geom_point(data=df, aes(x = x, y = y, fill = factor(category), co
 gpoints <- gpoints + scale_fill_manual("", values = cols) + scale_color_manual("", values = contcols) + theme(legend.position = "none")
 gpoints
 
-# ggsave(filename = "anothertrial.pdf", width = 5, height = 5, plot = gpoints)
+ggsave(filename = "anothertrial.pdf", width = 5, height = 5, plot = gpoints)
 
 
 polygon_df <- data.frame()
@@ -241,7 +236,7 @@ gpointsshaded <- gpointsshaded + scale_fill_manual("", values = cols) + scale_co
 gpointsshaded
 
 
-# ggsave(filename = "infeasibleset.pdf", width = 5, height = 5, plot = gpointsshaded)
+ggsave(filename = "infeasibleset.pdf", width = 5, height = 5, plot = gpointsshaded)
 ##
 
 

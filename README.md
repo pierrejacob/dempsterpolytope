@@ -4,7 +4,7 @@
 Implements a Gibbs sampler for Dempster’s inference approach for
 Categorical distributions; this package is a companion to an article by
 Pierre E. Jacob, Ruobin Gong, Paul T. Edlefsen, Arthur P. Dempster,
-available at <https://www.researchers.one/article/2019-10-14>.
+available at <https://arxiv.org/abs/1910.11953>.
 
 This is not a general-purpose statistical software. This is just a
 collection of scripts intended to reproduce figures and tables of a
@@ -25,8 +25,7 @@ devtools::install_github("pierrejacob/dempsterpolytope")
 ```
 
 It depends on the packages Rcpp, RcppEigen, igraph, rcdd, dplyr,
-lpSolveAPI which can be installed
-via:
+lpSolveAPI which can be installed via:
 
 ``` r
 install.packages(c("Rcpp", "RcppEigen", "igraph", "rcdd", "dplyr", "lpSolveAPI"))
@@ -100,14 +99,22 @@ eta_converted$vertices_barcoord
 #> [3,] 0.5827381 0.1738669 0.2433950
 #> [4,] 0.5674307 0.1955678 0.2370015
 # next we can view the K-simplex as a triangle, with K = 3 here
-# and the feasible polytope can be shown as a polygon within the simplex
+# and the feasible polytopes as polygons within the triangle
 gs <- set_custom_theme()
 g <- create_plot_triangle(gs)
-g <- add_plot_polytope(gs, g, eta_converted)
-g
+cvxpolytope_cartesian.df <- data.frame()
+for (iter in 51:100){
+  cvx <- etas2cvxpolytope(gibbs_results$etas[iter,,])
+  cvx_cartesian <- t(apply(cvx$vertices_barcoord, 1, function(row) barycentric2cartesian(row, gs$v_cartesian)))
+  average_ <- colMeans(cvx_cartesian)
+  o_ <- order(apply(sweep(cvx_cartesian, 2, average_, "-"), 1, function(v) atan2(v[2], v[1])))
+  cvx_cartesian <- cvx_cartesian[o_,]
+  cvxpolytope_cartesian.df <- rbind(cvxpolytope_cartesian.df, data.frame(cvx_cartesian, iter = iter))
+}
+gpolytopes <- g + geom_polygon(data = cvxpolytope_cartesian.df, aes(x = X1, y = X2, group = iter), size = 0.25, alpha = .2, fill = 'black', colour = 'black')
+gpolytopes
 ```
 
 ![](README-usage-1.png)<!-- -->
 
-The generated polytope is the black polygon in the middle of the
-simplex.
+The generated polytopes are black polygons overlaid in the simplex.

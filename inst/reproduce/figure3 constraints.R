@@ -61,8 +61,8 @@ g <- g + geom_edge_fan(arrow = arrow(), end_cap = circle(7, 'mm')) +  theme_grap
 g <- g + geom_node_label(aes(label = name), size = 10, fill = "white")
 g <- g + annotate(geom = "label", x = 0.15, y = 0.5, label = TeX("$\\log(\\eta_{1\\rightarrow 2})$"), size = labelsize, col = contcols[1])
 g <- g + annotate(geom = "label", x = 0.35, y = 0.4, label = TeX("$\\log(\\eta_{2\\rightarrow 1})$"), size = labelsize, col = contcols[2])
-g <- g + annotate(geom = "label", x = 0.85, y = 0.5, label = TeX("$\\log(\\eta_{1\\rightarrow 3})$"), size = labelsize, col = contcols[1])
-g <- g + annotate(geom = "label", x = 0.65, y = 0.4, label = TeX("$\\log(\\eta_{3\\rightarrow 1})$"), size = labelsize, col = contcols[3])
+g <- g + annotate(geom = "label", x = 0.85, y = 0.5, label = TeX("$\\log(\\eta_{3\\rightarrow 1})$"), size = labelsize, col = contcols[3])
+g <- g + annotate(geom = "label", x = 0.65, y = 0.4, label = TeX("$\\log(\\eta_{1\\rightarrow 3})$"), size = labelsize, col = contcols[1])
 g <- g + annotate(geom = "label", x = 0.5, y = +0.1, label = TeX("$\\log(\\eta_{3\\rightarrow 2})$"), size = labelsize, col = contcols[3])
 g <- g + annotate(geom = "label", x = 0.5, y = -0.1, label = TeX("$\\log(\\eta_{2\\rightarrow 3})$"), size = labelsize, col = contcols[2])
 g 

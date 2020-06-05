@@ -1,11 +1,14 @@
+rm(list = ls())
 library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
+library(latex2exp)
 registerDoParallel(cores = detectCores()-2)
-set_my_theme()
-library(gridExtra)
+graphsettings <- set_custom_theme()
 set.seed(1)
-rm(list = ls())
+attach(graphsettings)
+v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
+set.seed(4)
 
 # number of observations
 n <- 50
@@ -23,9 +26,6 @@ counts
 
 ## encompassing triangle has three vertices
 if (K == 3){
-  v_cartesian <- list(c(1/2, sin(pi/3)), c(0,0), c(1,0))
-  cols <- c("red", "green", "blue")
-  v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
   matrixT <- matrix(0, nrow = K-1, ncol = K-1)
   for (k in 1:(K-1)){
     kth_components <- sapply(v_cartesian, function(x) x[k])
@@ -77,8 +77,8 @@ if (K == 3){
     df.polytope <- rbind(df.polytope, data.frame(x = vertices_cart[,1], y= vertices_cart[,2], 
                                                  iteration = iteration))
   }
-  g <- ggplot_triangle(v_cartesian) +
-    geom_polygon(data=df.polytope %>% filter(iteration >= 100), aes(x = x, y = y, group = iteration), alpha = .3)
+  g <- create_plot_triangle(graphsettings) +
+    geom_polygon(data=df.polytope %>% filter(iteration >= 100), aes(x = x, y = y, group = iteration), alpha = .2, colour = 'black')
   g
 }
 
@@ -121,22 +121,21 @@ hist(sapply(smc_res_lp, function(v) sum(v$normcst)))
 
 #  visualize etas
 plot_etas <- function(etas){
-  triangle.df <- data.frame(x = c(v1[1], v2[1], v3[1]), y = c(v1[2], v2[2], v3[2]))
-  g <- ggplot(triangle.df, aes(x = x, y = y)) + geom_polygon(fill = "white", colour = "black")
+  g <- create_plot_triangle(graphsettings)
   for (d in categories){
     # set indices for two other components
     j1 <- setdiff(categories, d)[1]
     j2 <- setdiff(categories, d)[2]
     interslope_j1 <- barconstraint2cartconstraint(d, j1, 1/etas[d, j1], matrixT, v_cartesian)
     interslope_j2 <- barconstraint2cartconstraint(d, j2, 1/etas[d, j2], matrixT, v_cartesian)
-    g <- g + geom_abline(intercept = interslope_j1[1], slope = interslope_j1[2], colour = cols[d], linetype = 2)
-    g <- g + geom_abline(intercept = interslope_j2[1], slope = interslope_j2[2], colour = cols[d], linetype = 2)
+    g <- g + geom_abline(intercept = interslope_j1[1], slope = interslope_j1[2], colour = contcols[d], linetype = 2)
+    g <- g + geom_abline(intercept = interslope_j2[1], slope = interslope_j2[2], colour = contcols[d], linetype = 2)
     intersection_12 <- get_line_intersection(interslope_j1, interslope_j2)
   }
   g
 }
 if (K==3){
-  grid.arrange(plot_etas(smc_res_graph[[1]]$etas_particles[1,,]), plot_etas(smc_res_graph[[1]]$etas_particles[2,,]),
+  gridExtra::grid.arrange(plot_etas(smc_res_graph[[1]]$etas_particles[1,,]), plot_etas(smc_res_graph[[1]]$etas_particles[2,,]),
              plot_etas(smc_res_graph[[1]]$etas_particles[3,,]), plot_etas(smc_res_graph[[1]]$etas_particles[4,,]), nrow = 2)
 }
 

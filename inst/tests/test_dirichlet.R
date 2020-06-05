@@ -1,11 +1,16 @@
 ## This script tests calculations to do with Dirichlet distributions
 
+rm(list = ls())
 library(dempsterpolytope)
-set_my_theme()
-## triangle with equal sides
-v_cartesian <- list(c(1/2, sin(pi/3)), c(0,0), c(1,0))
-cols <- c("red", "green", "blue")
+library(doParallel)
+library(doRNG)
+library(latex2exp)
+registerDoParallel(cores = detectCores()-2)
+graphsettings <- set_custom_theme()
+set.seed(1)
+attach(graphsettings)
 v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
+set.seed(4)
 
 ## going from K = 2 to K = 3
 

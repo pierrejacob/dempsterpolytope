@@ -2,13 +2,17 @@
 ## on counts in 3 categories
 ## and shows resulting polytopes in plots
 
+rm(list = ls())
 library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
+library(latex2exp)
 registerDoParallel(cores = detectCores()-2)
-set_my_theme()
+graphsettings <- set_custom_theme()
 set.seed(1)
-rm(list = ls())
+attach(graphsettings)
+v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
+set.seed(4)
 
 ## number of observations
 n <- 50
@@ -49,8 +53,9 @@ for (iteration in 1:200){
   df.polytope <- rbind(df.polytope, data.frame(x = vertices_cart[,1], y= vertices_cart[,2], 
                                                iteration = iteration))
 }
-g <- ggplot_triangle(v_cartesian) +
-  geom_polygon(data=df.polytope %>% filter(iteration >= 100), aes(x = x, y = y, group = iteration), alpha = .3)
+g <- create_plot_triangle(graphsettings) +
+  geom_polygon(data=df.polytope %>% filter(iteration >= 100), aes(x = x, y = y, group = iteration), alpha = .2,
+               colour = 'black', size = 0.25)
 g
 
 ###
@@ -118,7 +123,7 @@ for (iteration in 1:dim(etas)[1]){
   df.polytope <- rbind(df.polytope, data.frame(x = vertices_cart[,1], y= vertices_cart[,2], 
                                                iteration = iteration, type = type))
 }
-g <- ggplot_triangle(v_cartesian) +
+g <- create_plot_triangle(graphsettings) +
   geom_polygon(data=df.polytope %>% filter(iteration >= 100), aes(x = x, y = y, group = iteration, fill = factor(type)), alpha = .3)
 g + geom_polygon(data=data.frame(x = vrepr_cart[,1], y = vrepr_cart[,2]), fill = "black", alpha = 0.2) + 
   geom_point(data = data.frame(x = pointv_cart[1], y = pointv_cart[2]), col = "red")

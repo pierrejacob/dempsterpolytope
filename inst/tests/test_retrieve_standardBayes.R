@@ -1,27 +1,18 @@
+rm(list = ls())
 library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
 library(latex2exp)
 registerDoParallel(cores = detectCores()-2)
-set_my_theme()
+graphsettings <- set_custom_theme()
 set.seed(1)
-rm(list = ls())
-## triangle with equal sides
-v_cartesian <- list(c(1/2, sin(pi/3)), c(0,0), c(1,0))
-cols <- c("red", "yellow", "blue")
-contcols <- c("darkred", "goldenrod3", "darkblue")
+attach(graphsettings)
 v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
-triangle.df <- data.frame(x = c(v1[1], v2[1], v3[1]), y = c(v1[2], v2[2], v3[2]))
 set.seed(4)
 ##
 K <- 3
 categories <- 1:K
-g <- ggplot(triangle.df, aes(x = x, y = y)) + geom_polygon(fill = "white", colour = "black")
-g <- g + scale_x_continuous(breaks=NULL) + scale_y_continuous(breaks=NULL) + xlab("") + ylab("")
-g <- g + geom_text(data = data.frame(x = v2[1], y = v2[2]-0.1, label = "2"), aes(label = label), size = 5)
-g <- g + geom_text(data = data.frame(x = v3[1], y = v3[2]-0.1, label = "3"), aes(label = label), size = 5)
-g <- g + geom_text(data = data.frame(x = v1[1], y = v1[2]+0.1, label = "1"), aes(label = label), size = 5)
-gtriangle <- g
+gtriangle <- create_plot_triangle(graphsettings)
 ##
 counts <- c(3,2,1)
 niterations <- 1e4
@@ -75,21 +66,17 @@ for (iteration in subiter){
   cvxpolytope_cartesian.df <- rbind(cvxpolytope_cartesian.df, cvxpolytope_cartesian)
 }
 
-gpolytopes <- gtriangle + geom_polygon(data = cvxpolytope_cartesian.df, aes(x = X1, y = X2, group = iteration), alpha = .2)
+gpolytopes <- gtriangle + geom_polygon(data = cvxpolytope_cartesian.df, aes(x = X1, y = X2, group = iteration), alpha = .2, 
+                                       colour = 'black')
 gpolytopes
-ggsave(plot = gpolytopes, filename = "~/Dropbox/Dempster-Shafer Analysis/GibbsSamplerMultinomial/combination1.pdf",
-       width = 5, height = 5)
+
 prior_pts_cartesian <- t(apply(prior_pts, 1, function(row) barycentric2cartesian(row, v_cartesian)))
 
 gprior <- gtriangle + geom_point(data=data.frame(prior_pts_cartesian[1:1e3,]), aes(x = X1, y = X2))
 gprior
-ggsave(plot = gprior, filename = "~/Dropbox/Dempster-Shafer Analysis/GibbsSamplerMultinomial/combination2.pdf",
-       width = 5, height = 5)
 
 gpost <- gtriangle + geom_point(data=data.frame(post_pts_cartesian), aes(x = X1, y = X2))
 gpost
 
-ggsave(plot = gpost, filename = "~/Dropbox/Dempster-Shafer Analysis/GibbsSamplerMultinomial/combination3.pdf",
-       width = 5, height = 5)
 
 

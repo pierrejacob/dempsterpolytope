@@ -1,11 +1,11 @@
 ## This implements Art's idea
+rm(list = ls())
 library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
 registerDoParallel(cores = detectCores()-2)
-set_my_theme()
+graphsettings <- set_custom_theme()
 set.seed(2)
-rm(list = ls())
 ##
 
 K <- 4

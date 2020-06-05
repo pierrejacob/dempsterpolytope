@@ -1,21 +1,16 @@
-# install.packages("volesti")
-## This implements Art's idea
+rm(list = ls())
 library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
+library(latex2exp)
 registerDoParallel(cores = detectCores()-2)
-set_my_theme()
-set.seed(2)
-rm(list = ls())
-##
-## triangle with equal sides
-v_cartesian <- list(c(1/2, sin(pi/3)), c(0,0), c(1,0))
-cols <- c("red", "green", "blue")
+graphsettings <- set_custom_theme()
+set.seed(1)
+attach(graphsettings)
 v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
-
+set.seed(4)
 
 K <- 3
-
 counts <- c(1,2,1)
 N <- sum(counts)
 
@@ -40,8 +35,9 @@ for (iteration in (burnin+1):niterations){
   df.polytope <- rbind(df.polytope, data.frame(x = vertices_cart[,1], y= vertices_cart[,2], 
                                                iteration = iteration))
 }
-g <- ggplot_triangle(v_cartesian) +
-  geom_polygon(data=df.polytope %>% filter(iteration >= 1000, iteration <= 1100), aes(x = x, y = y, group = iteration), alpha = .3)
+g <- create_plot_triangle(graphsettings) +
+  geom_polygon(data=df.polytope %>% filter(iteration >= 1000, iteration <= 1100), 
+               aes(x = x, y = y, group = iteration), alpha = .2, colour = 'black')
 g
 
 ### Monte Carlo estimation of the volume
@@ -76,16 +72,3 @@ for (iter in (burnin+1):niterations){
 mean(volumes)
 1/choose(N+K-1,K-1)
 
-
-# 
-# X <- c()
-# for (cat in 1:K){
-#   X <- c(X, rep(cat, counts[cat]))
-# }
-# X <- sample(x = X, size = length(X), replace = F)
-# 
-# nparticles <- 2^12
-# samples_smc <- SMC_sampler(nparticles, X, K, essthreshold = 0.75, verbose = FALSE)
-# samples_smc$normcst
-# plot(samples_smc$normcst)
-# exp(sum(samples_smc$normcst))

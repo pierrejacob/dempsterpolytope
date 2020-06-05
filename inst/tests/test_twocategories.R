@@ -1,16 +1,16 @@
 ## This script looks at the case of two categories 
 
+rm(list = ls())
 library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
+library(latex2exp)
 registerDoParallel(cores = detectCores()-2)
-set_my_theme()
+graphsettings <- set_custom_theme()
 set.seed(1)
-rm(list = ls())
-
-v_cartesian <- list(c(0, 0), c(1,0))
-cols <- c("red", "blue")
-v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]
+attach(graphsettings)
+v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
+set.seed(4)
 
 # number of observations
 n <- 25
@@ -62,7 +62,6 @@ cvxp
 cvxp$vertices_cart <- t(apply(cvxp$vertices_barcoord, 1, function(v) barycentric2cartesian(v, v_cartesian)))
 plot(x = c(0,1), y = c(0,0), type = "l")
 abline(v = cvxp$vertices_cart[,1], lty = 2)
-
 
 param <- 1
 nsubiterations <- 1e4

@@ -1,13 +1,17 @@
 ## This scripts tests the method to add/remove empty categories 
 ## i.e. how to modify the 'uniform points' denoted by u_n in the paper
 
+rm(list = ls())
 library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
+library(latex2exp)
 registerDoParallel(cores = detectCores()-2)
-set_my_theme()
+graphsettings <- set_custom_theme()
 set.seed(1)
-rm(list = ls())
+attach(graphsettings)
+v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
+set.seed(4)
 
 niterations <- 25000
 counts_K4 <- c(7,5,8,0)

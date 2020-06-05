@@ -1,11 +1,14 @@
+rm(list = ls())
 library(dempsterpolytope)
 library(doParallel)
-registerDoParallel(cores = detectCores()-2)
 library(doRNG)
-set.seed(3)
-rm(list = ls())
-# install.packages("lpSolveAPI")
-# library(lpSolveAPI)
+library(latex2exp)
+registerDoParallel(cores = detectCores()-2)
+graphsettings <- set_custom_theme()
+set.seed(1)
+attach(graphsettings)
+v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
+set.seed(4)
 
 #
 ## Let's generate some data 

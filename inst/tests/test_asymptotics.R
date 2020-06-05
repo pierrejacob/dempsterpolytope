@@ -1,13 +1,17 @@
 ## This script looks at whether Dempster's approach
 ## appears to be consistent with large data sets 
 
+rm(list = ls())
 library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
+library(latex2exp)
 registerDoParallel(cores = detectCores()-2)
-set_my_theme()
+graphsettings <- set_custom_theme()
 set.seed(1)
-rm(list = ls())
+attach(graphsettings)
+v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
+set.seed(4)
 
 # number of observations
 n <- 10000

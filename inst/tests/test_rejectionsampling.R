@@ -1,13 +1,16 @@
 ## Rejection sampling algorithm 
 ## and comparison with Gibbs sampler
-
+rm(list = ls())
 library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
+library(latex2exp)
 registerDoParallel(cores = detectCores()-2)
-set_my_theme()
+graphsettings <- set_custom_theme()
 set.seed(1)
-rm(list = ls())
+attach(graphsettings)
+v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
+set.seed(4)
 
 # number of observations 
 # (don't set it to be too large, because rejection sampler would become very slow; values of <= 5,6 are OK)

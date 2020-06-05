@@ -1,12 +1,18 @@
 ## Test of various couplings of uniform sampling on Delta_k(theta), 
 ## the subsimplex where vertex k is replaced by theta
 ## 
-library(doParallel)
-registerDoParallel(cores = detectCores()-2)
-library(doRNG)
-library(dempsterpolytope)
 rm(list = ls())
-set.seed(10)
+library(dempsterpolytope)
+library(doParallel)
+library(doRNG)
+library(latex2exp)
+registerDoParallel(cores = detectCores()-2)
+graphsettings <- set_custom_theme()
+set.seed(1)
+attach(graphsettings)
+v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
+set.seed(4)
+
 n <- 20000
 K <- 4
 theta_star1 <- rexp(K)

@@ -1,10 +1,14 @@
+rm(list = ls())
 library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
+library(latex2exp)
 registerDoParallel(cores = detectCores()-2)
-set_my_theme()
+graphsettings <- set_custom_theme()
 set.seed(1)
-rm(list = ls())
+attach(graphsettings)
+v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
+set.seed(4)
 
 # number of observations 
 # (don't set it to be too large, because rejection sampler would become very slow; values of <= 5,6 are OK)
@@ -13,14 +17,7 @@ n <- 6
 K <- 3
 categories <- 1:K
 ## for plotting purposes
-v_cartesian <- list(c(1/2, sin(pi/3)), c(0,0), c(1,0))
-cols <- c("red", "green", "blue")
-v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
 
-# data 
-# counts <- c(70,150,0)
-# theta_dgp <- c(0.3, 0.3, 0.4)
-# X <- sample(x = categories, size = n, replace = TRUE, prob = theta_dgp)
 X <- c(categories, sample(x = categories, size = n - K, replace = TRUE))
 counts <- tabulate(X)
 counts
@@ -74,24 +71,6 @@ df_cartesian$z <- apply(df, 1, function(v) gtools::ddirichlet(v[3:5], post_param
 head(df_cartesian)
 g + geom_point(data = df_cartesian, aes(x = X1, y = X2, colour = z, fill = z)) + scale_color_viridis() + theme(legend.position = "none")
 
-## animation showing difference as prior changes
-
-df_cart_z <- data.frame()
-for (al in seq(from = c(0.1, to = 10, length(10)))){
-  alpha <- rep(al, K)
-  post_parameters <- alpha + counts
-  z <- apply(df, 1, function(v) gtools::ddirichlet(v[3:5], post_parameters))
-  df_cart_z <- rbind(df_cart_z, data.frame(X1 = df_cartesian$X1, X2 = df_cartesian$X2, al = al, z))
-}
-
-tail(df_cart_z)
-library(gganimate)
-ggplot(df_cart_z, aes(x = X1, y = X2, colour = z, fill = z)) + geom_point() + scale_color_viridis() + theme(legend.position = "none") + transition_states(al) + 
-  labs(title="state: {closest_state}")
-
-## then postior
-
-##
 
 
 

@@ -1,21 +1,18 @@
+rm(list = ls())
 library(dempsterpolytope)
 library(doParallel)
 library(doRNG)
+library(latex2exp)
 registerDoParallel(cores = detectCores()-2)
-set_my_theme()
+graphsettings <- set_custom_theme()
 set.seed(1)
-rm(list = ls())
-## triangle with equal sides
-v_cartesian <- list(c(1/2, sin(pi/3)), c(0,0), c(1,0))
-cols <- c("red", "green", "blue")
+attach(graphsettings)
 v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
+set.seed(4)
+
 K <- 3
 categories <- 1:K
-matrixT <- matrix(0, nrow = K-1, ncol = K-1)
-for (k in 1:(K-1)){
-  kth_components <- sapply(v_cartesian, function(x) x[k])
-  matrixT[k,] <- kth_components[-K] - kth_components[K]
-}
+
 ## show constraints
 barconstraint2cartconstraint <- function(d, j, eta, matrixT, v_cartesian){
   # ccc * (wA wB wC) = 0 with:
@@ -95,13 +92,7 @@ etas <- structure(c(1, 3.97840569581908, 5.78277269927406, 0.50153243920328,
 
 
 ### Constraint violations
-triangle.df <- data.frame(x = c(v1[1], v2[1], v3[1]), y = c(v1[2], v2[2], v3[2]))
-g <- ggplot(triangle.df, aes(x = x, y = y)) + geom_polygon(fill = "white", colour = "black")
-g <- g + scale_x_continuous(breaks=NULL) + scale_y_continuous(breaks=NULL) + xlab("") + ylab("")
-g <- g + geom_text(data = data.frame(x = v2[1], y = v2[2]-0.1, label = "2"), aes(label = label), size = 5)
-g <- g + geom_text(data = data.frame(x = v3[1], y = v3[2]-0.1, label = "3"), aes(label = label), size = 5)
-g <- g + geom_text(data = data.frame(x = v1[1], y = v1[2]+0.1, label = "1"), aes(label = label), size = 5)
-g <- g + scale_color_discrete("category: ")
+g <- create_plot_triangle(graphsettings)
 etas1 <- etas
 etas1[2,3] <- 5
 etas1[3,1] <- 2
@@ -112,23 +103,15 @@ for (d in categories){
   j2 <- setdiff(categories, d)[2]
   interslope_j1 <- barconstraint2cartconstraint(d, j1, 1/etas1[d, j1], matrixT, v_cartesian)
   interslope_j2 <- barconstraint2cartconstraint(d, j2, 1/etas1[d, j2], matrixT, v_cartesian)
-  g <- g + geom_abline(intercept = interslope_j1[1], slope = interslope_j1[2], colour = cols[d], linetype = 2)
-  g <- g + geom_abline(intercept = interslope_j2[1], slope = interslope_j2[2], colour = cols[d], linetype = 2)
+  g <- g + geom_abline(intercept = interslope_j1[1], slope = interslope_j1[2], colour = contcols[d], linetype = 2)
+  g <- g + geom_abline(intercept = interslope_j2[1], slope = interslope_j2[2], colour = contcols[d], linetype = 2)
   intersection_12 <- get_line_intersection(interslope_j1, interslope_j2)
 }
 g <- add_L3const(add_L3const(g, 1, 2, 3, etas1), 3, 2, 1, etas1)
 g
-ggsave(filename = "violateconstraintsL2.pdf", plot = g, width = 5, height = 5)
+# ggsave(filename = "violateconstraintsL2.pdf", plot = g, width = 5, height = 5)
 
-
-
-triangle.df <- data.frame(x = c(v1[1], v2[1], v3[1]), y = c(v1[2], v2[2], v3[2]))
-g <- ggplot(triangle.df, aes(x = x, y = y)) + geom_polygon(fill = "white", colour = "black")
-g <- g + scale_x_continuous(breaks=NULL) + scale_y_continuous(breaks=NULL) + xlab("") + ylab("")
-g <- g + geom_text(data = data.frame(x = v2[1], y = v2[2]-0.1, label = "2"), aes(label = label), size = 5)
-g <- g + geom_text(data = data.frame(x = v3[1], y = v3[2]-0.1, label = "3"), aes(label = label), size = 5)
-g <- g + geom_text(data = data.frame(x = v1[1], y = v1[2]+0.1, label = "1"), aes(label = label), size = 5)
-g <- g + scale_color_discrete("category: ")
+g <- create_plot_triangle(graphsettings)
 etas1 <- etas
 etas1[1,2] <- 10 
 etas1[2,1] <- 0.2 
@@ -139,8 +122,8 @@ for (d in categories){
   j2 <- setdiff(categories, d)[2]
   interslope_j1 <- barconstraint2cartconstraint(d, j1, 1/etas1[d, j1], matrixT, v_cartesian)
   interslope_j2 <- barconstraint2cartconstraint(d, j2, 1/etas1[d, j2], matrixT, v_cartesian)
-  g <- g + geom_abline(intercept = interslope_j1[1], slope = interslope_j1[2], colour = cols[d], linetype = 2)
-  g <- g + geom_abline(intercept = interslope_j2[1], slope = interslope_j2[2], colour = cols[d], linetype = 2)
+  g <- g + geom_abline(intercept = interslope_j1[1], slope = interslope_j1[2], colour = contcols[d], linetype = 2)
+  g <- g + geom_abline(intercept = interslope_j2[1], slope = interslope_j2[2], colour = contcols[d], linetype = 2)
   intersection_12 <- get_line_intersection(interslope_j1, interslope_j2)
 }
 # g <- add_L3const(add_L3const(g, 1, 2, 3, etas1), 3, 2, 1, etas1)
@@ -149,4 +132,4 @@ g <- add_L2const(g, 1, 3, etas1)
 g <- add_L2const(g, 2, 3, etas1)
 g
 
-ggsave(filename = "violateconstraintsL3.pdf", plot = g, width = 5, height = 5)
+# ggsave(filename = "violateconstraintsL3.pdf", plot = g, width = 5, height = 5)

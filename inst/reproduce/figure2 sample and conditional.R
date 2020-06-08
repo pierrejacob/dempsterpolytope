@@ -41,14 +41,14 @@ gconstraints <- add_ratioconstraint(graphsettings, gconstraints, eta[2,1], 2, 1,
 gconstraints <- add_ratioconstraint(graphsettings, gconstraints, eta[2,3], 2, 3, graphsettings$contcols[2])
 gconstraints <- add_ratioconstraint(graphsettings, gconstraints, eta[3,1], 3, 1, graphsettings$contcols[3])
 gconstraints <- add_ratioconstraint(graphsettings, gconstraints, eta[3,2], 3, 2, graphsettings$contcols[3])
-labelsize <- 5
-gconstraints <- gconstraints + geom_label(data = data.frame(x = 0.65, y = -0.1, label = TeX("$\\theta_3/\\theta_2 = \\eta_{2\\rightarrow 3}$", output = "character")), 
+labelsize <- 7
+gconstraints <- gconstraints + geom_label(data = data.frame(x = 0.7, y = -0.1, label = TeX("$\\theta_3/\\theta_2 = \\eta_{2\\rightarrow 3}$", output = "character")), 
                     aes(x = x, y = y, label = label), parse = TRUE, col = contcols[2], alpha = 0.75, size = labelsize)
 gconstraints <- gconstraints + geom_label(data = data.frame(x = 0.2, y = 0.6, label = TeX("$\\theta_1/\\theta_2 = \\eta_{2\\rightarrow 1}$", output = "character")), 
                                           aes(x = x, y = y, label = label), parse = TRUE, col = contcols[2], alpha = 0.75, size = labelsize)
-gconstraints <- gconstraints + geom_label(data = data.frame(x = 0.3, y = -0.1, label = TeX("$\\theta_2/\\theta_3 = \\eta_{3\\rightarrow 2}$", output = "character")), 
+gconstraints <- gconstraints + geom_label(data = data.frame(x = 0.25, y = -0.1, label = TeX("$\\theta_2/\\theta_3 = \\eta_{3\\rightarrow 2}$", output = "character")), 
                                           aes(x = x, y = y, label = label), parse = TRUE, col = contcols[3], alpha = 0.75, size = labelsize)
-gconstraints <- gconstraints + geom_label(data = data.frame(x = 0.9, y = 0.4, label = TeX("$\\theta_1/\\theta_3 = \\eta_{3\\rightarrow 1}$", output = "character")), 
+gconstraints <- gconstraints + geom_label(data = data.frame(x = 0.85, y = 0.35, label = TeX("$\\theta_1/\\theta_3 = \\eta_{3\\rightarrow 1}$", output = "character")), 
                                           aes(x = x, y = y, label = label), parse = TRUE, col = contcols[3], alpha = 0.75, size = labelsize)
 
 print(gconstraints)

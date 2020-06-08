@@ -91,5 +91,5 @@ g <- g + geom_ribbon() + scale_x_continuous(breaks = seq_along(X), labels = X)
 g <- g + xlab('observations') + ylab('positive association')
 g <- g + scale_fill_manual(values = c('grey', 'white')) + theme(legend.position = 'bottom')
 g
-ggsave(filename = "sequentialpositiveassociation.pdf", plot = g, width = 14, height = 5)
+ggsave(filename = "sequentialpositiveassociation.pdf", plot = g, width = 14, height = 4)
 

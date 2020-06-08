@@ -45,10 +45,10 @@ load(file = "computational.scaling.RData")
 g <- ggplot(df_, aes(x = n, y = elapsed, group = K, linetype = factor(K))) + geom_line() 
 g <- g + scale_linetype(name = "K") + xlab("N") + scale_x_continuous(breaks = samplesizes)
 g
-ggsave(filename = "elapsed.scalingn.pdf", plot = g, width = 7, height = 5)
+ggsave(filename = "elapsed.scalingn.pdf", plot = g, width = 6, height = 4)
 
 g <- ggplot(df_, aes(x = K, y = elapsed, group = n, linetype = factor(n))) + geom_line() 
 g <- g + scale_linetype(name = "N") + scale_x_continuous(breaks = Ks)
 g
-ggsave(filename = "elapsed.scalingK.pdf", plot = g, width = 7, height = 5)
+ggsave(filename = "elapsed.scalingK.pdf", plot = g, width = 6, height = 4)
 

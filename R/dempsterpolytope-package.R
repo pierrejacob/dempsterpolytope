@@ -1,5 +1,4 @@
 # dempsterpolytope - Gibbs sampler for Dempster's inference in Categorical distributions 
-# Copyright (C) 2019 Pierre E. Jacob
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,10 +17,9 @@
 #'@aliases dempsterpolytope
 #'@docType package
 #'@title Gibbs sampler for DS inference in Categorical distributions
-#'@author Pierre E. Jacob <pierre.jacob.work@@gmail.com>
+#'@author anonymous
 #'@description Implements a Gibbs sampler for Dempster's approach to inference in Categorical distributions; 
-#'@details This package is a companion to an article by Pierre E. Jacob, Ruobin Gong, Paul T. Edlefsen, Arthur P. Dempster
-#'The algorithm is described in https://arxiv.org/abs/1910.11953 ... the goal of the package is merely to reproduce the experiments.
+#'@details This package is a companion to an article [...] the goal of the package is merely to reproduce the experiments.
 #'@keywords package
 #'@useDynLib dempsterpolytope
 #'@importFrom Rcpp sourceCpp

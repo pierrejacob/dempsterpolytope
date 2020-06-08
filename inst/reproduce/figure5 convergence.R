@@ -54,7 +54,7 @@ g <- ggplot(ubounds.df, aes(x = iteration, y = ubounds, group = K, linetype = fa
 g <- g + scale_linetype(name = "K")
 g
 
-ggsave(plot = g, filename = "mixing.K.pdf", width = 7, height = 5)
+ggsave(plot = g, filename = "mixing.K.pdf", width = 6, height = 4)
 
 #### Effect of the number of observations on the mixing time
 ###
@@ -87,7 +87,7 @@ for (iN in seq_along(Ns)){
 g <- ggplot(ubounds.df, aes(x = iteration, y = ubounds, group = N, linetype = factor(N))) + geom_line() + ylab("TV upper bounds") + xlab("iteration")
 g <- g + scale_linetype(name = "N")
 g
-ggsave(plot = g, filename = "mixing.N.pdf", width = 7, height = 5)
+ggsave(plot = g, filename = "mixing.N.pdf", width = 6, height = 4)
 
 # # scaling of mixing time with N 
 # ubounds.df %>% group_by(N) %>% summarise(tmix = iteration[which(ubounds < 0.01)[1]])

@@ -225,7 +225,7 @@ g <- ggplot(df_, aes(x = x, linetype = dsm, group = interaction(side, dsm))) + s
 g <- g + xlab(expression(phi)) +  ylab("cdf") + scale_linetype(name = "DSM: ")
 g
 
-ggsave(filename = "linkage.cdf.pdf", plot = g, width = 7, height = 5)
+ggsave(filename = "linkage.cdf.pdf", plot = g, width = 6, height = 4)
 
 ##
 ddsm_cdf_lower_values <- rep(0, phi_grid_length)
@@ -242,7 +242,7 @@ gr <- qplot(x = phi_grid, y =  ddsm_cdf_upper_values - ddsm_cdf_lower_values, ge
 gr <- gr + scale_linetype(name = "DSM: ")
 gr            
 
-ggsave(filename = "linkage.r.pdf", plot = gr, width = 7, height = 5)
+ggsave(filename = "linkage.r.pdf", plot = gr, width = 6, height = 4)
 
 
 

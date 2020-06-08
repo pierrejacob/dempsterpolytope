@@ -9,10 +9,9 @@
 Implements a Gibbs sampler for Dempster's approach to inference in Categorical distributions;
 }
 \details{
-This package is a companion to an article by Pierre E. Jacob, Ruobin Gong, Paul T. Edlefsen, Arthur P. Dempster
-The algorithm is described in https://arxiv.org/abs/1910.11953 ... the goal of the package is merely to reproduce the experiments.
+This package is a companion to an article [...] the goal of the package is merely to reproduce the experiments.
 }
 \author{
-Pierre E. Jacob <pierre.jacob.work@gmail.com>
+anonymous
 }
 \keyword{package}

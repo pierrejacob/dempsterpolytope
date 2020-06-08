@@ -137,7 +137,7 @@ gtheta1 <- gtheta1  + theme(legend.position = 'bottom') + scale_fill_manual(name
   scale_colour_manual(name = "K: ", values = c("black", "grey"))
 gtheta1
 
-ggsave(plot = gtheta1, filename = "emptycategory1.pdf", width = 7, height = 5)
+ggsave(plot = gtheta1, filename = "emptycategory1.pdf", width = 6, height = 4)
 
 
 ## however if we look at theta1/theta2 
@@ -183,7 +183,7 @@ gratio
 
 
 
-ggsave(plot = gratio, filename = "emptycategory2.pdf", width = 7, height = 5)
+ggsave(plot = gratio, filename = "emptycategory2.pdf", width = 6, height = 4)
 
 
 

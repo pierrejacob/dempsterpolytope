@@ -87,9 +87,10 @@ row.names(background.df) <- NULL
 g <- ggplot(data = pqr.df,
             aes(x = x, ymin = ymin, ymax = ymax))
 g <- g + geom_polygon(data = background.df, aes(x = x, y = y, group = factor(i), ymin = NULL, ymax = NULL), fill = 'grey')
-g <- g + geom_ribbon() + scale_x_continuous(breaks = seq_along(X), labels = X)
+g <- g + geom_ribbon() + scale_x_continuous(breaks = seq_along(X)[2:length(X)], labels = X[2:length(X)])
 g <- g + xlab('observations') + ylab('positive association')
 g <- g + scale_fill_manual(values = c('grey', 'white')) + theme(legend.position = 'bottom')
-g
+g <- g + theme(axis.text.x = element_text(hjust=1.25), axis.ticks.x = element_blank())
+
 ggsave(filename = "sequentialpositiveassociation.pdf", plot = g, width = 14, height = 4)
 

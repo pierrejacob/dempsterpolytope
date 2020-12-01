@@ -1,4 +1,4 @@
-set.seed(1)
+set.seed(3)
 rm(list = ls())
 library(dempsterpolytope)
 library(doParallel)
@@ -42,11 +42,11 @@ gconstraints <- add_ratioconstraint(graphsettings, gconstraints, eta[2,3], 2, 3,
 gconstraints <- add_ratioconstraint(graphsettings, gconstraints, eta[3,1], 3, 1, graphsettings$contcols[3])
 gconstraints <- add_ratioconstraint(graphsettings, gconstraints, eta[3,2], 3, 2, graphsettings$contcols[3])
 labelsize <- 7
-gconstraints <- gconstraints + geom_label(data = data.frame(x = 0.7, y = -0.1, label = TeX("$\\theta_3/\\theta_2 = \\eta_{2\\rightarrow 3}$", output = "character")), 
+gconstraints <- gconstraints + geom_label(data = data.frame(x = 0.6, y = -0.1, label = TeX("$\\theta_3/\\theta_2 = \\eta_{2\\rightarrow 3}$", output = "character")), 
                     aes(x = x, y = y, label = label), parse = TRUE, col = contcols[2], alpha = 0.75, size = labelsize)
-gconstraints <- gconstraints + geom_label(data = data.frame(x = 0.2, y = 0.6, label = TeX("$\\theta_1/\\theta_2 = \\eta_{2\\rightarrow 1}$", output = "character")), 
+gconstraints <- gconstraints + geom_label(data = data.frame(x = 0.15, y = 0.4, label = TeX("$\\theta_1/\\theta_2 = \\eta_{2\\rightarrow 1}$", output = "character")), 
                                           aes(x = x, y = y, label = label), parse = TRUE, col = contcols[2], alpha = 0.75, size = labelsize)
-gconstraints <- gconstraints + geom_label(data = data.frame(x = 0.25, y = -0.1, label = TeX("$\\theta_2/\\theta_3 = \\eta_{3\\rightarrow 2}$", output = "character")), 
+gconstraints <- gconstraints + geom_label(data = data.frame(x = 0.15, y = -0.1, label = TeX("$\\theta_2/\\theta_3 = \\eta_{3\\rightarrow 2}$", output = "character")), 
                                           aes(x = x, y = y, label = label), parse = TRUE, col = contcols[3], alpha = 0.75, size = labelsize)
 gconstraints <- gconstraints + geom_label(data = data.frame(x = 0.85, y = 0.35, label = TeX("$\\theta_1/\\theta_3 = \\eta_{3\\rightarrow 1}$", output = "character")), 
                                           aes(x = x, y = y, label = label), parse = TRUE, col = contcols[3], alpha = 0.75, size = labelsize)
@@ -80,5 +80,30 @@ print(gcond)
 
 ggsave(filename = "conditional2.pdf", plot = gcond, width = 5, height = 5)
 
+### add feasible set
+pts_k
+g <- create_plot_triangle(graphsettings)
+g <- add_plot_points(graphsettings, g = g, barypoints = pts_k$pts, colour = graphsettings$contcols[1], fill = graphsettings$cols[1])
+g <- add_plot_points(graphsettings, g = g, barypoints = gibbs_results$Us[[2]][iter,,], colour = graphsettings$contcols[2], fill = graphsettings$cols[2])
+g <- add_plot_points(graphsettings, g = g, barypoints = gibbs_results$Us[[3]][iter,,], colour = graphsettings$contcols[3], fill = graphsettings$cols[3])
+# create etas
+Us <- list()
+Us[[1]] <- pts_k$pts
+Us[[2]] <- gibbs_results$Us[[2]][iter,,]
+Us[[3]] <- gibbs_results$Us[[3]][iter,,]
+etas <- diag(1, 3, 3)
+for (k in 1:K){
+  notk <- setdiff(1:K, k)
+  a_k <- matrix(Us[[k]], ncol = 3)
+  for (ell in notk){
+    etas[k,ell] <- min(a_k[,ell]/a_k[,k])
+  }
+}
 
+eta_cvx <- etas2cvxpolytope(etas)
+g <- add_plot_polytope(graphsettings, g, eta_cvx)
+g
+
+gcond <- add_plot_polytope(graphsettings, gcond, eta_cvx)
+ggsave(filename = "conditional3.pdf", plot = gcond, width = 5, height = 5)
 

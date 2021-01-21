@@ -1,4 +1,4 @@
-## This script generates the two plots of Figure 1 of the article.
+## This script generates two plots
 rm(list = ls())
 library(dempsterpolytope)
 library(latex2exp)

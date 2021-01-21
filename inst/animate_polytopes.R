@@ -1,3 +1,6 @@
+## this scripts produces an animation
+## showing two trajectories of convex polytopes within the simplex
+## contracting towards one another
 rm(list = ls())
 library(dempsterpolytope)
 library(doParallel)
@@ -176,7 +179,7 @@ g <- ggplot(triangle.df, aes(x = x, y = y)) + geom_polygon(fill = "white", colou
 gpolytopes <- g + geom_polygon(data = cvxpolytope_cartesian.df1, aes(x = X1, y = X2), size = 0.25, alpha = .25, fill = 'black', colour = 'black')
 gpolytopes <- gpolytopes + geom_polygon(data = cvxpolytope_cartesian.df2, aes(x = X1, y = X2), size = 0.25, alpha = .25, fill = 'orange', colour = 'black')
 gpolytopes_anim <- gpolytopes + transition_states(iter, 4, 1, wrap = F) + ease_aes('sine-in-out')
-# gpolytopes_anim
+gpolytopes_anim
 
 # animate(gpolytopes_anim, nframes = 400, fps = 20)
 

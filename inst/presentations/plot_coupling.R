@@ -1,5 +1,3 @@
-## This script generates a plot illustrating how to construct the support of the conditional distribution 
-## of the u's of one category given the others
 rm(list = ls())
 library(dempsterpolytope)
 library(latex2exp)

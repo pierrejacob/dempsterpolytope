@@ -4,11 +4,14 @@
 Implements a Gibbs sampler for Dempster’s inference approach for
 Categorical distributions; this package is a companion to an article by
 Pierre E. Jacob, Ruobin Gong, Paul T. Edlefsen, Arthur P. Dempster,
-available at <https://arxiv.org/abs/1910.11953>.
+available at <https://arxiv.org/abs/1910.11953v3>. The article is going
+to appear as a discussion paper in the Journal of the American
+Statistical Association, Theory & Methods, in 2021 (early version here
+<https://www.tandfonline.com/doi/abs/10.1080/01621459.2021.1881523?journalCode=uasa20>).
 
-This is not a general-purpose statistical software. This is just a
-collection of scripts intended to reproduce figures and tables of a
-paper. Use at your own risk\!
+Important: this is not a general-purpose statistical software. This is
+just a collection of scripts intended to reproduce figures and tables of
+a paper. Use at your own risk!
 
 The folder inst/reproduce/ contains the scripts to reproduce the
 figures. The folder inst/tests/ contains internal checks, and vignettes/

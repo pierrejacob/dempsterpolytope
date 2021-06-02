@@ -9,7 +9,6 @@ library(doRNG)
 library(latex2exp)
 registerDoParallel(cores = detectCores()-2)
 graphsettings <- set_custom_theme()
-set.seed(1)
 attach(graphsettings)
 v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
 set.seed(4)
@@ -34,7 +33,7 @@ samples_gibbs <- gibbs_sampler(niterations = niterations, counts = counts, theta
 df.polytope <- data.frame()
 for (iteration in 1:niterations){
   etas_iteration <- samples_gibbs$etas[iteration,,]
-  etascvxp <- etas2cvxpolytope(etas_iteration)
+  etascvxp <- etas2vertices(etas_iteration)
   ## convert coordinates to cartesian
   vertices_cart <- t(apply(etascvxp$vertices_barcoord, 1, function(v) barycentric2cartesian(v, v_cartesian)))
   # order vertices according to angles

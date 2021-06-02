@@ -5,6 +5,7 @@
 .Ruserdata
 *.pdf
 *.jpg
+*.swp
 *.gif
 src/*.o
 src/*.so

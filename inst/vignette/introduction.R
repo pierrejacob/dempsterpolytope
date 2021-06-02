@@ -28,7 +28,7 @@ samples_gibbs <- gibbs_sampler(niterations_gibbs, counts)
 # we get a K x K matrix of etas[k,j] for k,j in 1:K
 samples_gibbs$etas[100,,]
 # from which we can get the vertices of the polytope as
-cvxpolytope <- etas2cvxpolytope(samples_gibbs$etas[100,,])
+cvxpolytope <- etas2vertices(samples_gibbs$etas[100,,])
 print(cvxpolytope$vertices_barcoord)
 # as we can see this polytope has many vertices, each in the simplex of dimension K
 
@@ -54,7 +54,7 @@ postburn <- niterations_gibbs - burnin
 contained_ <- rep(0, postburn)
 intersects_ <- rep(0, postburn)
 for (index in ((burnin+1):niterations_gibbs)){
-  cvxp <- etas2cvxpolytope(samples_gibbs$etas[index,,])
+  cvxp <- etas2vertices(samples_gibbs$etas[index,,])
   res_ <- compare_polytopes(cvxp, intervalcvxp)
   contained_[index-burnin] <- res_[1]
   intersects_[index-burnin] <- res_[2]
@@ -72,7 +72,7 @@ cat(mean(contained_), mean(intersects_), "\n")
 
 ## find vertices of polytopes with minimum and maximum first component
 minmax1 <- apply(samples_gibbs$etas[(burnin+1):niterations_gibbs,,], 1, function(eta){ 
-  baryeta <- etas2cvxpolytope(eta)$vertices_barcoord
+  baryeta <- etas2vertices(eta)$vertices_barcoord
   mincoord1 <- min(baryeta[,1])
   maxcoord1 <- max(baryeta[,1])
   return(c(mincoord1, maxcoord1))
@@ -80,7 +80,7 @@ minmax1 <- apply(samples_gibbs$etas[(burnin+1):niterations_gibbs,,], 1, function
 
 ## obtain empirical cdf functions based on these 
 ecdf_lower <- ecdf(minmax1[1,])
-ecdf_upper <- ecdf(minmax1[2,])w
+ecdf_upper <- ecdf(minmax1[2,])
 
 
 # plot lower and upper CDFs
@@ -88,3 +88,4 @@ grid01 <- seq(from = 0, to = 1, length.out = 500)
 plot(x = grid01, y = ecdf_lower(grid01), type = "l", xlab = expression(theta[1]), ylab = "CDF")
 lines(x = grid01, y = ecdf_upper(grid01))
 abline(v = counts[1]/n, lty = 3) # add vertical dotted line at the MLE
+

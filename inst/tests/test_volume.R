@@ -25,7 +25,7 @@ names(samples_gibbs)
 df.polytope <- data.frame()
 for (iteration in (burnin+1):niterations){
   etas <- samples_gibbs$etas[iteration,,]
-  etascvxp <- etas2cvxpolytope(etas)
+  etascvxp <- etas2vertices(etas)
   ## convert coordinates to cartesian
   vertices_cart <- t(apply(etascvxp$vertices_barcoord, 1, function(v) barycentric2cartesian(v, v_cartesian)))
   # order vertices according to angles
@@ -43,7 +43,7 @@ g
 ### Monte Carlo estimation of the volume
 ## let's take a convex polytope
 etas <- samples_gibbs$etas[niterations,,]
-etascvxp <- etas2cvxpolytope(etas)
+etascvxp <- etas2vertices(etas)
 names(etascvxp)
 
 
@@ -57,7 +57,7 @@ library(volesti)
 volumes <- c()
 for (iter in (burnin+1):niterations){
   if (iter %% 100 == 1) print(iter)
-  cvx_ <- etas2cvxpolytope(samples_gibbs$etas[iter,,])
+  cvx_ <- etas2vertices(samples_gibbs$etas[iter,,])
   # A = cvx_$constr$constr
   # b = cvx_$constr$rhs
   unif_samples <- gtools::rdirichlet(1e3, c(1,1,1))

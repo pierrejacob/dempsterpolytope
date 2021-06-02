@@ -49,7 +49,7 @@ etas_K3 <- samples_gibbs_K3$etas[subiterations,,]
 ## for which we need to max coordinate and check if less than a
 ## for the upper CDF we need to check intersection, so we need min coordinate and check less than a
 minmax1 <- apply(etas_K3, 1, function(eta){ 
-  baryeta <- etas2cvxpolytope(eta)$vertices_barcoord
+  baryeta <- etas2vertices(eta)$vertices_barcoord
   mincoord1 <- min(baryeta[,1])
   maxcoord1 <- max(baryeta[,1])
   return(c(mincoord1, maxcoord1))
@@ -90,7 +90,7 @@ for (iter in 1:niterations){
 }
 ##
 minmax1_alt <- apply(etas_K3_alt, 1, function(eta){ 
-  baryeta <- etas2cvxpolytope(eta)$vertices_barcoord
+  baryeta <- etas2vertices(eta)$vertices_barcoord
   mincoord1 <- min(baryeta[,1])
   maxcoord1 <- max(baryeta[,1])
   return(c(mincoord1, maxcoord1))
@@ -108,7 +108,7 @@ galt
 
 ## compare CDF obtained with only 2 categories
 minmax1K2 <- apply(etas_K2, 1, function(eta){ 
-  baryeta <- etas2cvxpolytope(eta)$vertices_barcoord
+  baryeta <- etas2vertices(eta)$vertices_barcoord
   mincoord1 <- min(baryeta[,1])
   maxcoord1 <- max(baryeta[,1])
   return(c(mincoord1, maxcoord1))
@@ -142,14 +142,14 @@ ggsave(plot = gtheta1, filename = "emptycategory1.pdf", width = 6, height = 4)
 
 ## however if we look at theta1/theta2 
 minmax_ratio_K2 <- apply(etas_K2, 1, function(eta){ 
-  baryeta <- etas2cvxpolytope(eta)$vertices_barcoord
+  baryeta <- etas2vertices(eta)$vertices_barcoord
   mincoord1 <- min(baryeta[,1]/baryeta[,2])
   maxcoord1 <- max(baryeta[,1]/baryeta[,2])
   return(c(mincoord1, maxcoord1))
 })
 
 minmax_ratio_K3 <- apply(etas_K3, 1, function(eta){ 
-  baryeta <- etas2cvxpolytope(eta)$vertices_barcoord
+  baryeta <- etas2vertices(eta)$vertices_barcoord
   mincoord1 <- min(baryeta[,1]/baryeta[,2])
   maxcoord1 <- max(baryeta[,1]/baryeta[,2])
   return(c(mincoord1, maxcoord1))

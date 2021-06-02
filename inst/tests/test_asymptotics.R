@@ -42,7 +42,7 @@ subiterations <- floor(seq(from = burnin+1, to = niterations, length.out = nsubi
 contained_ <- rep(0, nsubiterations)
 intersects_ <- rep(0, nsubiterations)
 for (index in 1:nsubiterations){
-  cvxp <- etas2cvxpolytope(samples_gibbs$etas[subiterations[index],,])
+  cvxp <- etas2vertices(samples_gibbs$etas[subiterations[index],,])
   res_ <- compare_polytopes(cvxp, intervalcvxp)
   contained_[index] <- res_[1]
   intersects_[index] <- res_[2]

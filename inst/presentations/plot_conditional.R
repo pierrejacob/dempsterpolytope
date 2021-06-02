@@ -21,7 +21,7 @@ iter <- 70
 gpoints <- add_plot_points(graphsettings, g = g, barypoints = gibbs_results$Us[[1]][iter,,], colour = graphsettings$contcols[1], fill = graphsettings$cols[1])
 gpoints <- add_plot_points(graphsettings, g = gpoints, barypoints = gibbs_results$Us[[2]][iter,,], colour = graphsettings$contcols[2], fill = graphsettings$cols[2])
 gpoints <- add_plot_points(graphsettings, g = gpoints, barypoints = gibbs_results$Us[[3]][iter,,], colour = graphsettings$contcols[3], fill = graphsettings$cols[3])
-eta_cvx <- etas2cvxpolytope(gibbs_results$etas[iter,,])
+eta_cvx <- etas2vertices(gibbs_results$etas[iter,,])
 gpoints <- add_plot_polytope(graphsettings, gpoints, eta_cvx)
 gpoints
 ggsave(filename = "stepbystep.conditional.1.pdf", plot = gpoints, width = 5, height = 5)

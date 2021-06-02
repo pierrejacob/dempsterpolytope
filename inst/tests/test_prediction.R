@@ -43,7 +43,7 @@ etas <- samples_gibbs$etas[501:1000,,]
 df.polytope <- data.frame()
 for (iteration in 1:200){
   etas_iteration <- etas[iteration,,]
-  etascvxp <- etas2cvxpolytope(etas_iteration)
+  etascvxp <- etas2vertices(etas_iteration)
   ## convert coordinates to cartesian
   vertices_cart <- t(apply(etascvxp$vertices_barcoord, 1, function(v) barycentric2cartesian(v, v_cartesian)))
   # order vertices according to angles
@@ -102,7 +102,7 @@ vrepr_cart <- vrepr_cart[o_,]
 whichcontained  <- rep(FALSE, dim(etas)[1])
 whichintersects <- rep(FALSE, dim(etas)[1])
 for (iteration in 1:dim(etas)[1]){
-  cvx_gibbs <- etas2cvxpolytope(etas[iteration,,])
+  cvx_gibbs <- etas2vertices(etas[iteration,,])
   res_ <- compare_polytopes(cvx_gibbs, pointv_constr)
   whichcontained[iteration] <- res_[1]
   whichintersects[iteration] <- res_[2]
@@ -112,7 +112,7 @@ for (iteration in 1:dim(etas)[1]){
 df.polytope <- data.frame()
 for (iteration in 1:dim(etas)[1]){
   etas_iteration <- etas[iteration,,]
-  etascvxp <- etas2cvxpolytope(etas_iteration)
+  etascvxp <- etas2vertices(etas_iteration)
   ## convert coordinates to cartesian
   vertices_cart <- t(apply(etascvxp$vertices_barcoord, 1, function(v) barycentric2cartesian(v, v_cartesian)))
   # order vertices according to angles
@@ -137,7 +137,7 @@ for (iteration in 1:dim(etas)[1]){
   pointvs <- t(apply(pointvs, 1, function(v) v / sum(v)))
   whichcontained <- rep(0, nv)
   whichintersects <- rep(0, nv)
-  cvx_gibbs <- etas2cvxpolytope(etas[iteration,,])
+  cvx_gibbs <- etas2vertices(etas[iteration,,])
   for (iv in 1:nv){
     pointv_constr <- predictive_region(pointvs[iv,], k)
     res_ <- compare_polytopes(cvx_gibbs, pointv_constr)

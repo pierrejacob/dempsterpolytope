@@ -28,7 +28,7 @@ etas
 ## transform that into convex polytope
 ## where theta is in the simplex and 
 ## theta_ell / theta_k <= eta[k,l] for all k,l in [K]
-cvxpolytope <- etas2cvxpolytope(etas)
+cvxpolytope <- etas2vertices(etas)
 
 ## vertices of the polytope, in barycentric coordinates
 cvxpolytope$vertices_barcoord

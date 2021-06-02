@@ -56,7 +56,7 @@ dim(samples_gibbs$Us[[1]])
 dim(samples_gibbs$Us[[2]])
 
 ##
-cvxp <- etas2cvxpolytope(samples_gibbs$etas[1,,])
+cvxp <- etas2vertices(samples_gibbs$etas[1,,])
 cvxp
 ##
 cvxp$vertices_cart <- t(apply(cvxp$vertices_barcoord, 1, function(v) barycentric2cartesian(v, v_cartesian)))

@@ -95,7 +95,7 @@ etas <- foreach(irep = 1:nchains) %dorng% {
   samples_gibbs$etas[(burnin+1):niterations,,]
 }
 dim(etas[[1]])
-# barypoints <- etas2cvxpolytope(etas[[1]])$vertices_barcoord
+# barypoints <- etas2vertices(etas[[1]])$vertices_barcoord
 ## 
 # cartpoints <- apply(barypoints, 1, function(x) x[1] * v1 + x[2] * v2 + x[3] * v3 + x[4] * v4)
 

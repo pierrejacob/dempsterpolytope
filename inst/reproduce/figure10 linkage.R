@@ -154,7 +154,7 @@ for (j in 2:(K-1)){
 segment_constr <- list(constr = constr, dir = dir, rhs = rhs)
 
 intersects_with_segment <- function(eta, segment_constr){
-  cvxp <- etas2cvxpolytope(eta)
+  cvxp <- etas2vertices(eta)
   test_constr <- segment_constr
   test_constr$constr <- rbind(test_constr$constr, cvxp$constr$constr)
   test_constr$rhs <- c(test_constr$rhs, cvxp$constr$rhs)

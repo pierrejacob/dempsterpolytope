@@ -1,6 +1,6 @@
 #'@export
 positiveassociation <- function(eta){
-  ## check relation between feasible set, i.e. polypote of theta s.t. theta_j / theta_d <= etas[d,j] 
+  ## check relation between feasible set, i.e. polyope of theta s.t. theta_j / theta_d <= etas[d,j] 
   ## with positive association assumption
   ## -log(theta_1) - log(theta_4) + log(theta_2) + log(theta_3)  <= 0
   ## this function returns two booleans
@@ -9,7 +9,7 @@ positiveassociation <- function(eta){
   if (dim(eta)[1] != 4){
     stop("The matrix etas must be 4x4 for the function 'check_intersection_independence' to be called.")
   }
-  baryvertices <- etas2cvxpolytope(eta)$vertices_barcoord
+  baryvertices <- etas2vertices(eta)$vertices_barcoord
   ## round to zero if close to zero
   baryvertices[abs(baryvertices)<1e-10] <- 0
   ## compute 

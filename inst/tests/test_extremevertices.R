@@ -20,14 +20,14 @@ names(gibbs_results)
 
 burnin <- 1e3
 etas_iteration <- gibbs_results$etas[burnin,,]
-etascvxp <- etas2cvxpolytope(etas_iteration)
-# ?etas2cvxpolytope
+etascvxp <- etas2vertices(etas_iteration)
+# ?etas2vertices
 
 ## vertex with maximum 1st component
 max(etascvxp$vertices_barcoord[,1])
 
 maxv1 <- sapply((burnin+1):niterations, function(index){
-  polytope <- etas2cvxpolytope(gibbs_results$etas[index,,])$vertices_barcoord
+  polytope <- etas2vertices(gibbs_results$etas[index,,])$vertices_barcoord
   polytope[which.max(polytope[,1]),]
   })
 
@@ -46,7 +46,7 @@ hist(dirisamples[4,], add=TRUE, prob=TRUE, col = rgb(1,0,.5,0.5), nclass=30)
 
 
 minv1 <- sapply((burnin+1):niterations, function(index){
-  polytope <- etas2cvxpolytope(gibbs_results$etas[index,,])$vertices_barcoord
+  polytope <- etas2vertices(gibbs_results$etas[index,,])$vertices_barcoord
   polytope[which.min(polytope[,1]),]
 })
 

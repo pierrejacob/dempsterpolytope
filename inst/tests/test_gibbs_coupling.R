@@ -262,8 +262,8 @@ plot(times_, tv_upperbounds, type = "l")
 # contained_2 <- rep(0, postburn)
 # intersects_2 <- rep(0, postburn)
 # for (index in ((burnin+1):niterations)){
-#   cvxp <- etas2cvxpolytope(etas[index,,])
-#   cvxp2 <- etas2cvxpolytope(etas2[index,,])
+#   cvxp <- etas2vertices(etas[index,,])
+#   cvxp2 <- etas2vertices(etas2[index,,])
 #   res_ <- compare_polytopes(cvxp, intervalcvxp)
 #   res_2 <- compare_polytopes(cvxp2, intervalcvxp)
 #   contained_[index-burnin] <- res_[1]

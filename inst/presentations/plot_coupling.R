@@ -134,8 +134,8 @@ subiter <- 1:niterations
 cvxpolytope_cartesian.df1 <- data.frame()
 cvxpolytope_cartesian.df2 <- data.frame()
 for (iter in subiter){
-  cvx1 <- etas2cvxpolytope(cgibbsresults$etas1[iter,,])
-  cvx2 <- etas2cvxpolytope(cgibbsresults$etas2[iter,,])
+  cvx1 <- etas2vertices(cgibbsresults$etas1[iter,,])
+  cvx2 <- etas2vertices(cgibbsresults$etas2[iter,,])
   cvx_cartesian1 <- t(apply(cvx1$vertices_barcoord, 1, function(row) barycentric2cartesian(row, graphsettings$v_cartesian)))
   cvx_cartesian2 <- t(apply(cvx2$vertices_barcoord, 1, function(row) barycentric2cartesian(row, graphsettings$v_cartesian)))
   average_1 <- colMeans(cvx_cartesian1)
@@ -172,8 +172,8 @@ eta1 <- do.call(rbind, init_tmp1$minratios)
 eta2  <- do.call(rbind, init_tmp2$minratios)
 
 gtriangle <- create_plot_triangle(graphsettings)
-eta_cvx1 <- etas2cvxpolytope(eta1)
-eta_cvx2 <- etas2cvxpolytope(eta2)
+eta_cvx1 <- etas2vertices(eta1)
+eta_cvx2 <- etas2vertices(eta2)
 g <- add_plot_polytope(graphsettings, gtriangle, eta_cvx1, alpha = .25, fill = 'black', colour = 'black')
 g <- add_plot_polytope(graphsettings, g, eta_cvx2, alpha = .25, fill = 'black', colour = 'black')
 g

@@ -245,7 +245,7 @@ add_ratioconstraint <- function(graphsettings, g, eta, from, to, colour = "black
 #                                               y = c(v_cartesian[[j1]][2], v_cartesian[[j2]][2], intersection_12[2])), alpha = 0.2, fill = cols[d])
 #     }
 #     if (addpolytope){
-#       etascvxp <- etas2cvxpolytope(etas)
+#       etascvxp <- etas2vertices(etas)
 #       ## convert coordinates to cartesian
 #       vertices_cart <- t(apply(etascvxp$vertices_barcoord, 1, function(v) barycentric2cartesian(v, v_cartesian)))
 #       # order vertices according to angles

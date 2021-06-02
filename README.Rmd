@@ -61,7 +61,7 @@ gibbs_results <- gibbs_sampler(niterations, counts)
 # by taking the terminal iteration of the Gibbs chain
 eta <- gibbs_results$etas[niterations,,]
 # convert polytope to H-representation and V-representation
-eta_converted <- etas2cvxpolytope(eta)
+eta_converted <- etas2vertices(eta)
 # H-representation, or "half-plane" representation
 # means the set is represented as points x such that 'constr' times x <= 'rhs' 
 eta_converted$constr
@@ -74,7 +74,7 @@ gs <- set_custom_theme()
 g <- create_plot_triangle(gs)
 cvxpolytope_cartesian.df <- data.frame()
 for (iter in 51:100){
-  cvx <- etas2cvxpolytope(gibbs_results$etas[iter,,])
+  cvx <- etas2vertices(gibbs_results$etas[iter,,])
   cvx_cartesian <- t(apply(cvx$vertices_barcoord, 1, function(row) barycentric2cartesian(row, gs$v_cartesian)))
   average_ <- colMeans(cvx_cartesian)
   o_ <- order(apply(sweep(cvx_cartesian, 2, average_, "-"), 1, function(v) atan2(v[2], v[1])))

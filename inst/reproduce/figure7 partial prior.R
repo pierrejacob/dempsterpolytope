@@ -31,7 +31,7 @@ new_results <- gibbs_sampler(new_niterations, new_counts)
 subiter <- floor(seq(from = 1e2, to = new_niterations, length.out = 10))
 cvxpolytope_cartesian.df <- data.frame()
 for (iter in subiter){
-  cvx <- etas2cvxpolytope(new_results$etas[iter,,])
+  cvx <- etas2vertices(new_results$etas[iter,,])
   cvx_cartesian <- t(apply(cvx$vertices_barcoord, 1, function(row) barycentric2cartesian(row, graphsettings$v_cartesian)))
   average_ <- colMeans(cvx_cartesian)
   o_ <- order(apply(sweep(cvx_cartesian, 2, average_, "-"), 1, function(v) atan2(v[2], v[1])))
@@ -69,7 +69,7 @@ segment_constr <- function(point){
 
 ## for a convex polytope, draw segment and find intersection
 intersect_segment <- function(eta){
-  polytope_constr_ <- etas2cvxpolytope(eta)$constr
+  polytope_constr_ <- etas2vertices(eta)$constr
   segment_constr_ <- segment_constr(gtools::rdirichlet(1, counts+c(2,2)))
   constr <- rbind(polytope_constr_$constr, segment_constr_$constr)
   rhs <- c(polytope_constr_$rhs, segment_constr_$rhs)

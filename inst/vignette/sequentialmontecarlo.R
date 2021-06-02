@@ -45,7 +45,7 @@ postburn <- niterations_gibbs - burnin
 contained_ <- rep(0, postburn)
 intersects_ <- rep(0, postburn)
 for (index in ((burnin+1):niterations_gibbs)){
-  cvxp <- etas2cvxpolytope(samples_gibbs$etas[index,,])
+  cvxp <- etas2vertices(samples_gibbs$etas[index,,])
   res_ <- compare_polytopes(cvxp, intervalcvxp)
   contained_[index-burnin] <- res_[1]
   intersects_[index-burnin] <- res_[2]
@@ -67,7 +67,7 @@ samples_smc$weights[10]
 contained_smc <- rep(0, nparticles)
 intersects_smc <- rep(0, nparticles)
 for (iparticle in 1:nparticles){
-  cvxp <- etas2cvxpolytope(samples_smc$etas_particles[iparticle,,])
+  cvxp <- etas2vertices(samples_smc$etas_particles[iparticle,,])
   res_ <- compare_polytopes(cvxp, intervalcvxp)
   contained_smc[iparticle] <- res_[1]
   intersects_smc[iparticle] <- res_[2]

@@ -67,7 +67,7 @@ if (K == 3){
   df.polytope <- data.frame()
   for (iteration in 1:niterations){
     etas <- samples_gibbs$etas[iteration,,]
-    etascvxp <- etas2cvxpolytope(etas)
+    etascvxp <- etas2vertices(etas)
     ## convert coordinates to cartesian
     vertices_cart <- t(apply(etascvxp$vertices_barcoord, 1, function(v) barycentric2cartesian(v, v_cartesian)))
     # order vertices according to angles
@@ -156,7 +156,7 @@ postburn <- niterations - burnin
 contained_mcmc <- rep(0, postburn)
 intersects_mcmc <- rep(0, postburn)
 for (index in ((burnin+1):niterations)){
-  cvxp <- etas2cvxpolytope(samples_gibbs$etas[index,,])
+  cvxp <- etas2vertices(samples_gibbs$etas[index,,])
   res_ <- compare_polytopes(cvxp, intervalcvxp)
   contained_mcmc[index-burnin] <- res_[1]
   intersects_mcmc[index-burnin] <- res_[2]
@@ -165,7 +165,7 @@ for (index in ((burnin+1):niterations)){
 contained_smc <- rep(0, length(weights))
 intersect_smc <- rep(0, length(weights))
 for (iparticle in 1:length(weights)){
-  cvxp <- etas2cvxpolytope(etas_particles[iparticle,,])
+  cvxp <- etas2vertices(etas_particles[iparticle,,])
   res_ <- compare_polytopes(cvxp, intervalcvxp)
   contained_smc[iparticle] <- weights[iparticle] * res_[1]
   intersect_smc[iparticle] <- weights[iparticle] * res_[2]

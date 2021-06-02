@@ -6,6 +6,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // systematic_resampling_
 IntegerVector systematic_resampling_(int nsamples, const NumericVector& weights);
 RcppExport SEXP _dempsterpolytope_systematic_resampling_(SEXP nsamplesSEXP, SEXP weightsSEXP) {

@@ -277,3 +277,98 @@ gibbs_sampler <- function(niterations, counts, theta_0){
   return(gibbs_sampler_lp(niterations, counts, theta_0))
 }
 
+
+## new version, removes empty counts and adds them back after MCMC is complete
+#'@export
+gibbs_sampler_v2 <- function(niterations, counts){
+  # number of categories
+  K <- length(counts)
+  nonzeroK <- sum(counts > 0)
+  whichnonzero <- which(counts > 0)
+  whichzero <- which(counts == 0)
+  ## perform Gibbs on non-zero categories
+  nonzerocounts <- counts[counts>0]
+  ## set LP 
+  Km1squared <- (nonzeroK-1)^2
+  # number of constraints in the LP: K+1 constraints for the simplex
+  # and (K-1)*(K-1) constraints of the form theta_i / theta_j < eta_{j,i}
+  nconstraints <- nonzeroK + 1 + Km1squared
+  lc <- simplex_linearconstraints(nonzeroK)
+  mat_cst <- rbind(lc$constr, matrix(0, nrow = Km1squared, ncol = nonzeroK))
+  rhs_ <- c(lc$rhs, rep(0, Km1squared))
+  dir_ <- c(lc$dir, rep("<=", Km1squared))
+  # create LP object
+  lpobject <- lpSolveAPI::make.lp(nrow = nconstraints, ncol = nonzeroK)
+  # set right hand side and direction
+  lpSolveAPI::set.rhs(lpobject, rhs_)
+  lpSolveAPI::set.constr.type(lpobject, dir_)
+  # now we have the basic LP set up and we will update it during the run of Gibbs  
+  theta_0 <- nonzerocounts / sum(nonzerocounts)
+  categories <- 1:nonzeroK
+  # store points in barycentric coordinates
+  Us <- list()
+  for (k in 1:nonzeroK){
+    Us[[k]] <- array(0, dim = c(niterations, nonzerocounts[k], nonzeroK))
+  }
+  # store constraints in barycentric coordinates
+  etas <- array(0, dim = c(niterations, nonzeroK, nonzeroK))
+  ## initialization
+  init_tmp <- initialize_pts(nonzerocounts, theta_0)
+  ## 'pts' is a list with 'nonzeroK' entries, each is a matrix of dim = nonzerocounts[k] x nonzeroK
+  pts <- init_tmp$pts
+  ## store points at initial iteration
+  for (k in 1:nonzeroK){
+    Us[[k]][1,,] <- pts[[k]]
+  }
+  etas_current <- do.call(rbind, init_tmp$minratios)
+  # store constraints
+  etas[1,,] <- etas_current
+  # loop over Gibbs sampler iterations
+  for (iter_gibbs in 2:niterations){
+    # loop over categories
+    for (k in categories){
+      # set Linear Program for this update
+      mat_cst_ <- mat_cst
+      # find theta_star
+      icst <- 1
+      for (j in setdiff(categories, k)){
+        for (i in setdiff(categories, j)){
+          ## constraint of the form
+          # theta_i - eta_{j,i} theta_j < 0 
+          if (all(is.finite(etas_current[j,]))){
+            row_ <- (nonzeroK+1)+icst
+            mat_cst_[row_,i] <- 1
+            mat_cst_[row_,j] <- -etas_current[j,i]
+          }
+          icst <- icst + 1
+        }
+      }
+      # set LP with current constraints
+      for (ik in categories){
+        lpSolveAPI::set.column(lpobject, ik, mat_cst_[,ik])
+      }
+      # solve LP
+      objective_vec_ <- rep(0, nonzeroK)
+      objective_vec_[k] <- -1
+      lpSolveAPI::set.objfn(lpobject, objective_vec_)
+      solve(lpobject)
+      theta_star <- lpSolveAPI::get.variables(lpobject)
+      # once we have theta_star, we can draw points in pi_k(theta_star)
+      pts_k <- dempsterpolytope:::runif_piktheta_cpp(nonzerocounts[k], k, theta_star)
+      pts[[k]] <- pts_k$pts
+      etas_current[k,] <- pts_k$minratios
+    }
+    # store points and constraints
+    for (k in categories){
+      Us[[k]][iter_gibbs,,] <- pts[[k]]
+    }
+    etas[iter_gibbs,,] <- etas_current
+  }
+  rm(lpobject)
+  if (length(whichzero) == 0){
+    return(list(Us = Us, etas = etas))
+  } else {
+    ## now we need to add back the empty categories
+    return(extend_us(Us, whichnonzero, whichzero))
+  }
+}

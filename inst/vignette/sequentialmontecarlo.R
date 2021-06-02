@@ -28,7 +28,7 @@ print(counts)
 
 ## run Gibbs sampler to get random polytopes
 niterations_gibbs <- 2e3
-samples_gibbs <- gibbs_sampler(niterations_gibbs, counts)
+samples_gibbs <- gibbs_sampler_v2(niterations_gibbs, counts)
 
 ## from these random polytopes we can estimate lower and upper probabilities 
 ## associated with assertions of interest

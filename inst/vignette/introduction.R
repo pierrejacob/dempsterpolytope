@@ -21,7 +21,7 @@ print(counts)
 
 ## run Gibbs sampler to get random polytopes
 niterations_gibbs <- 1e3
-samples_gibbs <- gibbs_sampler(niterations_gibbs, counts)
+samples_gibbs <- gibbs_sampler_v2(niterations_gibbs, counts)
 
 # the "etas" are stored in samples_gibbs$etas, e.g.
 # for the etas corresponding to iteration 100
@@ -64,6 +64,21 @@ for (index in ((burnin+1):niterations_gibbs)){
 ## for the assertion "theta_1 is in (0.2, 0.3)"
 cat(mean(contained_), mean(intersects_), "\n")
 
+## we can do it without vertex enumeration
+## let's find the minimal and maximal 1st component of each set
+objvec_ <- c(1, rep(0, length(counts)-1))
+minfirstcomp <- foreach(ieta = (burnin+1):niterations_gibbs, .combine = c) %dopar% {
+  lpsolve_over_eta(samples_gibbs$etas[ieta,,], objvec_)
+}
+maxfirstcomp <- foreach(ieta = (burnin+1):niterations_gibbs, .combine = c) %dopar% {
+  -lpsolve_over_eta(samples_gibbs$etas[ieta,,], -objvec_)
+}
+contained_alt <- (minfirstcomp > 0.2) & (maxfirstcomp < 0.3)
+intersects_alt <- !((minfirstcomp > 0.3) | (maxfirstcomp < 0.2))
+#
+cat(mean(contained_alt), mean(intersects_alt), "\n")
+
+
 ## that was for a specific "assertion" on theta_1
 ## we can also plot the lower and upper CDF associated with any parameter theta_k
 ## as follows
@@ -82,6 +97,17 @@ minmax1 <- apply(samples_gibbs$etas[(burnin+1):niterations_gibbs,,], 1, function
 ecdf_lower <- ecdf(minmax1[1,])
 ecdf_upper <- ecdf(minmax1[2,])
 
+
+# plot lower and upper CDFs
+grid01 <- seq(from = 0, to = 1, length.out = 500)
+plot(x = grid01, y = ecdf_lower(grid01), type = "l", xlab = expression(theta[1]), ylab = "CDF")
+lines(x = grid01, y = ecdf_upper(grid01))
+abline(v = counts[1]/n, lty = 3) # add vertical dotted line at the MLE
+
+
+## obtain empirical cdf functions based on these 
+ecdf_lower <- ecdf(minfirstcomp)
+ecdf_upper <- ecdf(maxfirstcomp)
 
 # plot lower and upper CDFs
 grid01 <- seq(from = 0, to = 1, length.out = 500)

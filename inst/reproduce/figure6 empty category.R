@@ -38,7 +38,7 @@ gtvbounds
 
 
 niterations <- 5000
-samples_gibbs_K3 <- gibbs_sampler(niterations, counts)
+samples_gibbs_K3 <- gibbs_sampler_v2(niterations, counts)
 warmup <- 50
 # nsubiterations <- 25000
 # subiterations <- floor(seq(from = warmup, to = niterations, length.out = nsubiterations))
@@ -57,13 +57,13 @@ minmax1 <- apply(etas_K3, 1, function(eta){
 
 ecdf_lower <- ecdf(minmax1[1,])
 ecdf_upper <- ecdf(minmax1[2,])
-# qplot(x = c(0,1), y = c(0,1), geom = 'blank') + xlab(expression(theta[1])) + ylab("CDF") +
+# ggplot() + xlab(expression(theta[1])) + ylab("CDF") + xlim(0,1) + ylim(0,1) +
 #   stat_function(fun = ecdf_lower, colour = 'black', linetype = 1) + stat_function(fun = ecdf_upper, colour = 'black', linetype = 1)
 
 ## c'est quand meme plus simple quoi 
 
 ## suppose do inferene using only 2 non empty category and then manipulate
-samples_gibbs_K2 <- gibbs_sampler(niterations, counts[1:2])
+samples_gibbs_K2 <- gibbs_sampler_v2(niterations, counts[1:2])
 etas_K2 <- samples_gibbs_K2$etas[subiterations,,]
 ## extend from K = 2
 pts_extended_from_K2 <- list()
@@ -100,7 +100,7 @@ ecdf_lower_alt <- ecdf(minmax1_alt[1,])
 ecdf_upper_alt <- ecdf(minmax1_alt[2,])
 
 # lower / upper 
-galt <- qplot(x = c(0,1), y = c(0,1), geom = 'blank') + xlab(expression(theta[1])) + ylab("CDF") +
+galt <- ggplot() + xlim(0,1) + ylim(0,1) + xlab(expression(theta[1])) + ylab("CDF") +
  stat_function(fun = ecdf_lower, colour = 'red', linetype = 1) + stat_function(fun = ecdf_upper, colour = 'red', linetype = 1) + 
   stat_function(fun = ecdf_lower_alt, colour = 'blue', linetype = 2) + stat_function(fun = ecdf_upper_alt, colour = 'blue', linetype = 2)
 galt
@@ -117,7 +117,7 @@ minmax1K2 <- apply(etas_K2, 1, function(eta){
 ecdf_lower_K2 <- ecdf(minmax1K2[1,])
 ecdf_upper_K2 <- ecdf(minmax1K2[2,])
 
-galt <- qplot(x = c(0,1), y = c(0,1), geom = 'blank') + xlab(expression(theta[1])) + ylab("CDF") +
+galt <- ggplot() + xlim(0,1) + ylim(0,1) + xlab(expression(theta[1])) + ylab("CDF") +
   stat_function(fun = ecdf_lower, colour = 'red', linetype = 1) + stat_function(fun = ecdf_upper, colour = 'red', linetype = 1) + 
   stat_function(fun = ecdf_lower_K2, colour = 'blue', linetype = 2) + stat_function(fun = ecdf_upper_K2, colour = 'blue', linetype = 2)
 galt
@@ -126,7 +126,7 @@ galt
 xgrid <- seq(from = 0, to = 1, length.out = 500)
 ylower <- ecdf_lower(xgrid)
 yupper <- ecdf_upper(xgrid)
-gtheta1 <- qplot(x = c(0,1), y = c(0,1), geom = 'blank') + xlab(expression(theta[1])) + ylab("cdf") + 
+gtheta1 <- ggplot() + xlim(0,1) + ylim(0,1) + xlab(expression(theta[1])) + ylab("cdf") + 
   geom_ribbon(data = data.frame(x = xgrid, ymin = ylower, ymax = yupper), aes(x = x, ymin = ymin, ymax = ymax, y = NULL, fill = '3',
                                                                               colour = '3'), alpha = 0.5)
 ylowerK2 <- ecdf_lower_K2(xgrid)
@@ -160,7 +160,7 @@ ecdf_upper_ratio_K2 <- ecdf(log(minmax_ratio_K2[2,]))
 ecdf_lower_ratio_K3 <- ecdf(log(minmax_ratio_K3[1,]))
 ecdf_upper_ratio_K3 <- ecdf(log(minmax_ratio_K3[2,]))
 
-qplot(x = c(-3,3), y = c(0,1), geom = 'blank') + xlab(expression(log(theta[1]/theta[2]))) + ylab("CDF") +
+ggplot() + xlim(-3,+3) + ylim(0,1) + xlab(expression(log(theta[1]/theta[2]))) + ylab("CDF") +
   stat_function(fun = ecdf_lower_ratio_K2, colour = 'red', linetype = 1) + stat_function(fun = ecdf_upper_ratio_K2, colour = 'red', linetype = 1) +
   stat_function(fun = ecdf_lower_ratio_K3, colour = 'blue', linetype = 2) + stat_function(fun = ecdf_upper_ratio_K3, colour = 'blue', linetype = 2)
 ### 
@@ -172,16 +172,12 @@ yupper = ecdf_upper_ratio_K3(xgrid)
 ylowerK2 = ecdf_lower_ratio_K2(xgrid)
 yupperK2 = ecdf_upper_ratio_K2(xgrid)
 
-gratio <- qplot(x = c(-4,4), y = c(0,1), geom = 'blank') + xlab(expression(log(theta[1]/theta[2]))) + ylab("cdf") + 
+gratio <- ggplot() + xlim(-4,4) + ylim(0,1) + xlab(expression(log(theta[1]/theta[2]))) + ylab("cdf") + 
   geom_ribbon(data = data.frame(x = xgrid, ymin = ylower, ymax = yupper), aes(x = x, ymin = ymin, ymax = ymax, y = NULL, fill = '2 or 3',
                                                                               colour = '2 or 3'), alpha = 0.5)
-# gratio <- gratio + geom_ribbon(data = data.frame(x = xgrid, ymin = ylowerK2, ymax = yupperK2), 
-#                                 aes(x = x, ymin = ymin, ymax = ymax, y = NULL, fill = '2', colour = '2'), alpha = 0.5) 
 gratio <- gratio  + theme(legend.position = 'bottom') + scale_fill_manual(name = "K: ", values = c("black")) +
   scale_colour_manual(name = "K: ", values = c("black", "grey"))
 gratio
-
-
 
 ggsave(plot = gratio, filename = "emptycategory2.pdf", width = 6, height = 4)
 

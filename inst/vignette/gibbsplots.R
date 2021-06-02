@@ -23,7 +23,7 @@ counts <- c(7,5,8)
 ###
 niterations <- 200
 pct <- proc.time()
-samples_gibbs <- gibbs_sampler(niterations = niterations, counts = counts, theta_0 = c(0.8,0.1,0.1))
+samples_gibbs <- gibbs_sampler_v2(niterations = niterations, counts = counts)
 (proc.time() - pct)[3]
 ##
 

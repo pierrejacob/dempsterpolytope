@@ -18,14 +18,14 @@ counts <- c(3,1,2)
 ## run Gibbs sampler
 niterations <- 70
 pct <- proc.time()
-samples_gibbs <- gibbs_sampler(niterations = niterations, counts = counts)
+samples_gibbs <- gibbs_sampler_v2(niterations = niterations, counts = counts)
 (proc.time() - pct)[3]
 ##
 
 ## get a KxK matrix of etas
 etas <- samples_gibbs$etas[niterations,,]
 etas
-## transform that into convex polytope
+## obtain the vertices of the convex polytope by enumeration
 ## where theta is in the simplex and 
 ## theta_ell / theta_k <= eta[k,l] for all k,l in [K]
 cvxpolytope <- etas2vertices(etas)
@@ -67,20 +67,20 @@ unif_samples_cartesian.df <- data.frame(X1 = unif_samples_cartesian[1:1000,1], X
 g + geom_point(data = unif_samples_cartesian.df, aes(x = X1, y = X2, col = within)) + viridis::scale_color_viridis(discrete=T)
 
 mean(within_)
-library(volesti)
-P = Hpolytope$new(cvxpolytope$constr$constr, cvxpolytope$constr$rhs)
-volume(P, Algo = "CG", error = 0.0001)
+# library(volesti)
+# P = Hpolytope$new(cvxpolytope$constr$constr, cvxpolytope$constr$rhs)
+# volume(P, Algo = "CG", error = 0.0001)
 ## 0.004443476
 
 ## no match but maybe because this is not adjusting for the volume of the encompassing simplex
-Psimplex = Hpolytope$new(cvxpolytope$constr$constr[1:3,], cvxpolytope$constr$rhs[1:3])
-volume(Psimplex, Algo = "CG", error = 0.0001)
+# Psimplex = Hpolytope$new(cvxpolytope$constr$constr[1:3,], cvxpolytope$constr$rhs[1:3])
+# volume(Psimplex, Algo = "CG", error = 0.0001)
 ## very close to 0.5
 
 ## so 
-mean(within_)
+# mean(within_)
 ## should match 
-2 * volume(P, Algo = "CG", error = 0.0001)
+# 2 * volume(P, Algo = "CG", error = 0.0001)
 
 
 

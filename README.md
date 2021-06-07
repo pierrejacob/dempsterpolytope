@@ -66,55 +66,59 @@ counts <- c(10, 4, 7)
 # number of MCMC iterations
 niterations <- 100
 # run Gibbs sampler
-gibbs_results <- gibbs_sampler(niterations, counts)
-# obtain a K x K matrix representing a convex polytope in the simplex
-# by taking the terminal iteration of the Gibbs chain
-eta <- gibbs_results$etas[niterations,,]
+gibbs_results <- gibbs_sampler_v2(niterations, counts)
+# obtain a K x K matrix representing a convex polytope in the simplex by taking
+# the terminal iteration of the Gibbs chain
+eta <- gibbs_results$etas[niterations, , ]
 # convert polytope to H-representation and V-representation
 eta_converted <- etas2vertices(eta)
-# H-representation, or "half-plane" representation
-# means the set is represented as points x such that 'constr' times x <= 'rhs' 
+# H-representation, or 'half-plane' representation means the set is represented
+# as points x such that 'constr' times x <= 'rhs'
 eta_converted$constr
 #> $constr
-#>            [,1]      [,2]
-#>  [1,]  1.000000  1.000000
-#>  [2,] -1.000000  0.000000
-#>  [3,]  0.000000 -1.000000
-#>  [4,] -0.344655  1.000000
-#>  [5,] -1.608173 -1.000000
-#>  [6,]  1.000000 -3.351633
-#>  [7,] -1.000000 -6.775739
-#>  [8,]  3.394207  2.394207
-#>  [9,]  1.271098  2.271098
+#>             [,1]      [,2]
+#>  [1,]  1.0000000  1.000000
+#>  [2,] -1.0000000  0.000000
+#>  [3,]  0.0000000 -1.000000
+#>  [4,] -0.4637037  1.000000
+#>  [5,] -2.0297893 -1.000000
+#>  [6,]  1.0000000 -2.586375
+#>  [7,] -1.0000000 -7.083083
+#>  [8,]  2.5324235  1.532424
+#>  [9,]  0.8408546  1.840855
 #> 
 #> $rhs
-#> [1]  1.000000  0.000000  0.000000  0.000000 -1.000000  0.000000 -1.000000
-#> [8]  2.394207  1.271098
+#> [1]  1.0000000  0.0000000  0.0000000  0.0000000 -1.0000000  0.0000000 -1.0000000
+#> [8]  1.5324235  0.8408546
 #> 
 #> $dir
 #> [1] "<=" "<=" "<=" "<=" "<=" "<=" "<=" "<=" "<="
-# V-representation, or "vertex" representation
-# means the set is represented by its vertices
+# V-representation, or 'vertex' representation means the set is represented by
+# its vertices
 eta_converted$vertices_barcoord
 #>           [,1]      [,2]      [,3]
-#> [1,] 0.5120778 0.1764902 0.3114321
-#> [2,] 0.5245116 0.1564944 0.3189940
-#> [3,] 0.5827381 0.1738669 0.2433950
-#> [4,] 0.5674307 0.1955678 0.2370015
-# next we can view the K-simplex as a triangle, with K = 3 here
-# and the feasible polytopes as polygons within the triangle
+#> [1,] 0.4010438 0.1859655 0.4129907
+#> [2,] 0.4138335 0.1600052 0.4261613
+#> [3,] 0.4725307 0.2191142 0.3083551
+#> [4,] 0.4903878 0.1896043 0.3200080
+# next we can view the K-simplex as a triangle, with K = 3 here and the
+# feasible polytopes as polygons within the triangle
 gs <- set_custom_theme()
 g <- create_plot_triangle(gs)
 cvxpolytope_cartesian.df <- data.frame()
-for (iter in 51:100){
-  cvx <- etas2vertices(gibbs_results$etas[iter,,])
-  cvx_cartesian <- t(apply(cvx$vertices_barcoord, 1, function(row) barycentric2cartesian(row, gs$v_cartesian)))
-  average_ <- colMeans(cvx_cartesian)
-  o_ <- order(apply(sweep(cvx_cartesian, 2, average_, "-"), 1, function(v) atan2(v[2], v[1])))
-  cvx_cartesian <- cvx_cartesian[o_,]
-  cvxpolytope_cartesian.df <- rbind(cvxpolytope_cartesian.df, data.frame(cvx_cartesian, iter = iter))
+for (iter in 51:100) {
+    cvx <- etas2vertices(gibbs_results$etas[iter, , ])
+    cvx_cartesian <- t(apply(cvx$vertices_barcoord, 1, function(row) barycentric2cartesian(row,
+        gs$v_cartesian)))
+    average_ <- colMeans(cvx_cartesian)
+    o_ <- order(apply(sweep(cvx_cartesian, 2, average_, "-"), 1, function(v) atan2(v[2],
+        v[1])))
+    cvx_cartesian <- cvx_cartesian[o_, ]
+    cvxpolytope_cartesian.df <- rbind(cvxpolytope_cartesian.df, data.frame(cvx_cartesian,
+        iter = iter))
 }
-gpolytopes <- g + geom_polygon(data = cvxpolytope_cartesian.df, aes(x = X1, y = X2, group = iter), size = 0.25, alpha = .2, fill = 'black', colour = 'black')
+gpolytopes <- g + geom_polygon(data = cvxpolytope_cartesian.df, aes(x = X1, y = X2,
+    group = iter), size = 0.25, alpha = 0.2, fill = "black", colour = "black")
 gpolytopes
 ```
 

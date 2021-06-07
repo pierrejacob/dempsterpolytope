@@ -13,22 +13,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-## function to sample a's uniformly on the simplex, 
+## function to sample u's uniformly on the simplex, 
 ## and then compute and return the associate etas, 
-## where etas[k,ell] is the minimum of a[ell] / a[k] over the a's corresponding to category k
+## where etas[k,ell] is the minimum of u[ell] / u[k] over the u's corresponding to category k
 sample_uniform_etas <- function(X, K){
   # number of observations
   n <- length(X)
   # matrix of uniform a's in the simplex
-  a <- matrix(rexp(K*n), ncol = K)
-  a <- t(apply(a, 1, function(v) v / sum(v)))
+  u <- matrix(rexp(K*n), ncol = K)
+  u <- t(apply(u, 1, function(v) v / sum(v)))
   # create etas
   etas <- diag(1, K, K)
   for (k in 1:K){
     notk <- setdiff(1:K, k)
-    a_k <- a[X == k,,drop=F]
-    for (ell in notk){
-      etas[k,ell] <- min(a_k[,ell]/a_k[,k])
+    u_k <- u[X == k,,drop=F]
+    if (dim(u_k)[1] == 0){
+      etas[k,notk] <- +Inf
+    } else {
+      for (ell in notk){
+        etas[k,ell] <- min(u_k[,ell]/u_k[,k])
+      }
     }
   }
   return(etas)
@@ -53,16 +57,16 @@ check_cst_graph <- function(etas){
 #' and the number of attempts it took 
 #'@examples 
 #' \dontrun{
-#' rejectionsampler(c(1,2,3,1,2,3,2,2,1), 3)
+#' rejectionsampler(c(1,2,3))
 #' }
 #'@export
-rejectionsampler <- function(counts){
+rejectionsampler <- function(counts, maxnattempts = 1e5){
   X <- rep(1:length(counts), times = counts)
   K <- length(counts)
   accept <- FALSE
   etas <- NULL
   nattempts <- 0
-  while (!accept){
+  while ((!accept) && (nattempts < maxnattempts)){
     etas <- sample_uniform_etas(X, K)
     nattempts <- nattempts + 1
     accept <- check_cst_graph(etas)

@@ -303,7 +303,9 @@ gibbs_sampler_v2 <- function(niterations, counts){
   lpSolveAPI::set.rhs(lpobject, rhs_)
   lpSolveAPI::set.constr.type(lpobject, dir_)
   # now we have the basic LP set up and we will update it during the run of Gibbs  
-  theta_0 <- nonzerocounts / sum(nonzerocounts)
+  # theta_0 <- nonzerocounts / sum(nonzerocounts)
+  theta_0 <- rexp(nonzeroK)
+  theta_0 <- theta_0 / sum(theta_0)
   categories <- 1:nonzeroK
   # store points in barycentric coordinates
   Us <- list()

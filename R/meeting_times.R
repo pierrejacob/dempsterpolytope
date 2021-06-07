@@ -21,17 +21,23 @@
 ## rinit is the distribution of theta_0, used to draw the auxiliary variables at the 
 ## initial step
 ## and max_iterations is used to cut the while loop if for some reason meetings do not occur
+## the option 'removezero' is TRUE by default, and performs all calculations on non-zero counts
 #'@export
-meeting_times <- function(counts, lag, rinit, omega, max_iterations = 1e5){
+meeting_times <- function(counts, lag, omega, max_iterations = 1e5, removezero = TRUE){
   K <- length(counts) # number of categories
+  if (removezero){
+    counts <- counts[counts>0]
+    K <- length(counts) # number of categories
+  }
+  rinit <- function(){ x = rexp(K); return(x/sum(x))}
   categories <- 1:K
-  same_a_in_categoryk <- rep(FALSE, K) # indicates whether all variables in a category are identical
-  same_a <- list() # indicates whether the auxiliary variables are identical across the chains
+  same_u_in_categoryk <- rep(FALSE, K) # indicates whether all variables in a category are identical
+  same_u <- list() # indicates whether the auxiliary variables are identical across the chains
   for (k in 1:K){
     if (counts[k] > 0){
-      same_a[[k]] <- rep(FALSE, counts[k]) # indicator of each a's being identical in both chains
+      same_u[[k]] <- rep(FALSE, counts[k]) # indicator of each a's being identical in both chains
     } else { 
-      same_a[[k]] <- TRUE
+      same_u[[k]] <- TRUE
     }
   }
   ######### setup Linear Program (LP) 
@@ -72,7 +78,8 @@ meeting_times <- function(counts, lag, rinit, omega, max_iterations = 1e5){
     for (k in categories){ if (counts[k] > 0){
       # set Linear Program for this update and find associated theta_star
       mat_cst_ <- mat_cst; icst <- 1
-      for (j in setdiff(1:K, k)){ for (i in setdiff(1:K, j)){
+      for (j in setdiff(1:K, k)){ 
+        for (i in setdiff(1:K, j)){
         if (all(is.finite(etas1[j,]))){
           row_ <- (K+1)+icst; mat_cst_[row_,i] <- 1; mat_cst_[row_,j] <- -etas1[j,i]
         }
@@ -82,7 +89,7 @@ meeting_times <- function(counts, lag, rinit, omega, max_iterations = 1e5){
       vec_ <- rep(0, K); vec_[k] <- -1; set.objfn(lpobject, vec_)
       solve(lpobject); theta_star1 <- get.variables(lpobject)
       # using theta_star, re-draw auxiliary variables
-      pts_k <- runif_piktheta_cpp(counts[k], k, theta_star1)
+      pts_k <- dempsterpolytope:::runif_piktheta_cpp(counts[k], k, theta_star1)
       pts1[[k]] <- pts_k$pts
       etas1[k,] <- pts_k$minratios
     }}
@@ -122,7 +129,7 @@ meeting_times <- function(counts, lag, rinit, omega, max_iterations = 1e5){
       u_ <- runif(1)
       if (u_ < omega){
         ## common random numbers
-        coupled_results_ <- crng_runif_piktheta_cpp(counts[k], k, theta_star1, theta_star2)
+        coupled_results_ <- dempsterpolytope:::crng_runif_piktheta_cpp(counts[k], k, theta_star1, theta_star2)
         pts1[[k]] <- coupled_results_$pts1
         etas1[k,] <- coupled_results_$minratios1
         pts2[[k]] <- coupled_results_$pts2
@@ -131,18 +138,18 @@ meeting_times <- function(counts, lag, rinit, omega, max_iterations = 1e5){
         ## maximal coupling
         pts1_ <- matrix(NA, nrow = counts[k], ncol = K)
         pts2_ <- matrix(NA, nrow = counts[k], ncol = K)
-        coupled_results_ <- maxcoupling_runif_piktheta_cpp(counts[k], k, theta_star1, theta_star2)
+        coupled_results_ <- dempsterpolytope:::maxcoupling_runif_piktheta_cpp(counts[k], k, theta_star1, theta_star2)
         pts1[[k]] <- coupled_results_$pts1
         etas1[k,] <- coupled_results_$minratios1
         pts2[[k]] <- coupled_results_$pts2
         etas2[k,] <- coupled_results_$minratios2
-        same_a[[k]] <- coupled_results_$equal
+        same_u[[k]] <- coupled_results_$equal
         ## indicate whether all auxiliary variables coincide across two chains
-        same_a_in_categoryk <- all(same_a[[k]])
+        same_u_in_categoryk <- all(same_u[[k]])
       }
     }}
     ## if all auxiliary variables, in all categories, coincide across two chains
-    if (all(same_a_in_categoryk)){
+    if (all(same_u_in_categoryk)){
       ## then chains have met
       meeting <- iteration
     }

@@ -7,9 +7,9 @@ positiveassociation <- function(eta){
   ## 1) whether feasible set intersects with the 'positive association polytope' 
   ## 2) whether feasible set is contained in 'positive association polytope'
   if (dim(eta)[1] != 4){
-    stop("The matrix etas must be 4x4 for the function 'check_intersection_independence' to be called.")
+    stop("The matrix etas must be 4x4 for the function 'positiveassociation'")
   }
-  baryvertices <- etas2vertices(eta)$vertices_barcoord
+  baryvertices <- etas_vertices(eta)
   ## round to zero if close to zero
   baryvertices[abs(baryvertices)<1e-10] <- 0
   ## compute 

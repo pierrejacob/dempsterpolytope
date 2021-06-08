@@ -4,14 +4,18 @@
 \name{dempsterpolytope-package}
 \alias{dempsterpolytope-package}
 \alias{dempsterpolytope}
-\title{Gibbs sampler for DS inference in Categorical distributions}
+\title{Gibbs sampler for Dempster-Shafer inference in Categorical distributions}
 \description{
+Implements a Gibbs sampler for DS inference approach for Categorical distributions;
+this package is a companion to an article by Pierre E. Jacob, Ruobin Gong, Paul T. Edlefsen,
+Arthur P. Dempster, available at \url{https://arxiv.org/abs/1910.11953}.
 Implements a Gibbs sampler for Dempster's approach to inference in Categorical distributions;
 }
 \details{
-This package is a companion to an article [...] the goal of the package is merely to reproduce the experiments.
+This package is a companion to an article. The goal of the package is merely to
+reproduce the experiments of that article. Use at your own risk!
 }
 \author{
-anonymous
+Pierre E. Jacob (\href{mailto:pierre.jacob.work@gmail.com}{pierre.jacob.work@gmail.com}), Ruobin Gong, Paul T. Edlefsen, Arthur P. Dempster
 }
 \keyword{package}

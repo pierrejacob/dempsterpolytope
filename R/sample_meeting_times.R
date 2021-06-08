@@ -13,17 +13,37 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-## Sample meeting times to implement TV upper bounds as in https://arxiv.org/abs/1905.09971
-## with probability omega, common random numbers are used in a Gibbs sweep
-## otherwise a (nearly) maximal coupling is used in a Gibbs sweep
-## counts contains the data, i.e. the counts of X_1,...,X_K
-## lag refers to the lag employed in the coupling
-## rinit is the distribution of theta_0, used to draw the auxiliary variables at the 
-## initial step
-## and max_iterations is used to cut the while loop if for some reason meetings do not occur
-## the option 'removezero' is TRUE by default, and performs all calculations on non-zero counts
+#'@rdname sample_meeting_times
+#'@title Sample meeting times associated with coupled lagged Gibbs chains
+#'@description
+#' Sample meeting times to monitor convergence
+#' of the Gibbs sampler, as in the article
+#' *Estimating Convergence of Markov chains with L-Lag Couplings*
+#' by Niloy Biswas, Pierre E. Jacob, Paul Vanetti,
+#' available at <https://arxiv.org/abs/1905.09971>.
+#'
+#' The coupled chains are generated using a mixture of coupled kernels;
+#' with probability omega, a "common random numbers (CRN)" coupling is performed;
+#' otherwise a (nearly) maximal coupling is used in a Gibbs sweep.
+#'@param counts vector of counts; could include zeros. 
+#'@param lag lag between the chains; defaults to 1.
+#'@param omega probability of a coupled "CRN" step as opposed to maximal coupling step; defaults to 0.9.
+#'@param max_iterations number of iterations after which to stop, in case meeting hasn't occurred; defaults to 1e5.
+#'@param removezero remove zeros from counts before running coupled Gibbs sampler; defaults to TRUE
+#'@return An integer representing the meeting time; or +Inf if meeting has not occurred before 'max_iterations'.
+#'The meeting times can be turned into upper bounds on the total variation (TV) distance
+#'between the Markov chain at some iteration and the limiting distribution,
+#'using the function \code{\link{tv_upper_bound}}.
+#'@examples
+#'\dontrun{
+#'nrep <- 100
+#'meeting_times <- sapply(1:nrep, function(irep) sample_meeting_times(counts = c(3,2,0,1)))
+#'tmax <- floor(max(meeting_times)*1.2)
+#'ubounds <- sapply(1:tmax, function(t) tv_upper_bound(meeting_times, 1, t))
+#'plot(x = 1:tmax, y = ubounds, type = 'l', xlab = "iteration", ylab = "TV upper bounds")
+#'}
 #'@export
-meeting_times <- function(counts, lag, omega, max_iterations = 1e5, removezero = TRUE){
+sample_meeting_times <- function(counts, lag = 1, omega = 0.9, max_iterations = 1e5, removezero = TRUE){
   K <- length(counts) # number of categories
   if (removezero){
     counts <- counts[counts>0]

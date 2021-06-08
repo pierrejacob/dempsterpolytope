@@ -26,9 +26,8 @@ cat("Data:", counts, "\n")
 
 NREP <- 100
 lag <- 30
-omega <- 0.9
 meetings <- unlist(foreach(irep = 1:NREP) %dorng% {
-  meeting_times(counts, lag = lag, rinit = function(){ x = rexp(K); return(x/sum(x))}, omega = omega, max_iterations = 1e5)
+  sample_meeting_times(counts, lag = lag)
 })
 
 ubounds <- sapply(1:(1.2*lag), function(t) tv_upper_bound(meetings, lag, t))
@@ -38,32 +37,30 @@ gtvbounds
 
 
 niterations <- 5000
-samples_gibbs_K3 <- gibbs_sampler_v2(niterations, counts)
+samples_gibbs_K3 <- gibbs_sampler(niterations, counts)
 warmup <- 50
-# nsubiterations <- 25000
-# subiterations <- floor(seq(from = warmup, to = niterations, length.out = nsubiterations))
 subiterations <- (warmup+1):niterations
 etas_K3 <- samples_gibbs_K3$etas[subiterations,,]
 
 ## in order to obtain the lower CDF, we need to check if polytope is contained in [0,a) for different a 
 ## for which we need to max coordinate and check if less than a
 ## for the upper CDF we need to check intersection, so we need min coordinate and check less than a
-minmax1 <- apply(etas_K3, 1, function(eta){ 
-  baryeta <- etas2vertices(eta)$vertices_barcoord
-  mincoord1 <- min(baryeta[,1])
-  maxcoord1 <- max(baryeta[,1])
-  return(c(mincoord1, maxcoord1))
-})
 
-ecdf_lower <- ecdf(minmax1[1,])
-ecdf_upper <- ecdf(minmax1[2,])
-# ggplot() + xlab(expression(theta[1])) + ylab("CDF") + xlim(0,1) + ylim(0,1) +
-#   stat_function(fun = ecdf_lower, colour = 'black', linetype = 1) + stat_function(fun = ecdf_upper, colour = 'black', linetype = 1)
+min1st <- foreach(ieta = 1:(dim(etas_K3)[1]), .combine = c) %dopar% {
+  lpsolve_over_eta(etas_K3[ieta,,], c(1, rep(0, K-1)))
+}
+max1st <- foreach(ieta = 1:(dim(etas_K3)[1]), .combine = c) %dopar% {
+  -lpsolve_over_eta(etas_K3[ieta,,], c(-1, rep(0, K-1)))
+}
 
-## c'est quand meme plus simple quoi 
+ecdf_lower <- ecdf(max1st)
+ecdf_upper <- ecdf(min1st)
+
+ggplot() + xlab(expression(theta[1])) + ylab("CDF") + xlim(0,1) + ylim(0,1) +
+  stat_function(fun = ecdf_lower, colour = 'black', linetype = 1) + stat_function(fun = ecdf_upper, colour = 'black', linetype = 2)
 
 ## suppose do inferene using only 2 non empty category and then manipulate
-samples_gibbs_K2 <- gibbs_sampler_v2(niterations, counts[1:2])
+samples_gibbs_K2 <- gibbs_sampler(niterations, counts[1:2])
 etas_K2 <- samples_gibbs_K2$etas[subiterations,,]
 ## extend from K = 2
 pts_extended_from_K2 <- list()
@@ -88,39 +85,41 @@ for (iter in 1:niterations){
     etas_K3_alt[iter,category,3] <- min(pts_extended_from_K2[[category]][iter,,3]/pts_extended_from_K2[[category]][iter,,category]) 
   }
 }
-##
-minmax1_alt <- apply(etas_K3_alt, 1, function(eta){ 
-  baryeta <- etas2vertices(eta)$vertices_barcoord
-  mincoord1 <- min(baryeta[,1])
-  maxcoord1 <- max(baryeta[,1])
-  return(c(mincoord1, maxcoord1))
-})
 
-ecdf_lower_alt <- ecdf(minmax1_alt[1,])
-ecdf_upper_alt <- ecdf(minmax1_alt[2,])
+min1st_alt <- foreach(ieta = 1:(dim(etas_K3_alt)[1]), .combine = c) %dopar% {
+  lpsolve_over_eta(etas_K3_alt[ieta,,], c(1, rep(0, K-1)))
+}
+max1st_alt <- foreach(ieta = 1:(dim(etas_K3_alt)[1]), .combine = c) %dopar% {
+  -lpsolve_over_eta(etas_K3_alt[ieta,,], c(-1, rep(0, K-1)))
+}
+
+ecdf_lower_alt <- ecdf(max1st_alt)
+ecdf_upper_alt <- ecdf(min1st_alt)
+##
 
 # lower / upper 
 galt <- ggplot() + xlim(0,1) + ylim(0,1) + xlab(expression(theta[1])) + ylab("CDF") +
- stat_function(fun = ecdf_lower, colour = 'red', linetype = 1) + stat_function(fun = ecdf_upper, colour = 'red', linetype = 1) + 
-  stat_function(fun = ecdf_lower_alt, colour = 'blue', linetype = 2) + stat_function(fun = ecdf_upper_alt, colour = 'blue', linetype = 2)
+ stat_function(fun = ecdf_lower, colour = 'red', linetype = 1) + stat_function(fun = ecdf_upper, colour = 'red', linetype = 2) + 
+  stat_function(fun = ecdf_lower_alt, colour = 'blue', linetype = 1) + stat_function(fun = ecdf_upper_alt, colour = 'blue', linetype = 2)
 galt
 ## agreement
 
 ## compare CDF obtained with only 2 categories
-minmax1K2 <- apply(etas_K2, 1, function(eta){ 
-  baryeta <- etas2vertices(eta)$vertices_barcoord
-  mincoord1 <- min(baryeta[,1])
-  maxcoord1 <- max(baryeta[,1])
-  return(c(mincoord1, maxcoord1))
-})
+min1st_K2 <- foreach(ieta = 1:(dim(etas_K2)[1]), .combine = c) %dopar% {
+  lpsolve_over_eta(etas_K2[ieta,,], c(1, 0))
+}
+max1st_K2 <- foreach(ieta = 1:(dim(etas_K2)[1]), .combine = c) %dopar% {
+  -lpsolve_over_eta(etas_K2[ieta,,], c(-1, 0))
+}
 
-ecdf_lower_K2 <- ecdf(minmax1K2[1,])
-ecdf_upper_K2 <- ecdf(minmax1K2[2,])
+ecdf_lower_K2 <- ecdf(max1st_K2)
+ecdf_upper_K2 <- ecdf(min1st_K2)
 
 galt <- ggplot() + xlim(0,1) + ylim(0,1) + xlab(expression(theta[1])) + ylab("CDF") +
-  stat_function(fun = ecdf_lower, colour = 'red', linetype = 1) + stat_function(fun = ecdf_upper, colour = 'red', linetype = 1) + 
-  stat_function(fun = ecdf_lower_K2, colour = 'blue', linetype = 2) + stat_function(fun = ecdf_upper_K2, colour = 'blue', linetype = 2)
+  stat_function(fun = ecdf_lower, colour = 'red', linetype = 1) + stat_function(fun = ecdf_upper, colour = 'red', linetype = 2) + 
+  stat_function(fun = ecdf_lower_K2, colour = 'blue', linetype = 1) + stat_function(fun = ecdf_upper_K2, colour = 'blue', linetype = 2)
 galt
+
 ### 'r' don't know proba increases
 ### clean graph
 xgrid <- seq(from = 0, to = 1, length.out = 500)
@@ -139,26 +138,24 @@ gtheta1
 
 ggsave(plot = gtheta1, filename = "emptycategory1.pdf", width = 6, height = 4)
 
-
 ## however if we look at theta1/theta2 
-minmax_ratio_K2 <- apply(etas_K2, 1, function(eta){ 
-  baryeta <- etas2vertices(eta)$vertices_barcoord
-  mincoord1 <- min(baryeta[,1]/baryeta[,2])
-  maxcoord1 <- max(baryeta[,1]/baryeta[,2])
-  return(c(mincoord1, maxcoord1))
-})
+min1st_K2 <- foreach(ieta = 1:(dim(etas_K2)[1]), .combine = c) %dopar% {
+  lpsolve_over_eta_log(etas_K2[ieta,,], c(1, -1))
+}
+max1st_K2 <- foreach(ieta = 1:(dim(etas_K2)[1]), .combine = c) %dopar% {
+  -lpsolve_over_eta_log(etas_K2[ieta,,], c(-1, +1))
+}
+ecdf_lower_ratio_K2 <- ecdf(max1st_K2)
+ecdf_upper_ratio_K2 <- ecdf(min1st_K2)
+min1st_K3 <- foreach(ieta = 1:(dim(etas_K3)[1]), .combine = c) %dopar% {
+  lpsolve_over_eta_log(etas_K3[ieta,,], c(1, -1, 0))
+}
+max1st_K3 <- foreach(ieta = 1:(dim(etas_K3)[1]), .combine = c) %dopar% {
+  -lpsolve_over_eta_log(etas_K3[ieta,,], c(-1, +1, 0))
+}
+ecdf_lower_ratio_K3 <- ecdf(max1st_K3)
+ecdf_upper_ratio_K3 <- ecdf(min1st_K3)
 
-minmax_ratio_K3 <- apply(etas_K3, 1, function(eta){ 
-  baryeta <- etas2vertices(eta)$vertices_barcoord
-  mincoord1 <- min(baryeta[,1]/baryeta[,2])
-  maxcoord1 <- max(baryeta[,1]/baryeta[,2])
-  return(c(mincoord1, maxcoord1))
-})
-
-ecdf_lower_ratio_K2 <- ecdf(log(minmax_ratio_K2[1,]))
-ecdf_upper_ratio_K2 <- ecdf(log(minmax_ratio_K2[2,]))
-ecdf_lower_ratio_K3 <- ecdf(log(minmax_ratio_K3[1,]))
-ecdf_upper_ratio_K3 <- ecdf(log(minmax_ratio_K3[2,]))
 
 ggplot() + xlim(-3,+3) + ylim(0,1) + xlab(expression(log(theta[1]/theta[2]))) + ylab("CDF") +
   stat_function(fun = ecdf_lower_ratio_K2, colour = 'red', linetype = 1) + stat_function(fun = ecdf_upper_ratio_K2, colour = 'red', linetype = 1) +

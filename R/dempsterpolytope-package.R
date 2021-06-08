@@ -16,10 +16,14 @@
 #'@name dempsterpolytope-package
 #'@aliases dempsterpolytope
 #'@docType package
-#'@title Gibbs sampler for DS inference in Categorical distributions
-#'@author anonymous
-#'@description Implements a Gibbs sampler for Dempster's approach to inference in Categorical distributions; 
-#'@details This package is a companion to an article [...] the goal of the package is merely to reproduce the experiments.
+#'@title Gibbs sampler for Dempster-Shafer inference in Categorical distributions 
+#'@author Pierre E. Jacob (<pierre.jacob.work@@gmail.com>), Ruobin Gong, Paul T. Edlefsen, Arthur P. Dempster
+#'@description Implements a Gibbs sampler for DS inference approach for Categorical distributions;
+#'  this package is a companion to an article by Pierre E. Jacob, Ruobin Gong, Paul T. Edlefsen,
+#'   Arthur P. Dempster, available at <https://arxiv.org/abs/1910.11953>.
+#'Implements a Gibbs sampler for Dempster's approach to inference in Categorical distributions; 
+#'@details This package is a companion to an article. The goal of the package is merely to
+#' reproduce the experiments of that article. Use at your own risk!
 #'@keywords package
 #'@useDynLib dempsterpolytope
 #'@importFrom Rcpp sourceCpp

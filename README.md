@@ -1,22 +1,35 @@
 
 ## dempsterpolytope
 
-Implements a Gibbs sampler for Dempster’s inference approach for
-Categorical distributions; this package is a companion to an article by
-Pierre E. Jacob, Ruobin Gong, Paul T. Edlefsen, Arthur P. Dempster,
-available at <https://arxiv.org/abs/1910.11953v3>. The article is going
-to appear as a discussion paper in the Journal of the American
-Statistical Association, Theory & Methods, in 2021 (early version here
+This package implements a Gibbs sampler for Dempster’s inference
+approach for Categorical distributions using the “simplicial model” or
+“structure of the second kind”. This package is a companion to an
+article entitled *A Gibbs sampler for a class of random convex
+polytopes* by Pierre E. Jacob, Ruobin Gong, Paul T. Edlefsen, Arthur P.
+Dempster, available at <https://arxiv.org/abs/1910.11953v3>, and due to
+appear with a discussion in the Journal of the American Statistical
+Association, Theory & Methods, in 2021 (see
 <https://www.tandfonline.com/doi/abs/10.1080/01621459.2021.1881523?journalCode=uasa20>).
 
-Important: this is not a general-purpose statistical software. This is
-just a collection of scripts intended to reproduce figures and tables of
-a paper. Use at your own risk!
+The sampling problem addressed by this package dates back to these
+articles:
 
-The folder inst/reproduce/ contains the scripts to reproduce the
-figures. The folder inst/tests/ contains internal checks, and vignettes/
-contains tutorials on how to use the package’s main functions, which at
-the moment are just R scripts and not proper “R vignettes”.
+-   Dempster, A.P., 1966. New methods for reasoning towards posterior
+    distributions based on sample data. The Annals of Mathematical
+    Statistics, 37(2), pp.355-374.
+
+-   Dempster, A.P., 1972. A class of random convex polytopes. The Annals
+    of Mathematical Statistics, pp.260-272.
+
+**Important**: this is not a general-purpose statistical software. This
+is just a collection of scripts intended to reproduce figures and tables
+of a paper. Use at your own risk!
+
+The folder inst/reproduce/ contains the scripts to reproduce the figures
+of the article. The folder inst/tests/ contains internal checks, and
+vignettes/ contains tutorials on how to use the package’s main
+functions, which at the moment are just R scripts and not proper “R
+vignettes”.
 
 ### Installation
 
@@ -66,36 +79,31 @@ counts <- c(10, 4, 7)
 # number of MCMC iterations
 niterations <- 100
 # run Gibbs sampler
-gibbs_results <- gibbs_sampler_v2(niterations, counts)
+gibbs_results <- gibbs_sampler(niterations, counts)
 # obtain a K x K matrix representing a convex polytope in the simplex by taking
 # the terminal iteration of the Gibbs chain
 eta <- gibbs_results$etas[niterations, , ]
-# convert polytope to H-representation and V-representation
-eta_converted <- etas2vertices(eta)
-# H-representation, or 'half-plane' representation means the set is represented
-# as points x such that 'constr' times x <= 'rhs'
-eta_converted$constr
-#> $constr
-#>             [,1]      [,2]
-#>  [1,]  1.0000000  1.000000
-#>  [2,] -1.0000000  0.000000
-#>  [3,]  0.0000000 -1.000000
-#>  [4,] -0.4637037  1.000000
-#>  [5,] -2.0297893 -1.000000
-#>  [6,]  1.0000000 -2.586375
-#>  [7,] -1.0000000 -7.083083
-#>  [8,]  2.5324235  1.532424
-#>  [9,]  0.8408546  1.840855
-#> 
-#> $rhs
-#> [1]  1.0000000  0.0000000  0.0000000  0.0000000 -1.0000000  0.0000000 -1.0000000
-#> [8]  1.5324235  0.8408546
-#> 
-#> $dir
-#> [1] "<=" "<=" "<=" "<=" "<=" "<=" "<=" "<=" "<="
-# V-representation, or 'vertex' representation means the set is represented by
-# its vertices
-eta_converted$vertices_barcoord
+# There are multiple ways of representing a polytope.  The H-representation, or
+# 'half-plane' representation, means the set is represented as points x such
+# that 'constr' times x <= 'rhs'
+Hrep <- eta_linearconstraints(eta)
+print(Hrep$constr)
+#>            [,1]      [,2]       [,3]
+#> [1,] -0.4637037  1.000000  0.0000000
+#> [2,] -1.0297893  0.000000  1.0000000
+#> [3,]  1.0000000 -2.586375  0.0000000
+#> [4,]  0.0000000 -6.083083  1.0000000
+#> [5,]  1.0000000  0.000000 -1.5324235
+#> [6,]  0.0000000  1.000000 -0.8408546
+print(Hrep$dir)
+#> [1] "<=" "<=" "<=" "<=" "<=" "<="
+print(Hrep$rhs)
+#> [1] 0 0 0 0 0 0
+# In small dimensions we can also obtain the list of vertices corresponding to
+# this polytope, and then the polytope itself is the convex hull of these
+# vertices
+eta_vertices <- etas_vertices(eta)
+print(eta_vertices)
 #>           [,1]      [,2]      [,3]
 #> [1,] 0.4010438 0.1859655 0.4129907
 #> [2,] 0.4138335 0.1600052 0.4261613
@@ -107,8 +115,8 @@ gs <- set_custom_theme()
 g <- create_plot_triangle(gs)
 cvxpolytope_cartesian.df <- data.frame()
 for (iter in 51:100) {
-    cvx <- etas2vertices(gibbs_results$etas[iter, , ])
-    cvx_cartesian <- t(apply(cvx$vertices_barcoord, 1, function(row) barycentric2cartesian(row,
+    vertices <- etas_vertices(gibbs_results$etas[iter, , ])
+    cvx_cartesian <- t(apply(vertices, 1, function(row) barycentric2cartesian(row,
         gs$v_cartesian)))
     average_ <- colMeans(cvx_cartesian)
     o_ <- order(apply(sweep(cvx_cartesian, 2, average_, "-"), 1, function(v) atan2(v[2],

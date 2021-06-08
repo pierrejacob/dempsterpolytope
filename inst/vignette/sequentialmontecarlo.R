@@ -28,31 +28,33 @@ print(counts)
 
 ## run Gibbs sampler to get random polytopes
 niterations_gibbs <- 2e3
-samples_gibbs <- gibbs_sampler_v2(niterations_gibbs, counts)
+gibbs_results <- gibbs_sampler(niterations_gibbs, counts)
 
 ## from these random polytopes we can estimate lower and upper probabilities 
 ## associated with assertions of interest
 ## consider the assertion: theta_1 is in the interval [0.2, 0.3]
-## we can encode the interval as a polytope in the simplex of dimension K
-## with the instruction:
-intervalcvxp <- interval2polytope(K, 1, c(0.2, 0.3))
 
-## then we can compute whether our Gibbs samples intersect or are contained in the 
-## polytope corresponding to our interval of interest
-## we have to specify some burn-in perod
+## To assess whether the sets intersect or are contained in that assertion
+## we compute the minimal and maximal value of theta_1 over each set
+
 burnin <- 100
 postburn <- niterations_gibbs - burnin
-contained_ <- rep(0, postburn)
-intersects_ <- rep(0, postburn)
-for (index in ((burnin+1):niterations_gibbs)){
-  cvxp <- etas2vertices(samples_gibbs$etas[index,,])
-  res_ <- compare_polytopes(cvxp, intervalcvxp)
-  contained_[index-burnin] <- res_[1]
-  intersects_[index-burnin] <- res_[2]
+etas <- gibbs_results$etas[(burnin+1):niterations_gibbs,,]
+
+min1st <- foreach(ieta = 1:(dim(etas)[1]), .combine = c) %dopar% {
+  lpsolve_over_eta(etas[ieta,,], c(1, rep(0, K-1)))
+}
+max1st <- foreach(ieta = 1:(dim(etas)[1]), .combine = c) %dopar% {
+  -lpsolve_over_eta(etas[ieta,,], c(-1, rep(0, K-1)))
 }
 
+## intersection occurs unless max1st < 0.2 or min1st > 0.3
+intersect_ <- !((max1st < 0.2) | (min1st > 0.3))
+## inclusion occurs when min1st > 0.2 and max1st < 0.3
+contained_ <- ((min1st > 0.2) & (max1st < 0.3))
+
 ## this gives us the following lower and upper probabilities
-cat(mean(contained_), mean(intersects_), "\n")
+cat(mean(contained_), mean(intersect_), "\n")
 
 ## next we can approximate the same quantities but using sequential Monte Carlo
 nparticles <- 2^10
@@ -63,15 +65,18 @@ samples_smc$etas_particles[10,,]
 ## with weight
 samples_smc$weights[10]
 
-## from which we can compute lower and upper probabilities for the same interval as
-contained_smc <- rep(0, nparticles)
-intersects_smc <- rep(0, nparticles)
-for (iparticle in 1:nparticles){
-  cvxp <- etas2vertices(samples_smc$etas_particles[iparticle,,])
-  res_ <- compare_polytopes(cvxp, intervalcvxp)
-  contained_smc[iparticle] <- res_[1]
-  intersects_smc[iparticle] <- res_[2]
+min1st_smc <- foreach(ieta = 1:nparticles, .combine = c) %dopar% {
+  lpsolve_over_eta(samples_smc$etas_particles[ieta,,], c(1, rep(0, K-1)))
 }
+max1st_smc <- foreach(ieta = 1:nparticles, .combine = c) %dopar% {
+  -lpsolve_over_eta(samples_smc$etas_particles[ieta,,], c(-1, rep(0, K-1)))
+}
+
+## intersection occurs unless max1st < 0.2 or min1st > 0.3
+intersects_smc <- !((max1st_smc < 0.2) | (min1st_smc > 0.3))
+## inclusion occurs when min1st > 0.2 and max1st < 0.3
+contained_smc <- ((min1st_smc > 0.2) & (max1st_smc < 0.3))
+
 ## the lower and upper probabilities are then approximated as weighted averages over the particles
 cat(sum(samples_smc$weights * contained_smc), sum(samples_smc$weights * intersects_smc) , "\n")
 

@@ -39,3 +39,31 @@ concatenate_linearconstraints <- function(lc1, lc2){
   return(list(constr = rbind(lc1$constr, lc2$constr), rhs = c(lc1$rhs, lc2$rhs), dir = c(lc1$dir, lc2$dir))
   )
 }
+
+
+## theta_ell / theta_k <= eta[k,ell]
+## iff 
+## log theta_ell - log theta_k <= log eta[k,ell]
+## -> defines linear constraints on log theta
+## and we add \sum_k log theta_k = 0
+#'@export
+eta_log_linearconstraints <- function(eta){
+  K_ <- dim(eta)[1]
+  A_log <- matrix(0, nrow = 1+K_*(K_-1), ncol = K_)
+  b_log <- rep(0, 1+K_*(K_-1))
+  step <- 1
+  A_log[1,] <- 1
+  b_log[1] <- 0
+  for (d in 1:K_){
+    for (j in setdiff(1:K_, d)){
+      if (is.finite(eta[d,j])){
+        step <- step + 1
+        A_log[step,d] <- -1
+        A_log[step,j] <- +1
+        b_log[step] <- log(eta[d,j])
+      }
+    }
+  }
+  constr <- list(constr = A_log[1:step,], rhs = b_log[1:step], dir = c("=", rep("<=", step-1)))
+  return(constr)
+}

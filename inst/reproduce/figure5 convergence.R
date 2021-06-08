@@ -37,7 +37,7 @@ for (iK in seq_along(Ks)){
   counts <- rep(10, K)
   n <- sum(counts)
   meetings[[iK]] <- unlist(foreach(irep = 1:NREP) %dorng% {
-    meeting_times(counts, lag = lag, rinit = function(){ x = rexp(K); return(x/sum(x))}, omega = omega, max_iterations = 1e5)
+    sample_meeting_times(counts, lag = lag, omega = omega, max_iterations = 1e5)
   })
 }
 save(Ks, meetings, file = "mixing.K.RData")
@@ -71,7 +71,7 @@ for (iN in seq_along(Ns)){
   counts <- rep(N, K)
   n <- sum(counts)
   meetings[[iN]] <- unlist(foreach(irep = 1:NREP) %dorng% {
-    meeting_times(counts, lag = lag, rinit = function(){ x = rexp(K); return(x/sum(x))}, omega = omega, max_iterations = 1e5)
+    sample_meeting_times(counts, lag = lag, omega = omega, max_iterations = 1e5)
   })
 }
 save(Ns, lag_multiplier, K, meetings, file = "mixing.N.RData")

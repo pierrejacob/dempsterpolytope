@@ -89,9 +89,7 @@ nchains <- 25
 niterations <- burnin+1
 library(abind)
 etas <- foreach(irep = 1:nchains) %dorng% {
-  init <- rexp(K)
-  init <- init/sum(init)
-  samples_gibbs <- gibbs_sampler(niterations, counts, theta_0 = init)
+  samples_gibbs <- gibbs_sampler(niterations, counts)
   samples_gibbs$etas[(burnin+1):niterations,,]
 }
 dim(etas[[1]])

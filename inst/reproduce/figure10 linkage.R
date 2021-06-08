@@ -112,11 +112,10 @@ lines(seq(0, 1, by=by), ub_idm, col = 'red', lty = 2)
 legend('topleft', lty = c(1, 2), legend = c('DDSM', 'IDM'))
 
 ## 3. Simplex DSM model.
-omega <- 0.9
 lag <- 100
 NREP <- 1e3
 meetingtimes <- foreach(irep = 1:NREP, .combine = c) %dorng% {
-  meeting_times(counts, lag = lag, rinit = function(){ x = rexp(K); return(x/sum(x))}, omega = omega, max_iterations = 1e5)
+  sample_meeting_times(counts, lag = lag)
 }
 ## TV upper bounds
 niterations <- 100
@@ -130,9 +129,7 @@ niterations <- 500
 library(abind)
 acomb <- function(...) abind(..., along=1)
 etas <- foreach(irep = 1:nchains, .combine = 'acomb') %dorng% {
-  init <- rexp(K)
-  init <- init/sum(init)
-  samples_gibbs <- gibbs_sampler(niterations, counts, theta_0 = init)
+  samples_gibbs <- gibbs_sampler(niterations, counts)
   samples_gibbs$etas[(burnin+1):niterations,,]
 }
 dim(etas)
@@ -154,11 +151,34 @@ for (j in 2:(K-1)){
 segment_constr <- list(constr = constr, dir = dir, rhs = rhs)
 
 intersects_with_segment <- function(eta, segment_constr){
-  cvxp <- etas2vertices(eta)
+  K_ <- dim(eta)[1]
+  categories <- 1:K_
+  # # the constraints are on the first K-1 coordinates
+  # # the first ones say that the feasible set is within the simplex
+  constrA <- matrix(rep(1, K_-1), ncol = K_-1)
+  constrA <- rbind(constrA, diag(-1, K_-1, K_-1))
+  constrb <- c(1, rep(0, K_-1))
+  # then the extra constraints come from etas
+  for (d in categories){
+    for (j in setdiff(categories, d)){
+      if (is.finite(eta[d,j])){
+        # cccc (wA wB wC ... )' = 0
+        ccc <- rep(0, K_)
+        ccc[d] <- -eta[d, j]
+        ccc[j] <- 1
+        cc <- ccc - ccc[K_]
+        constrb <- c(constrb, -ccc[K_])
+        constrA <- rbind(constrA, matrix(cc[1:(K_-1)], nrow = 1))
+      } else {
+        # if eta is infinite, no constraint
+      }
+    }
+  }
+  polytope_constr_ <- list(constr = constrA, rhs = constrb, dir = rep("<=", nrow(constrA)))
   test_constr <- segment_constr
-  test_constr$constr <- rbind(test_constr$constr, cvxp$constr$constr)
-  test_constr$rhs <- c(test_constr$rhs, cvxp$constr$rhs)
-  test_constr$dir <- c(test_constr$dir, cvxp$constr$dir)
+  test_constr$constr <- rbind(test_constr$constr, polytope_constr_$constr)
+  test_constr$rhs <- c(test_constr$rhs, polytope_constr_$rhs)
+  test_constr$dir <- c(test_constr$dir, polytope_constr_$dir)
   ## make H representation (H for ?)
   h <- rcdd::makeH(test_constr$constr, test_constr$rhs)
   ## try to find V representation (V for Vendetta or Vertex?)

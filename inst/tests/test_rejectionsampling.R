@@ -28,12 +28,12 @@ counts
 ##
 
 ## Rejection sampling
-dempsterpolytope::rejectionsampler(counts)
+dempsterpolytope::rejection_sampler(counts)
 
 ## repeatedly
 nsamples_rs <- 5e2
 samples_rs <- foreach(irep = 1:nsamples_rs) %dorng% {
-  dempsterpolytope::rejectionsampler(counts)
+  dempsterpolytope::rejection_sampler(counts)
 }
 
 ## to estimate the volume of accept region

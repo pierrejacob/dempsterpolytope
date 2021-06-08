@@ -47,20 +47,30 @@ check_cst_graph <- function(etas){
   return(!negativecycle)
 }
 
-#'@rdname rejectionsampler
-#'@title Rejection sampler to obtain convex polytopes for DS inference in Categorical distributions 
-#'@description This is implemented to perform quick comparison on very small data sets; the method does not 
-#'scale well with the number of counts. It samples auxiliary variables uniformly in the simplex,
-#'and then checks whether constraints are satisfied. The implementation uses the igraph package.
-#'@param counts a vector of counts, of length K
-#'It returns accepted states only, and 
-#' and the number of attempts it took 
+#'@rdname rejection_sampler
+#'@title Rejection sampler for DS convex polytopes
+#'@description Implements a rejection sampler, 
+#' as an alternative to the proposed Gibbs sampler. Only works
+#' for very small data sets, otherwise the number of attempts required
+#' to obtain a draw is prohibitively large.
+#' The sampler draws N uniform variables in the simplex of dimension K,
+#' and then checks whether the constraints are satisfied, specifically
+#' by checking whether a certain graph contains negative cycles. 
+#' The implementation uses the "igraph" package for that.
+#'@param counts a vector of counts, of length K, that could contain zeros.
+#'@param maxnattempts an integer indicating the number of trials to perform before giving up.
+#'@return A list with the following entries:
+#'\itemize{
+#'\item "etas": a KxK matrix if procedure succeeded, otherwise NULL.
+#'\item "nattempts": an integer indicating the number of trials.
+#'} 
 #'@examples 
 #' \dontrun{
-#' rejectionsampler(c(1,2,3))
+#' rejection_sampler(c(1,2,3))
+#' rejection_sampler(c(6,0,5,0))
 #' }
 #'@export
-rejectionsampler <- function(counts, maxnattempts = 1e5){
+rejection_sampler <- function(counts, maxnattempts = 1e5){
   X <- rep(1:length(counts), times = counts)
   K <- length(counts)
   accept <- FALSE
@@ -71,6 +81,10 @@ rejectionsampler <- function(counts, maxnattempts = 1e5){
     nattempts <- nattempts + 1
     accept <- check_cst_graph(etas)
   }
-  return(list(etas = etas, nattempts = nattempts))
+  if (nattempts == maxnattempts){
+    return(list(etas = NULL, nattempts = nattempts))
+  } else {
+    return(list(etas = etas, nattempts = nattempts))
+  }
 }
 

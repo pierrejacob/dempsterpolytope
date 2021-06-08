@@ -36,9 +36,7 @@ niterations <- 200
 burnin <- 100
 
 ds_estimators <- foreach(irep = 1:nchains, .combine = rbind) %dorng% {
-  init <- rexp(K)
-  init <- init/sum(init)
-  samples_gibbs <- gibbs_sampler(niterations, counts, theta_0 = init)
+  samples_gibbs <- gibbs_sampler(niterations, counts)
   etas <- samples_gibbs$etas[(burnin+1):niterations,,]
   positivassoc <- t(apply(etas, 1, positiveassociation))
   c(mean(positivassoc[,1]), mean(positivassoc[,2]))

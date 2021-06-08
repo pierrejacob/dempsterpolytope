@@ -13,47 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# initialize points by defining a point in the simplex as theta_0
-# then sampling a_n uniformly on pi_k(theta_0) if X_n == k
-# also returns 'minratios', a list of K vectors, where the k-th vector contains min_{a in A_k} a_ell / a_k at element ell
-
-#'@rdname initialize_pts
-#'@title Initialize auxiliary variables 
-#'@description For a point theta in the simplex, a vector of counts, sample points 'u_n' uniformly in the subsimplex Delta_k(theta) 
-#' where x_n = k.  
-#'@param counts a vector of K integers representing counts 
-#'@param theta a point in the simplex, represented by a K-vector of non-negative values summing to one
-#'@return A list with 'pts', containing a list of K matrices of size N_k x K containing the auxiliary variables
-#' and 'minratios', containing a list of K vectors of size K, where minratios[[k]] has entry ell equal to min_{n in I_k} u_{n,ell} / u_{n,k}
-#' which are later used to define 'eta'. The notation follows that of the paper. 
-#'@examples
-#' initialize_pts(c(3,1,2), c(1/3,1/3,1/3))
-#'@export
-initialize_pts <- function(counts, theta){
-  # number of categories
-  K <- length(counts)
-  # create list to store points
-  pts <- list()
-  # create list to store minimum ratio
-  minratios <- list()
-  # for each category
-  for (k in 1:K){
-    # if there are counts in that category
-    if (counts[k] > 0){
-      # generate sample in appropriate subsimplex
-      tmp <- dempsterpolytope:::runif_piktheta_cpp(counts[k], k, theta)
-      # store them and associated minimum ratios
-      pts[[k]] <- tmp$pts
-      minratios[[k]] <- tmp$minratios
-    } else { # no count in that category
-      pts[[k]] <- NA
-      minratios[[k]] <- rep(Inf, K)
-    }
-  }
-  # return points and associated minimum ratios ('eta')
-  return(list(pts = pts, minratios = minratios))
-}
-
 ## function to perform one Gibbs update, of auxiliary variables corresponding to category k
 ## using the "shortest path approach" implemented in the igraph package
 refresh_pts_category_graph <- function(g, k, counts){
@@ -247,52 +206,67 @@ gibbs_sampler_lp <- function(niterations, counts, theta_0){
   return(list(etas = etas, Us = Us))
 }
 
-#'@rdname gibbs_sampler
-#'@title Gibbs sampler for Categorical inference 
-#'@description This is the main function of the package. It runs the proposed Gibbs sampler
-#' for a desired number of iterations, for a given vector of counts.
-#' It generates a convex polytope at each iteration. Below the number of categories is denoted by K,
-#' and corresponds to the length of the input vector 'counts'.
-#'@param niterations a number of iterations to perform (each iteration is a full sweep of Gibbs updates)
-#'@param counts a vector of non-negative integers containing the count data; its length defines K, the number of categories.
-#'@param theta_0 (optional) a vector in the K-simplex used to initialize the sampler.
-#' If missing, it is set to counts / sum(counts). 
-#'@return A list containing 'etas', an array of dimension niterations x K x K
-#' and 'Us', a list of K arrays, each of dimension niterations x N_k x K where N_k is the number of 
-#' observations in category k. 
-#' \enumerate{
-#' \item etas: for iteration 'iteration', etas[iteration,,] is a K x K matrix.
-#' The feasible set at that iteration, is the set of all vectors theta such that, theta_l/theta_k < etas[iteration,k,l]
-#' for all k,l in {1,...,K}.
-#' \item Us: for iteration 'iteration', and category 'k' in {1,...,K}, Us[[k]][iteration,,]
-#' is made of N_k rows, where N_k is the k-th entry of counts, i.e. the number of counts in category k.
-#' Each row contains one of the vectors u_{n} with n in I_k in the notation of the article.
-#' } 
-#'@examples
-#' gibbs_results <- gibbs_sampler(niterations = 5, counts = c(1,2,3))
-#' gibbs_results$etas[5,,]
-#'@export
-gibbs_sampler <- function(niterations, counts, theta_0){
+
+gibbs_sampler_deprecated <- function(niterations, counts, theta_0){
   # return(gibbs_sampler_graph(niterations, counts, theta_0))
   return(gibbs_sampler_lp(niterations, counts, theta_0))
 }
 
 
-## new version, removes empty counts and adds them back after MCMC is complete
+#'@rdname gibbs_sampler
+#'@title Gibbs sampler for DS convex polytopes 
+#'@description This is the main function of the package. 
+#' It runs the proposed Gibbs sampler
+#' for a desired number of iterations, for a given vector of counts.
+#' It generates a convex polytope at each iteration, in the form 
+#' of a matrix "eta". 
+#' Below the number of categories is denoted by K,
+#' and corresponds to the length of the input vector 'counts'.
+#' Each category k has count N_k, possibly equal to zero.
+#' The zeros are removed from the counts when performing the Gibbs iterations,
+#' and "added back" using \code{\link{extend_us}}.
+#'@param niterations a number of iterations to perform; 
+#' each iteration is a full sweep of Gibbs updates for each category.
+#' For help on choosing the number of iterations to perform,
+#' see the function \code{\link{meeting_times}}.
+#'@param counts a vector of non-negative integers containing 
+#' the count data; its length defines K, the number of categories. It can include zeros.
+#'@return A list with the following entries:
+#' \itemize{
+#' \item "etas": an array of dimension niterations x K x K. 
+#' For iteration 'iteration', etas[iteration,,] is a K x K matrix
+#' representing a convex polytope.
+#' The feasible set at that iteration, is the set of all vectors
+#' theta such that, theta_l/theta_k < etas[iteration,k,l]
+#' for all k,l in {1,...,K}.
+#' \item "Us": a list of K arrays. For iteration 'iteration', 
+#' and category 'k' in {1,...,K}, if N_k = 0 then Us[[k]] is NA.
+#' If N_k > 0 then Us[[k]][iteration,,]
+#' is a matrix with N_k rows, and K columns, representing the auxiliary variables
+#' "U"'s generated at that iteration.
+#' } 
+#'@examples
+#' \dontrun{
+#' gibbs_results <- gibbs_sampler(niterations = 5, counts = c(1,2,0,3))
+#' gibbs_results$etas[5,,]
+#' }
 #'@export
-gibbs_sampler_v2 <- function(niterations, counts){
+gibbs_sampler <- function(niterations, counts){
   # number of categories
   K <- length(counts)
+  # find zeros
   nonzeroK <- sum(counts > 0)
   whichnonzero <- which(counts > 0)
   whichzero <- which(counts == 0)
-  ## perform Gibbs on non-zero categories
+  # the function will perform Gibbs on non-zero categories
+  # and then add the zeros back at the end
   nonzerocounts <- counts[counts>0]
   ## set LP 
   Km1squared <- (nonzeroK-1)^2
   # number of constraints in the LP: K+1 constraints for the simplex
   # and (K-1)*(K-1) constraints of the form theta_i / theta_j < eta_{j,i}
   nconstraints <- nonzeroK + 1 + Km1squared
+  # get constraints that define the simplex
   lc <- simplex_linearconstraints(nonzeroK)
   mat_cst <- rbind(lc$constr, matrix(0, nrow = Km1squared, ncol = nonzeroK))
   rhs_ <- c(lc$rhs, rep(0, Km1squared))
@@ -303,27 +277,29 @@ gibbs_sampler_v2 <- function(niterations, counts){
   lpSolveAPI::set.rhs(lpobject, rhs_)
   lpSolveAPI::set.constr.type(lpobject, dir_)
   # now we have the basic LP set up and we will update it during the run of Gibbs  
-  # theta_0 <- nonzerocounts / sum(nonzerocounts)
+  # initialize points using random point in simplex
   theta_0 <- rexp(nonzeroK)
   theta_0 <- theta_0 / sum(theta_0)
   categories <- 1:nonzeroK
-  # store points in barycentric coordinates
+  # store auxiliary variables 
   Us <- list()
   for (k in 1:nonzeroK){
     Us[[k]] <- array(0, dim = c(niterations, nonzerocounts[k], nonzeroK))
   }
-  # store constraints in barycentric coordinates
+  # store eta-constraints 
   etas <- array(0, dim = c(niterations, nonzeroK, nonzeroK))
   ## initialization
   init_tmp <- initialize_pts(nonzerocounts, theta_0)
-  ## 'pts' is a list with 'nonzeroK' entries, each is a matrix of dim = nonzerocounts[k] x nonzeroK
+  # 'pts' is a list with 'nonzeroK' entries, 
+  # each is a matrix of dim = nonzerocounts[k] x nonzeroK
   pts <- init_tmp$pts
   ## store points at initial iteration
   for (k in 1:nonzeroK){
     Us[[k]][1,,] <- pts[[k]]
   }
+  # current eta-constraints
   etas_current <- do.call(rbind, init_tmp$minratios)
-  # store constraints
+  # store eta-constraints
   etas[1,,] <- etas_current
   # loop over Gibbs sampler iterations
   for (iter_gibbs in 2:niterations){
@@ -354,19 +330,22 @@ gibbs_sampler_v2 <- function(niterations, counts){
       objective_vec_[k] <- -1
       lpSolveAPI::set.objfn(lpobject, objective_vec_)
       solve(lpobject)
+      # construct theta_star
       theta_star <- lpSolveAPI::get.variables(lpobject)
       # once we have theta_star, we can draw points in pi_k(theta_star)
       pts_k <- dempsterpolytope:::runif_piktheta_cpp(nonzerocounts[k], k, theta_star)
       pts[[k]] <- pts_k$pts
+      # update eta-constraints
       etas_current[k,] <- pts_k$minratios
     }
-    # store points and constraints
+    # store auxiliary points and eta-constraints
     for (k in categories){
       Us[[k]][iter_gibbs,,] <- pts[[k]]
     }
     etas[iter_gibbs,,] <- etas_current
   }
   rm(lpobject)
+  ## add empty categories if need be, and return etas and Us
   if (length(whichzero) == 0){
     return(list(Us = Us, etas = etas))
   } else {

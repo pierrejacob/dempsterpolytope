@@ -27,13 +27,10 @@ X <- sample(x = 1:K, size = n, replace = TRUE, prob = theta_dgp)
 counts <- tabulate(X, nbins = K)
 print(counts)
 
-## omega indicates the probability of doing a common random number move
-## versus a "maximal coupling" move
-omega <- 0.9
 lag <- 1
 nrep <- 500
 meetingtimes <- unlist(foreach(irep = 1:nrep) %dorng% {
-  meeting_times(counts, lag = lag, rinit = function(){ x = rexp(K); return(x/sum(x))}, omega = omega, max_iterations = 1e5)
+  sample_meeting_times(counts, lag = lag)
 })
 
 summary(meetingtimes)
@@ -41,9 +38,9 @@ summary(meetingtimes)
 ## thus we re-try with 
 lag <- 50
 meetingtimes <- unlist(foreach(irep = 1:nrep) %dorng% {
-  meeting_times(counts, lag = lag, rinit = function(){ x = rexp(K); return(x/sum(x))}, omega = omega, max_iterations = 1e5)
+  sample_meeting_times(counts, lag = lag)
 })
-summary(meetingtimes)
+summary(meetingtimes - lag)
 
 ## and we can obtain upper bounds on the Total Variation distance between 
 ## the chain at some step t and its stationary distribution

@@ -16,7 +16,7 @@
 ## The following converts the constraint 'theta_k in [a,b]'
 ## into linear constraints in barycentric coordinate, i.e. of the form A x <= b.
 ## Then obtain the vertices of the corresponding polytope.
-#'@export
+# #'@export
 interval2polytope <- function(K, param, interval){
   # we first encode the constraint that the values are in the simplex
   # the constraints are on the first K-1 coordinates
@@ -52,7 +52,7 @@ interval2polytope <- function(K, param, interval){
 ### the following function takes two convex polytopes,
 ## and evaluates whether the first is contained within the second (in which case contained = 1)
 ## and whether the two intersects
-#'@export
+# #'@export
 compare_polytopes <- function(cvxp1, cvxp2){
   K_ <- dim(cvxp1$vertices_barcoord)[2]
   ## check whether polytope is contained, i.e. all vertices satisfy linear inequalities
@@ -74,7 +74,7 @@ compare_polytopes <- function(cvxp1, cvxp2){
 ## and a category (index between 1 and K)
 ## and compute whether the corresponding sets is contained / intersects 
 ## with the intervals [0,x] for x provided in 'xgrid'
-#'@export
+# #' @export
 etas_to_lower_upper_cdf <- function(etas, category, xgrid){
   K_ <- dim(etas)[2]
   netas <- dim(etas)[1] 
@@ -126,7 +126,7 @@ etas_to_lower_upper_cdf <- function(etas, category, xgrid){
 }
 
 ## same but parallelize the competition with foreach 
-#'@export
+# #'@export
 etas_to_lower_upper_cdf_dopar <- function(etas, category, xgrid){
   K_ <- dim(etas)[2]
   netas <- dim(etas)[1] 

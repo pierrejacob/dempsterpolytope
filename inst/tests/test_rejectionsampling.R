@@ -31,9 +31,9 @@ counts
 dempsterpolytope::rejection_sampler(counts)
 
 ## repeatedly
-nsamples_rs <- 5e2
+nsamples_rs <- 5e3
 samples_rs <- foreach(irep = 1:nsamples_rs) %dorng% {
-  dempsterpolytope::rejection_sampler(counts)
+  dempsterpolytope::rejection_sampler(counts, maxnattempts = 1e5)
 }
 
 ## to estimate the volume of accept region
@@ -47,16 +47,8 @@ mean(sapply(samples_rs, function(x) x$nattempts))
 ## the MLE is 
 1/(mean(sapply(samples_rs, function(x) x$nattempts-1)) + 1)
 
-
-# ## check normalizing constant against SMC
-# nparticles <- 2^12
-# smc_res <- SMC_sampler(nparticles, X, K)
-# ## log normalizing constant
-# exp(sum(smc_res$normcst))
-# ## seems to agree
-
 ##
-niterations_gibbs <- 5100
+niterations_gibbs <- 20100
 pct <- proc.time()
 samples_gibbs <- gibbs_sampler(niterations = niterations_gibbs, counts = counts)
 elapsed <- (proc.time() - pct)[3]
@@ -65,42 +57,41 @@ burnin <- 100
 
 # 
 param <- 2
-nsubiterations_gibbs <- 500
+nsubiterations_gibbs <- 5000
 subiterations <- floor(seq(from = burnin, to = niterations_gibbs, length.out = nsubiterations_gibbs))
 
 xgrid <- seq(from = 0, to = 1, length.out = 100)
 etas <- samples_gibbs$etas[subiterations,,]
-cdf_ <- etas_to_lower_upper_cdf_dopar(etas, param, xgrid)
-lowercdf <- colMeans(cdf_$iscontained)
-uppercdf <- colMeans(cdf_$intersects)
-plot(xgrid, lowercdf, type = "l")
-lines(xgrid, uppercdf)
 
-library(plyr)
-res <- laply(samples_rs, function(l) as.matrix(l$etas))
+objvec <- rep(0, K)
+objvec[param] <- 1
 
-cdf_rs <- etas_to_lower_upper_cdf_dopar(res, param, xgrid)
-lowercdf_rs <- colMeans(cdf_rs$iscontained)
-uppercdf_rs <- colMeans(cdf_rs$intersects)
-#
-plot(xgrid, lowercdf, type = "l")
-lines(xgrid, uppercdf)
-lines(xgrid, lowercdf_rs, lty = 2)
-lines(xgrid, uppercdf_rs, lty = 2)
+etas_min <- foreach(ieta = 1:(dim(etas)[1]), .combine = c) %dopar% {
+  lpsolve_over_eta(etas[ieta,,], objvec)
+}
+etas_max <- foreach(ieta = 1:(dim(etas)[1]), .combine = c) %dopar% {
+  -lpsolve_over_eta(etas[ieta,,], -objvec)
+}
 
+ecdf_lower <- ecdf(etas_max)
+ecdf_upper <- ecdf(etas_min)
 
-dim(cdf_rs$iscontained)
+plot(xgrid, ecdf_lower(xgrid), type = "l")
+lines(xgrid, ecdf_upper(xgrid), lty = 2)
 
-## and with SMC... 
-# nparticles <- 2^10
-# smc_res <- SMC_sampler(nparticles, X, K, essthreshold = 0.9)
-# etas_particles <- smc_res$etas_particles
-# weights <- smc_res$weights
-# cdf_smc <- etas_to_lower_upper_cdf_dopar(etas_particles, param, xgrid)
-# 
-# dim(cdf_smc$iscontained)
-# lowercdf_smc <- apply(cdf_smc$iscontained, 2, function(v) sum(v * weights))
-# uppercdf_smc <- apply(cdf_smc$intersects, 2, function(v) sum(v * weights))
-# lines(xgrid, lowercdf_smc, lty = 3)
-# lines(xgrid, uppercdf_smc, lty = 3)
+## check against rejection sampler
+
+etas_min_rs <- foreach(ieta = 1:nsamples_rs, .combine = c) %dopar% {
+  lpsolve_over_eta(samples_rs[[ieta]]$etas, objvec)
+}
+etas_max_rs <- foreach(ieta = 1:nsamples_rs, .combine = c) %dopar% {
+  -lpsolve_over_eta(samples_rs[[ieta]]$etas, -objvec)
+}
+
+ecdf_lower_rs <- ecdf(etas_max_rs)
+ecdf_upper_rs <- ecdf(etas_min_rs)
+
+lines(xgrid, ecdf_lower_rs(xgrid), lty = 1, col = 'red')
+lines(xgrid, ecdf_upper_rs(xgrid), lty = 2, col = 'red')
+
 

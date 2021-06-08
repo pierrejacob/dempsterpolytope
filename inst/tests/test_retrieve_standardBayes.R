@@ -24,8 +24,8 @@ prior_pts <- gtools::rdirichlet(niterations, alpha = alpha_prior)
 ## retain points which fall inside feasible regions
 within <- rep(FALSE, niterations)
 for (iteration in 1:niterations){
-  cvx <- etas2vertices(results$etas[iteration,,])
-  within[iteration] <- all(cvx$constr$constr %*% prior_pts[iteration,1:2] <= cvx$constr$rhs)
+  lc <- eta_linearconstraints(results$etas[iteration,,])
+  within[iteration] <- all(lc$constr %*% prior_pts[iteration,] <= lc$rhs)
   # pt_xy <- barycentric2cartesian(prior_pts[i,], v_cartesian)
   # ggplot_triangle(v_cartesian, etas = results$etas[i,,], addpolytope = T) +
   #   geom_point(aes(x = pt_xy[1], y = pt_xy[2]), colour = 'red')
@@ -57,8 +57,8 @@ hist(post_pts[,3], prob = TRUE, add = TRUE, nclass = 40, col = rgb(0.6, 0.6, 0.3
 subiter <- floor(seq(from = 1e2, to = niterations, length.out = 100))
 cvxpolytope_cartesian.df <- data.frame()
 for (iteration in subiter){
-  cvxpolytope <- etas2vertices(results$etas[iteration,,])
-  cvxpolytope_cartesian <- data.frame(t(apply(cvxpolytope$vertices_barcoord, 1, function(row_) barycentric2cartesian(row_, v_cartesian))))
+  vert_ <- etas_vertices(results$etas[iteration,,])
+  cvxpolytope_cartesian <- data.frame(t(apply(vert_, 1, function(row_) barycentric2cartesian(row_, v_cartesian))))
   average_ <- colMeans(cvxpolytope_cartesian)
   o_ <- order(apply(sweep(cvxpolytope_cartesian, 2, average_, "-"), 1, function(v) atan2(v[2], v[1])))
   cvxpolytope_cartesian <- cvxpolytope_cartesian[o_,]

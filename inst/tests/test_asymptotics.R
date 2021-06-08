@@ -14,7 +14,7 @@ v1 <- v_cartesian[[1]]; v2 <- v_cartesian[[2]]; v3 <- v_cartesian[[3]]
 set.seed(4)
 
 # number of observations
-n <- 10000
+n <- 500
 # number of categories
 K <- 4
 categories <- 1:K
@@ -30,36 +30,41 @@ pct <- proc.time()
 samples_gibbs <- gibbs_sampler(niterations = niterations, counts = counts)
 (proc.time() - pct)[3]
 ##
+burnin <- 1000
+nsubiterations <- 500
+subiterations <- floor(seq(from = burnin+1, to = niterations, length.out = nsubiterations))
+etas <- samples_gibbs$etas[subiterations,,]
 
 param <- 4
 interval <- theta_dgp[param] + c(-0.01, +0.01)
-intervalcvxp <- interval2polytope(K, param, interval)
-# 
-burnin <- 1000
 
-nsubiterations <- 500
-subiterations <- floor(seq(from = burnin+1, to = niterations, length.out = nsubiterations))
-contained_ <- rep(0, nsubiterations)
-intersects_ <- rep(0, nsubiterations)
-for (index in 1:nsubiterations){
-  cvxp <- etas2vertices(samples_gibbs$etas[subiterations[index],,])
-  res_ <- compare_polytopes(cvxp, intervalcvxp)
-  contained_[index] <- res_[1]
-  intersects_[index] <- res_[2]
+objvec <- rep(0, K)
+objvec[param] <- 1
+
+min_param <- foreach(ieta = 1:(dim(etas)[1]), .combine = c) %dopar% {
+  lpsolve_over_eta(etas[ieta,,], objvec)
+}
+max_param <- foreach(ieta = 1:(dim(etas)[1]), .combine = c) %dopar% {
+  -lpsolve_over_eta(etas[ieta,,], -objvec)
 }
 
-# lower/upper probabilities, post burn-in
-cat(mean(contained_), mean(intersects_), "\n")
+plot(min_param, max_param)
+abline(v = interval)
+abline(h = interval)
 
+## intersection 
+intersect_ <- !((max_param < interval[1]) | (min_param > interval[2]))
+## inclusion 
+contained_ <- ((min_param > interval[1]) & (max_param < interval[2]))
+
+# lower/upper probabilities, post burn-in
+cat(mean(contained_), mean(intersect_), "\n")
 
 xgrid <- c(0, seq(from = theta_dgp[param]-0.1, to = theta_dgp[param]+0.1, length.out = 100), 1)
-cdfs_ <- etas_to_lower_upper_cdf_dopar(samples_gibbs$etas[subiterations,,], param, xgrid)
-lowercdf <- colMeans(cdfs_$iscontained)
-uppercdf <- colMeans(cdfs_$intersects)
 
 # lower / upper 
-plot(xgrid, lowercdf, type = "l")
-lines(xgrid, uppercdf)
+plot(xgrid, (ecdf(max_param))(xgrid), type = "l")
+lines(xgrid, (ecdf(min_param))(xgrid), col = 'red')
 abline(v = theta_dgp[param], lty = 2)
 abline(v = counts[param]/n, lty = 3)
 

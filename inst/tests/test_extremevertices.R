@@ -19,47 +19,17 @@ names(gibbs_results)
 
 
 burnin <- 1e3
-etas_iteration <- gibbs_results$etas[burnin,,]
-etascvxp <- etas2vertices(etas_iteration)
-# ?etas2vertices
-
-## vertex with maximum 1st component
-max(etascvxp$vertices_barcoord[,1])
-
-maxv1 <- sapply((burnin+1):niterations, function(index){
-  polytope <- etas2vertices(gibbs_results$etas[index,,])$vertices_barcoord
-  polytope[which.max(polytope[,1]),]
-  })
+etas <- gibbs_results$etas[(burnin+1):niterations,,]
+## vertices with maximum component 'param'
+objvec <- rep(0, K)
+param <- 4
+objvec[param] <- 1
+max_param <- foreach(ieta = 1:(dim(etas)[1]), .combine = c) %dopar% {
+  -lpsolve_over_eta(etas[ieta,,], -objvec)
+}
 
 # sample from Dirichlet distribution supposed to match
-dirisamples <- t(gtools::rdirichlet(1e4, alpha = counts + c(1,0,0,0)))
+dirisamples <- t(gtools::rdirichlet(1e4, alpha = counts + objvec))
 #
-par(mfrow = c(2,2))
-hist(maxv1[1,], nclass=30, xlim=c(0,1), prob=TRUE)
-hist(dirisamples[1,], add=TRUE, prob=TRUE, col = rgb(1,0,.5,0.5), nclass=30)
-hist(maxv1[2,], nclass=30, xlim=c(0,1), prob=TRUE)
-hist(dirisamples[2,], add=TRUE, prob=TRUE, col = rgb(1,0,.5,0.5), nclass=30)
-hist(maxv1[3,], nclass=30, xlim=c(0,1), prob=TRUE)
-hist(dirisamples[3,], add=TRUE, prob=TRUE, col = rgb(1,0,.5,0.5), nclass=30)
-hist(maxv1[4,], nclass=30, xlim=c(0,1), prob=TRUE)
-hist(dirisamples[4,], add=TRUE, prob=TRUE, col = rgb(1,0,.5,0.5), nclass=30)
-
-
-minv1 <- sapply((burnin+1):niterations, function(index){
-  polytope <- etas2vertices(gibbs_results$etas[index,,])$vertices_barcoord
-  polytope[which.min(polytope[,1]),]
-})
-
-dirisamples <- t(gtools::rdirichlet(1e4, alpha = counts + c(0,1,1,1)))
-#
-par(mfrow = c(2,2))
-hist(minv1[1,], nclass=30, xlim=c(0,1), prob=TRUE)
-hist(dirisamples[1,], add=TRUE, prob=TRUE, col = rgb(1,0,.5,0.5), nclass=30)
-hist(minv1[2,], nclass=30, xlim=c(0,1), prob=TRUE)
-hist(dirisamples[2,], add=TRUE, prob=TRUE, col = rgb(1,0,.5,0.5), nclass=30)
-hist(minv1[3,], nclass=30, xlim=c(0,1), prob=TRUE)
-hist(dirisamples[3,], add=TRUE, prob=TRUE, col = rgb(1,0,.5,0.5), nclass=30)
-hist(minv1[4,], nclass=30, xlim=c(0,1), prob=TRUE)
-hist(dirisamples[4,], add=TRUE, prob=TRUE, col = rgb(1,0,.5,0.5), nclass=30)
-
-
+hist(max_param, nclass=30, xlim=c(0,1), prob=TRUE)
+hist(dirisamples[param,], add=TRUE, prob=TRUE, col = rgb(1,0,.5,0.5), nclass=30)

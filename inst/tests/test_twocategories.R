@@ -56,27 +56,27 @@ dim(samples_gibbs$Us[[1]])
 dim(samples_gibbs$Us[[2]])
 
 ##
-cvxp <- etas2vertices(samples_gibbs$etas[1,,])
-cvxp
+vertices_  <- etas_vertices(samples_gibbs$etas[1,,])
+vertices_
 ##
-cvxp$vertices_cart <- t(apply(cvxp$vertices_barcoord, 1, function(v) barycentric2cartesian(v, v_cartesian)))
-plot(x = c(0,1), y = c(0,0), type = "l")
-abline(v = cvxp$vertices_cart[,1], lty = 2)
+# vertices_cart <- t(apply(vertices_, 1, function(v) barycentric2cartesian(v, v_cartesian)))
+# plot(x = c(0,1), y = c(0,0), type = "l")
+# abline(v = vertices_cart[,1], lty = 2)
 
-param <- 1
-nsubiterations <- 1e4
-subiterations <- floor(seq(from = burnin+1, to = niterations, length.out = nsubiterations))
+# param <- 1
+# nsubiterations <- 1e4
+# subiterations <- floor(seq(from = burnin+1, to = niterations, length.out = nsubiterations))
 
-xgrid <- seq(from = 0, to = 1, length.out = 100)
-cdfs_ <- etas_to_lower_upper_cdf_dopar(samples_gibbs$etas[subiterations,,], param, xgrid)
-lowercdf <- colMeans(cdfs_$iscontained)
-uppercdf <- colMeans(cdfs_$intersects)
+# xgrid <- seq(from = 0, to = 1, length.out = 100)
+# cdfs_ <- etas_to_lower_upper_cdf_dopar(samples_gibbs$etas[subiterations,,], param, xgrid)
+# lowercdf <- colMeans(cdfs_$iscontained)
+# uppercdf <- colMeans(cdfs_$intersects)
 
 # lower / upper 
-plot(xgrid, lowercdf, type = "l")
-lines(xgrid, uppercdf)
-abline(v = theta_dgp[param], lty = 2)
-abline(v = counts[param]/n, lty = 3)
+# plot(xgrid, lowercdf, type = "l")
+# lines(xgrid, uppercdf)
+# abline(v = theta_dgp[param], lty = 2)
+# abline(v = counts[param]/n, lty = 3)
 
 ## Now manual implementation of the Gibbs sampler, as described in Algorithm 1 of the paper
 gibbs_sampler_K2_with_uniforms <- function(niterations, counts){
@@ -123,11 +123,11 @@ for (igrid in 1:length(xgrid)){
 }
 
 
-plot(xgrid, lowercdf, type = "l", ylab = "CDF")
-lines(xgrid, uppercdf)
-lines(xgrid, lowercdf_alt, lty = 2, col = "red")
-lines(xgrid, uppercdf_alt, lty = 2, col = "red")
-abline(v = counts[param]/n, lty = 3)
+plot(xgrid, lowercdf_alt, type = "l", ylab = "CDF")
+lines(xgrid, uppercdf_alt)
+# lines(xgrid, lowercdf_alt, lty = 2, col = "red")
+# lines(xgrid, uppercdf_alt, lty = 2, col = "red")
+# abline(v = counts[param]/n, lty = 3)
 
 
 ## Now another Gibbs sampler that directly samples the end point of the feasible set
@@ -172,8 +172,8 @@ for (igrid in 1:length(xgrid)){
 }
 
 
-plot(xgrid, lowercdf, type = "l", ylab = "CDF")
-lines(xgrid, uppercdf)
+plot(xgrid, lowercdf_alt, type = "l", ylab = "CDF")
+lines(xgrid, uppercdf_alt)
 lines(xgrid, lowercdf_alt, lty = 2, col = "red")
 lines(xgrid, uppercdf_alt, lty = 2, col = "red")
 abline(v = counts[param]/n, lty = 3)

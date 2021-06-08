@@ -24,8 +24,8 @@ etas <- samples_gibbs$etas[iteration,,]
 subiter <- 101:150
 cvxpolytope_cartesian.df <- data.frame()
 for (iter in subiter){
-  cvx <- etas2vertices(samples_gibbs$etas[iter,,])
-  cvx_cartesian <- t(apply(cvx$vertices_barcoord, 1, function(row) barycentric2cartesian(row, graphsettings$v_cartesian)))
+  vert <- etas_vertices(samples_gibbs$etas[iter,,])
+  cvx_cartesian <- t(apply(vert, 1, function(row) barycentric2cartesian(row, graphsettings$v_cartesian)))
   average_ <- colMeans(cvx_cartesian)
   o_ <- order(apply(sweep(cvx_cartesian, 2, average_, "-"), 1, function(v) atan2(v[2], v[1])))
   cvx_cartesian <- cvx_cartesian[o_,]

@@ -31,8 +31,8 @@ new_results <- gibbs_sampler(new_niterations, new_counts)
 subiter <- floor(seq(from = 1e2, to = new_niterations, length.out = 10))
 cvxpolytope_cartesian.df <- data.frame()
 for (iter in subiter){
-  cvx <- etas2vertices(new_results$etas[iter,,])
-  cvx_cartesian <- t(apply(cvx$vertices_barcoord, 1, function(row) barycentric2cartesian(row, graphsettings$v_cartesian)))
+  vert <- etas_vertices(new_results$etas[iter,,])
+  cvx_cartesian <- t(apply(vert, 1, function(row) barycentric2cartesian(row, graphsettings$v_cartesian)))
   average_ <- colMeans(cvx_cartesian)
   o_ <- order(apply(sweep(cvx_cartesian, 2, average_, "-"), 1, function(v) atan2(v[2], v[1])))
   cvx_cartesian <- cvx_cartesian[o_,]
@@ -70,7 +70,31 @@ segment_constr <- function(point){
 
 ## for a convex polytope, draw segment and find intersection
 intersect_segment <- function(eta){
-  polytope_constr_ <- etas2vertices(eta)$constr
+  K_ <- dim(eta)[1]
+  categories <- 1:K_
+  # # the constraints are on the first K-1 coordinates
+  # # the first ones say that the feasible set is within the simplex
+  A <- matrix(rep(1, K_-1), ncol = K_-1)
+  A <- rbind(A, diag(-1, K_-1, K_-1))
+  b <- c(1, rep(0, K_-1))
+  # then the extra constraints come from etas
+  for (d in categories){
+    for (j in setdiff(categories, d)){
+      if (is.finite(eta[d,j])){
+        # cccc (wA wB wC ... )' = 0
+        ccc <- rep(0, K_)
+        ccc[d] <- -eta[d, j]
+        ccc[j] <- 1
+        cc <- ccc - ccc[K_]
+        b <- c(b, -ccc[K_])
+        A <- rbind(A, matrix(cc[1:(K_-1)], nrow = 1))
+      } else {
+        # if eta is infinite, no constraint
+      }
+    }
+  }
+  polytope_constr_ <- list(constr = A, rhs = b, dir = rep("<=", nrow(A)))
+  
   segment_constr_ <- segment_constr(gtools::rdirichlet(1, counts+c(2,2)))
   constr <- rbind(polytope_constr_$constr, segment_constr_$constr)
   rhs <- c(polytope_constr_$rhs, segment_constr_$rhs)

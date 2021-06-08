@@ -134,10 +134,10 @@ subiter <- 1:niterations
 cvxpolytope_cartesian.df1 <- data.frame()
 cvxpolytope_cartesian.df2 <- data.frame()
 for (iter in subiter){
-  cvx1 <- etas2vertices(cgibbsresults$etas1[iter,,])
-  cvx2 <- etas2vertices(cgibbsresults$etas2[iter,,])
-  cvx_cartesian1 <- t(apply(cvx1$vertices_barcoord, 1, function(row) barycentric2cartesian(row, graphsettings$v_cartesian)))
-  cvx_cartesian2 <- t(apply(cvx2$vertices_barcoord, 1, function(row) barycentric2cartesian(row, graphsettings$v_cartesian)))
+  vert1 <- etas_vertices(cgibbsresults$etas1[iter,,])
+  vert2 <- etas_vertices(cgibbsresults$etas2[iter,,])
+  cvx_cartesian1 <- t(apply(vert1, 1, function(row) barycentric2cartesian(row, graphsettings$v_cartesian)))
+  cvx_cartesian2 <- t(apply(vert2, 1, function(row) barycentric2cartesian(row, graphsettings$v_cartesian)))
   average_1 <- colMeans(cvx_cartesian1)
   o_1 <- order(apply(sweep(cvx_cartesian1, 2, average_1, "-"), 1, function(v) atan2(v[2], v[1])))
   cvx_cartesian1 <- cvx_cartesian1[o_1,]
@@ -147,8 +147,8 @@ for (iter in subiter){
   cvxpolytope_cartesian.df1 <- rbind(cvxpolytope_cartesian.df1, data.frame(cvx_cartesian1, iter = iter))
   cvxpolytope_cartesian.df2 <- rbind(cvxpolytope_cartesian.df2, data.frame(cvx_cartesian2, iter = iter))
 }
-g <- ggplot(triangle.df, aes(x = x, y = y)) + geom_polygon(fill = "white", colour = "black") + theme_void()
 
+g <- ggplot(triangle.df, aes(x = x, y = y)) + geom_polygon(fill = "white", colour = "black") + theme_void()
 for (i in subiter){
   gpolytopes <- g + geom_polygon(data = cvxpolytope_cartesian.df1 %>% filter(iter == i), aes(x = X1, y = X2, group = iter), size = 0.25, alpha = .25, fill = 'black', colour = 'black')
   gpolytopes <- gpolytopes + geom_polygon(data = cvxpolytope_cartesian.df2 %>% filter(iter == i), aes(x = X1, y = X2, group = iter), size = 0.25, alpha = .25, fill = 'orange', colour = 'black')
@@ -169,21 +169,15 @@ init_tmp2 <- initialize_pts(counts, theta_02)
 pts2 <- init_tmp2$pts
 # compute etas  
 eta1 <- do.call(rbind, init_tmp1$minratios)
-eta2  <- do.call(rbind, init_tmp2$minratios)
+eta2 <- do.call(rbind, init_tmp2$minratios)
 
 gtriangle <- create_plot_triangle(graphsettings)
-eta_cvx1 <- etas2vertices(eta1)
-eta_cvx2 <- etas2vertices(eta2)
-g <- add_plot_polytope(graphsettings, gtriangle, eta_cvx1, alpha = .25, fill = 'black', colour = 'black')
-g <- add_plot_polytope(graphsettings, g, eta_cvx2, alpha = .25, fill = 'black', colour = 'black')
+eta_vert1 <- etas_vertices(eta1)
+eta_vert2 <- etas_vertices(eta2)
+g <- add_plot_polytope(graphsettings, gtriangle, eta_vert1, alpha = .25, fill = 'black', colour = 'black')
+g <- add_plot_polytope(graphsettings, g, eta_vert2, alpha = .25, fill = 'black', colour = 'black')
 g
 
-# gconstraints <- gtriangle
-# gconstraints <- add_ratioconstraint(graphsettings, gconstraints, eta1[2,1], 2, 1, graphsettings$contcols[2])
-# gconstraints <- add_ratioconstraint(graphsettings, gconstraints, eta1[2,3], 2, 3, graphsettings$contcols[2])
-# gconstraints <- add_ratioconstraint(graphsettings, gconstraints, eta1[3,1], 3, 1, graphsettings$contcols[3])
-# gconstraints <- add_ratioconstraint(graphsettings, gconstraints, eta1[3,2], 3, 2, graphsettings$contcols[3])
-# gconstraints
 k <- 1
 graph_1 <- igraph::graph_from_adjacency_matrix(log(eta1), mode = "directed", weighted = TRUE, diag = FALSE)
 graph_2 <- igraph::graph_from_adjacency_matrix(log(eta2), mode = "directed", weighted = TRUE, diag = FALSE)
@@ -203,8 +197,8 @@ theta_star2[k] <- 1
 theta_star2 <- theta_star2 / sum(theta_star2)
 gcond <- add_plot_subsimplex(graphsettings, gtriangle, theta_star1, 1, fill = graphsettings$cols[1], alpha = 0.6)
 gcond <- add_plot_subsimplex(graphsettings, gcond, theta_star2, 1, fill = graphsettings$cols[1], alpha = 0.6)
-gcond <- add_plot_polytope(graphsettings, gcond, eta_cvx1, alpha = .25, fill = 'black', colour = 'black')
-gcond <- add_plot_polytope(graphsettings, gcond, eta_cvx2, alpha = .25, fill = 'black', colour = 'black')
+gcond <- add_plot_polytope(graphsettings, gcond, eta_vert1, alpha = .25, fill = 'black', colour = 'black')
+gcond <- add_plot_polytope(graphsettings, gcond, eta_vert2, alpha = .25, fill = 'black', colour = 'black')
 gcond
 
 ggsave(filename = "twoconditionals.pdf", plot = gcond, width = 5, height = 5)

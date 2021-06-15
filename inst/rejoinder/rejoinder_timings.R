@@ -1,5 +1,5 @@
 ## This scrips times some calculations to do with the proposed method.
-## It was used to write the rejoinder of the article.
+## It was used to obtain the timings reported in the rejoinder of the article.
 
 rm(list = ls())
 library(dempsterpolytope)
@@ -17,11 +17,14 @@ theme_update(axis.text.x = element_text(size = 20), axis.text.y = element_text(s
              strip.text = element_text(size = 25), strip.background = element_rect(fill = "white"), 
              legend.position = "bottom")
 
+## start with 50 non-empty categories
 K <- 50
 N <- 500
 counts <- tabulate(sample(x=1:K, size = N, replace = TRUE), nbins = K)
 print(sum(counts>0))
 
+## first, assess how many iterations are required for the Gibbs sampler to reach
+## stationarity, using "meeting times"
 lag <- 30
 nrep <- 100
 meeting_times <- unlist(foreach(irep = 1:nrep) %dorng% sample_meeting_times(counts, lag = lag))
@@ -32,6 +35,8 @@ plot(x = 1:tmax, y = ubounds, type = 'l', xlab = "iteration", ylab = "TV upper b
 mixing_time_TV1pct <- which(ubounds < 0.01)[1]
 cat("time to get to stationarity (1% in TV):", mixing_time_TV1pct, "MCMC iterations\n")
 
+## timing for 10 iterations of Gibbs sampler
+## (median over 10 repeats, on a single processor)
 niterations <- 10
 repeats <- 10
 elapseds <- c()
@@ -43,12 +48,17 @@ for (irepeat in 1:repeats){
 median(elapseds)
 cat("time to perform", niterations, "MCMC iterations:", median(elapseds), "seconds (median over", repeats, "runs)\n")
 
-## add empty categories
+## next, add 150 empty categories
 niterations <- 150
+## generate polytopes
 gibbs_results <- gibbs_sampler(niterations, counts)
+## add zeros to the vector of counts
 extended_counts <- c(counts, rep(0, 150))
+## new 'K'
 extended_K <- length(extended_counts)
+## number of repeats
 repeats <- 10
+## time the time it takes to add 150 empty categories to all 150 iterations 
 elapseds <- c()
 for (irepeat in 1:repeats){
   pct <- proc.time()
@@ -59,15 +69,17 @@ print(elapseds)
 print(median(elapseds))
 cat("time to extend number of categories:", median(elapseds), "seconds (median over", repeats, "runs)\n")
 
+## add empty categories 
 extended_gibbs_results <- extend_us(gibbs_results$Us, whichbefore = 1:K, whichnew = (K+1):extended_K)
 dim(extended_gibbs_results$etas)
 dim(extended_gibbs_results$etas[1,,])
 
+## remove burn-in
 burnin <- 50
 niterations <- dim(extended_gibbs_results$etas)[1]
 etas <- extended_gibbs_results$etas[(burnin+1):niterations,,]
 
-## Solve linear programs
+## time to solve linear programs
 extended_K <- dim(etas)[2]
 objvec <- rep(0, extended_K)
 objvec[1] <- 1
@@ -84,8 +96,7 @@ print(median(elapseds))
 hist(min1st)
 cat("time to solve LP:", median(elapseds), "seconds (median over", repeats, "runs)\n")
 
-## Solve quadratic programs
-
+## time to solve quadratic programs
 library(quadprog)
 ##
 mindist <- function(eta, phat){
@@ -127,7 +138,7 @@ mindist <- function(eta, phat){
   l <- sum((phat - solution.QP$solution)^2)
   return(l)
 }
-
+## we compute the smallest distance from polytope to vector of empirical frequencies
 phat <- extended_counts / sum(extended_counts)
 repeats <- dim(etas)[1]
 elapseds <- c()
@@ -142,6 +153,6 @@ print(median(elapseds))
 hist(mindists)
 cat("time to solve QP:", median(elapseds), "seconds (median over", repeats, "runs)\n")
 
-### don't run!
+### don't run! vertex enumeration takes way too long in such dimensions
 ## etas_vertices(etas[1,,])
 
